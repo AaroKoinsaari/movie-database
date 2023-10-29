@@ -53,6 +53,12 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.43.2.1</version>
+        </dependency>
         <!-- Local dependecy -->
         <dependency>
             <groupId>fi.mit.jyu</groupId>
