@@ -53,6 +53,14 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Local dependecy -->
+        <dependency>
+            <groupId>fi.mit.jyu</groupId>
+            <artifactId>fxgui</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/ohj2/fxgui.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <build>
@@ -75,7 +83,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.moviedb.moviedatabase/com.moviedb.moviedatabase.HelloApplication</mainClass>
+                            <mainClass>com.moviedb/com.moviedb.app.MovieMain</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>
