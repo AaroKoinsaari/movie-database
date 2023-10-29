@@ -1,8 +1,11 @@
 package com.moviedb.dao;
 
 import java.io.*;
-import java.util.*;
+import java.sql.*;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.moviedb.models.Movie;
 
 
@@ -11,175 +14,187 @@ import com.moviedb.models.Movie;
  */
 public class MovieDao {
 
-    /** Filepath to the csv file. */
-    private final String path;
+    /** Connection used to execute SQL queries and interact with the database. */
+    private Connection connection;
+
+    /** The URL pointing to the SQLite database location. */
+    private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
+
 
     /**
-     * Default constructor.
-     * Initializes the path to the default CSV file.
+     * Default constructor that initializes the connection to the default SQLite database.
      */
     public MovieDao() {
-        // TODO: check if filepath exist
-        this("../../resources/data/movies.csv");
+        this(DB_URL);
     }
 
 
     /**
-     * Constructor that accepts a specific path.
+     * Constructor that accepts a specific database URL.
      *
-     * @param path The path to the CSV file.
+     * @param dbUrl The URL to the SQLite database.
      */
-    public MovieDao(String path) {
-        this.path = path;
+    public MovieDao(String dbUrl) {
+        try {
+            connection = DriverManager.getConnection(dbUrl);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
     /**
-     * Creates and adds a movie to the CSV file.
+     * Creates and adds a movie to the SQLite database.
      *
      * @param movie The movie to be added.
      */
     public void create(Movie movie) {
-        List<Movie> movies;
+        String sql = "INSERT INTO movies(title, release_year, director) VALUES(?, ?, ?)";
 
-        try {
-            movies = readAll();
-            movie.setId(getNextId(movies));
-            movies.add(movie);
-            writeAll(movies);
-        } catch (IOException e) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+            pstmt.setString(1, movie.getTitle());
+            pstmt.setInt(2, movie.getReleaseYear());
+            pstmt.setString(3, movie.getDirector());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
 
+
+
+    /**
+     * Fetches a list of either actor or genre IDs based on a specified movie ID and table name.
+     *
+     * @param movieId The ID of the movie for which the actor or genre IDs are to be fetched.
+     * @param tableName The name of the table (either "actors" or "genres") to fetch IDs from.
+     * @return A List of Integers representing actor or genre IDs associated with the given movie ID.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    private List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) {
+        List<Integer> ids = new ArrayList<>();
+        String sql = "SELECT" + columnName + "FROM" + tableName + "WHERE movie_id = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, movieId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                ids.add(rs.getInt(columnName));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ids;
     }
 
 
     /**
-     * Reads a specific movie based on its ID.
+     * Retrieves a movie based on its ID.
      *
-     * @param id The ID of the movie.
-     * @return The movie if found, otherwise null.
+     * @param id The unique identifier of the movie to be fetched.
+     * @return The Movie object if found, null otherwise.
+     * @throws SQLException If there's an error during the database operation.
      */
     public Movie read(int id) throws IOException {
-        for (Movie movie : readAll()) {
-            if(movie.getId() == id) {
-                return movie;
+        String sql = "SELECT title, release_year, director FROM movies WHERE id = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+
+            // If result is found, convert it to a Movie object
+            if (rs.next()) {
+                String title = rs.getString("title");
+                int releaseYear = rs.getInt("release_year");
+                String director = rs.getString("director");
+
+                // Fetch the list of actors and genres
+                List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
+                List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
+
+                return new Movie(id, title, releaseYear, director, actorIds, genreIds);
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return null;
     }
 
 
     /**
-     * Updates the information of a specific movie.
+     * Updates the details of a specified movie in the SQLite database.
+     * If associated actors or genres are modified, the relevant links in the database are updated accordingly.
      *
-     * @param updatedMovie The updated movie information.
-     */
-    // TODO: ensure that the updated movie is added back to the list after removal in the update method.
-    public void update(Movie updatedMovie) throws IOException {
-        List<Movie> movies = readAll();
-        movies.removeIf(movie -> movie.getId() == updatedMovie.getId());
-        writeAll(movies);
-    }
-
-
-    /**
-     * Deletes a movie with a given ID from the CSV file.
+     * @param updatedMovie The movie object containing updated information.
+     * @throws SQLException If there's an error during the database operation.
      *
-     * @param id The ID of the movie to be deleted.
-     * @throws IOException if there's an error accessing the file.
+     * TODO:
+     * - Modify deleting and inserting into their own methods
+     * - Improve efficiency by checking first if dependencies need updating at all
      */
-    public void delete(int id) throws IOException {
-        List<Movie> movies = readAll();
-        movies.removeIf(movie -> movie.getId() == id);
-        writeAll(movies);
-    }
+    public void update(Movie updatedMovie) {
+        // Update movie information
+        String sqlUpdateMovie = "UPDATE movies SET title = ?, release_year = ?, director = ? WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sqlUpdateMovie)) {
+            pstmt.setString(1, updatedMovie.getTitle());
+            pstmt.setInt(2, updatedMovie.getReleaseYear());
+            pstmt.setString(3, updatedMovie.getDirector());
+            pstmt.setInt(4, updatedMovie.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
+        // Delete old genre dependencies
+        String sqlDeleteGenre = "DELETE FROM movie_genres WHERE movie_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sqlDeleteGenre)) {
+            pstmt.setInt(1, updatedMovie.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
-    /**
-     * Returns the next available ID for a new movie.
-     * The ID is based on the highest existing ID + 1.
-     *
-     * @param movies The list of all movies.
-     * @return The next available ID.
-     */
-    private int getNextId(List<Movie> movies) {
-        int max = 0;
-        for (Movie movie : movies) {
-            if (movie.getId() > max) {
-                max = movie.getId();
+        // Add new genre dependencies
+        for (Integer genreId : updatedMovie.getGenreIds()) {  // TODO: getGenreIds method in Movie
+            String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
+            try (PreparedStatement pstmt = connection.prepareStatement(sqlInsertGenre)) {
+                pstmt.setInt(1, updatedMovie.getId());
+                pstmt.setInt(2, genreId);
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
         }
-        return max + 1;
-    }
 
-
-    /**
-     * Reads all movies from the CSV file and returns them as a list.
-     *
-     * @return A list of all movies.
-     * @throws IOException if there's an error accessing the file.
-     */
-    // TODO: improve exception handling
-    public List<Movie> readAll() throws IOException {
-        List<Movie> movies = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(";");
-                movies.add(parseMovie(parts));
-            }
+        // Delete old actor dependencies
+        String sqlDeleteActor = "DELETE FROM movie_actors WHERE movie_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sqlDeleteActor)) {
+            pstmt.setInt(1, updatedMovie.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return movies;
-    }
 
-
-    /**
-     * Parses a movie's details from a given array of strings.
-     *
-     * @param parts The array containing movie details in string format.
-     * @return A new movie instance.
-     */
-    // TODO: improve exception handling
-    private Movie parseMovie(String[] parts) {
-        int id = Integer.parseInt(parts[0]);
-        String title = parts[1];
-        int releaseYear = Integer.parseInt(parts[2]);
-        String director = parts[3];
-        List<Integer> actorIds = parseIds(parts[4]);
-        List<Integer> genreIds = parseIds(parts[5]);
-
-        return new Movie(id, title, releaseYear, director, actorIds, genreIds);
-    }
-
-
-    /**
-     * Parses a list of IDs from a string.
-     *
-     * @param idStrings The string containing IDs separated by commas.
-     * @return A list of integer IDs.
-     */
-    // TODO: improve exception handling
-    private List<Integer> parseIds(String idStrings) {
-        return Arrays.stream(idStrings.split(","))
-                .map(Integer::parseInt)
-                .collect(Collectors.toList());
-    }
-
-
-    /**
-     * Writes all movies to the CSV file.
-     *
-     * @param movies The list of movies to write to the file.
-     * @throws IOException if there's an error accessing the file.
-     */
-    // TODO: improve exception handling
-    private void writeAll(List<Movie> movies) throws IOException {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(path))) {
-            for (Movie movie : movies) {
-                bw.write(movie.toCSVLine());
-                bw.newLine();
+        // Add new actor dependencies
+        for (Integer actorId : updatedMovie.getActorIds()) {  // TODO: getActorIds method in Movie
+            String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
+            try (PreparedStatement pstmt = connection.prepareStatement(sqlInsertActor)) {
+                pstmt.setInt(1, updatedMovie.getId());
+                pstmt.setInt(2, actorId);
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
         }
     }
+
+    /**
+     * TODO:
+     *  - delete method
+     *  - search methods
+     *  - sorting methods
+     *  - find methods
+     */
 }

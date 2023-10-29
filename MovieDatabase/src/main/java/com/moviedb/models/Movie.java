@@ -122,31 +122,4 @@ public class Movie {
         this.id = id;
     }
 
-
-    /**
-     * Converts the movie details to a CSV line format.
-     *
-     * @return A string representation of the movie in CSV format.
-     */
-    public String toCSVLine() {
-        return  id + ";" +
-                title + ";" +
-                releaseYear + ";" +
-                director + ";" +
-                listToCSVString(actorIds) + ";" +
-                listToCSVString(genreIds);
-    }
-
-
-    /**
-     * Converts a list of integers to a CSV string format.
-     *
-     * @param list The list of integers.
-     * @return A string representation of the list in CSV format.
-     */
-    private String listToCSVString(List<Integer> list) {
-        return list.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(","));
-    }
 }
