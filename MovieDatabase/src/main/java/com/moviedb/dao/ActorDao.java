@@ -1,12 +1,13 @@
 package com.moviedb.dao;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Connection;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Optional;
 import com.moviedb.models.Actor;
 
 /**
@@ -14,124 +15,186 @@ import com.moviedb.models.Actor;
  */
 public class ActorDao {
 
-    /** Filepath to the csv file. */
-    private final String path;
+    /** Connection used to execute SQL queries and interact with the database. */
+    private Connection connection;
+
+    /** The URL pointing to the SQL database location. */
+    private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
 
 
     /**
-     * Default constructor.
-     * Initializes the path to the default CSV file.
+     * Default constructor that initializes the connection to the default SQLite database.
      */
     public ActorDao() {
-        // TODO: check if filepath exist
-        this("../../resources/data/actors.csv");
+        this(DB_URL);
     }
 
 
     /**
-     * Constructor that accepts a specific path.
+     * Constructor that accepts a specific database URL.
      *
-     * @param path The path to the CSV file.
+     * @param dbUrl The URL to the SQLite database.
      */
-    public ActorDao(String path) {
-        // TODO: check if filepath exists
-        this.path = path;
+    public ActorDao(String dbUrl) {
+        try {
+            connection = DriverManager.getConnection(dbUrl);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
     /**
-     * Adds new actor to the csv file.
+     * Creates and adds an actor to the SQL database.
      *
      * @param actor The actor to be added.
-     * @throws IOException If there's an error reading or writing the file.
      */
-    public void addActor(Actor actor) throws IOException {
+    public void create(Actor actor) {
+        String sql = "INSERT INTO actors(name) VALUES(?)";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, actor.getName());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * Updates the name of an actor in the SQL database.
+     *
+     * @param updatedActor The movie object containing updated information.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    public void update(Actor updatedActor) {
+        String sql = "UPDATE actors SET name = ? WHERE id = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, updatedActor.getName());
+            pstmt.setInt(2, updatedActor.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * Checks if an actor is associated with any movies.
+     *
+     * @param actorId the ID of the actor to check.
+     * @return true if the actor is linked to one or more movies, false otherwise.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    private boolean isActorLinkedToMovie(int actorId) {
+        String sql = "SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, actorId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0;  // true if there actor is in ANY movie
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+    /**
+     * Deletes an actor from the SQL database.
+     *
+     * @param deletedActor The movie to be deleted.
+     */
+    public void delete(Actor deletedActor) throws SQLException {
+        if (!isActorLinkedToMovie(deletedActor.getId())) {
+            String sql = "DELETE FROM actors WHERE ID = ?";
+
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setInt(1, deletedActor.getId());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw e;  // re-throw the exception
+            }
+        } else {
+            throw new SQLException();  // generic exception
+        }
+    }
+
+
+    /**
+     * Reads all actors from the SQL database and returns them as a list.
+     *
+     * @return A list of all actors.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    public List<Actor> readAll() {
         List<Actor> actors = new ArrayList<>();
+        String sql = "SELECT id, name FROM actors";
 
-        // Read all actors from the file
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(";");
-                int id = Integer.parseInt(values[0]);
-                actors.add(new Actor(id, values[1]));
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                // Insert the values of name and id from every row to the ArrayList
+                actors.add(new Actor(rs.getInt("id"), rs.getString("name")));
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        // Set new ID for the actor and add it to the list
-        actor.setId(getNextId(actors));
-        actors.add(actor);
-
-        // Write the updated list of actors back to the file
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(path))) {
-            for (Actor a : actors) {
-                bw.write(a.getId() + ";" + a.getName());
-                bw.newLine();
-            }
-        }
+        return actors;
     }
 
 
     /**
-     * Returns the next available ID for a new actor.
-     * The ID is based on the highest existing ID + 1.
+     * Retrieves an actor from the SQL database based on its ID.
      *
-     * @param actors The list of all actors.
-     * @return The next available ID.
+     * @param id The ID of the actor to retrieve.
+     * @return The actor if found, otherwise an empty optional.
+     * @throws SQLException If there's an error during the database operation.
      */
-    private int getNextId(List<Actor> actors) {
-        int max = 0;
-        for (Actor actor : actors) {
-            if (actor.getId() > max) {
-                max = actor.getId();
+    public Optional<Actor> getActorById(int id) {
+        String sql = "SELECT id FROM actors WHERE id = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+
+            // Wrap the result in Optional if found
+            if (rs.next()) {
+                return Optional.of(new Actor(rs.getInt("id"), rs.getString("name")));
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return max + 1;
+        return Optional.empty();
     }
 
 
     /**
-     * Retrieves an actor from the csv file based on the provided name.
+     * Retrieves a actor by its name.
      *
-     * @param name The name of the actor to be retrieved.
-     * @return An Actor object if found, otherwise null.
-     * @throws IOException If there's an error reading the file.
+     * @param name The name of the actor to retrieve.
+     * @return The actor if found, otherwise an empty optional.
+     * @throws SQLException If there's an error during the database operation.
      */
-    public Actor getActorByName(String name) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(";");
+    public Optional<Actor> getActorByName(String name) {
+        String sql = "SELECT name FROM actors WHERE name = ?";
 
-                // Check if the current actor's name matches the provided name
-                if (values[1].equalsIgnoreCase(name)) {
-                    return new Actor(Integer.parseInt(values[0]), values[1]);
-                }
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            ResultSet rs = pstmt.executeQuery();
+
+            // Wrap the result in Opitonal if found
+            if (rs.next()) {
+                return Optional.of(new Actor(rs.getInt("id"), rs.getString("name")));
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        return null;
-    }
-
-
-    /**
-     * Retrieves an actor from the csv file based on the provided ID.
-     *
-     * @param id The ID of the actor to be retrieved.
-     * @return An Actor object if found, otherwise null.
-     * @throws IOException If there's an error reading the file.
-     */
-    public Actor getActorById(int id) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(";");
-
-                // Check if the current actor's ID matches the provided ID
-                if (Integer.parseInt(values[0]) == id) {
-                    return new Actor(id, values[1]);
-                }
-            }
-        }
-        return null;
+        return Optional.empty();
     }
 }

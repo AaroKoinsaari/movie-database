@@ -1,11 +1,13 @@
 package com.moviedb.dao;
 
-import java.io.*;
-import java.sql.*;
-import java.util.stream.Collectors;
-import java.util.ArrayList;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.List;
-
+import java.util.ArrayList;
 import com.moviedb.models.Movie;
 
 
@@ -17,7 +19,7 @@ public class MovieDao {
     /** Connection used to execute SQL queries and interact with the database. */
     private Connection connection;
 
-    /** The URL pointing to the SQLite database location. */
+    /** The URL pointing to the SQL database location. */
     private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
 
 
@@ -44,7 +46,7 @@ public class MovieDao {
 
 
     /**
-     * Creates and adds a movie to the SQLite database.
+     * Creates and adds a movie to the SQL database.
      *
      * @param movie The movie to be added.
      */
@@ -53,7 +55,7 @@ public class MovieDao {
         String sqlInsertMovie = "INSERT INTO movies(title, release_year, director) VALUES(?, ?, ?)";
         String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
         String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
-        
+
         try {
             // Insert the main details
             try (PreparedStatement pstmtMovie = connection.prepareStatement(sqlInsertMovie,
@@ -124,7 +126,7 @@ public class MovieDao {
      * @return The Movie object if found, null otherwise.
      * @throws SQLException If there's an error during the database operation.
      */
-    public Movie read(int id) throws IOException {
+    public Movie read(int id) {
         String sql = "SELECT title, release_year, director FROM movies WHERE id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -151,7 +153,7 @@ public class MovieDao {
 
 
     /**
-     * Updates the details of a specified movie in the SQLite database.
+     * Updates the details of a specified movie in the SQL database.
      * If associated actors or genres are modified, the relevant links in the database are updated accordingly.
      *
      * @param updatedMovie The movie object containing updated information.
@@ -209,6 +211,11 @@ public class MovieDao {
     }
 
 
+    /**
+     * Deletes a movie from the SQL database.
+     *
+     * @param deletedMovie The movie to be deleted.
+     */
     public void delete(Movie deletedMovie) {
         String sql = "DELETE FROM movies WHERE id = ?";
 

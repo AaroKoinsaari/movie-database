@@ -1,6 +1,5 @@
 package com.moviedb.dao;
 
-import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.DriverManager;
@@ -19,7 +18,7 @@ public class GenreDao {
     /** Connection used to execute SQL queries and interact with the database. */
     private Connection connection;
 
-    /** The URL pointing to the SQLite database location. */
+    /** The URL pointing to the SQL database location. */
     private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
 
 
@@ -51,10 +50,10 @@ public class GenreDao {
      * @return A list of all genres.
      * @throws SQLException If there's an error during the database operation.
      */
-    public List<Genre> readAll() throws IOException {
+    public List<Genre> readAll() {
         List<Genre> genres = new ArrayList<>();
-
         String sql = "SELECT id, name FROM genres";
+
         try (PreparedStatement pstmt = connection.prepareStatement(sql);
             ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
@@ -77,6 +76,7 @@ public class GenreDao {
      */
     public Optional<Genre> getGenreById(int id) {
         String sql = "SELECT id FROM genres WHERE id = ?";
+
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
@@ -101,6 +101,7 @@ public class GenreDao {
      */
     public Optional<Genre> getGenreByName(String name) {
         String sql = "SELECT name FROM genres WHERE name = ?";
+
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, name);
             ResultSet rs = pstmt.executeQuery();
