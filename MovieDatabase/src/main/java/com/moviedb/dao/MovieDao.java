@@ -157,7 +157,7 @@ public class MovieDao {
         }
 
         // Add new genre dependencies
-        for (Integer genreId : updatedMovie.getGenreIds()) {  // TODO: getGenreIds method in Movie
+        for (Integer genreId : updatedMovie.getGenreIds()) {
             String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
             try (PreparedStatement pstmt = connection.prepareStatement(sqlInsertGenre)) {
                 pstmt.setInt(1, updatedMovie.getId());
@@ -178,7 +178,7 @@ public class MovieDao {
         }
 
         // Add new actor dependencies
-        for (Integer actorId : updatedMovie.getActorIds()) {  // TODO: getActorIds method in Movie
+        for (Integer actorId : updatedMovie.getActorIds()) {
             String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
             try (PreparedStatement pstmt = connection.prepareStatement(sqlInsertActor)) {
                 pstmt.setInt(1, updatedMovie.getId());

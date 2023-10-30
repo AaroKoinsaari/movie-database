@@ -122,4 +122,12 @@ public class Movie {
         this.id = id;
     }
 
+
+    public List<Integer> getGenreIds() {
+        return this.genreIds;
+    }
+
+    public List<Integer> getActorIds() {
+        return this.actorIds;
+    }
 }
