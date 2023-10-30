@@ -63,7 +63,6 @@ public class MovieDao {
     }
 
 
-
     /**
      * Fetches a list of either actor or genre IDs based on a specified movie ID and table name.
      *
@@ -187,6 +186,18 @@ public class MovieDao {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+
+    public void delete(Movie deletedMovie) {
+        String sql = "DELETE FROM movies WHERE id = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, deletedMovie.getId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
