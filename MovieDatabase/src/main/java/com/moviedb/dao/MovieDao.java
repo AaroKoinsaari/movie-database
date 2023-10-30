@@ -49,14 +49,42 @@ public class MovieDao {
      * @param movie The movie to be added.
      */
     public void create(Movie movie) {
-        String sql = "INSERT INTO movies(title, release_year, director) VALUES(?, ?, ?)";
+        // Define the SQL queries
+        String sqlInsertMovie = "INSERT INTO movies(title, release_year, director) VALUES(?, ?, ?)";
+        String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
+        String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
+        
+        try {
+            // Insert the main details
+            try (PreparedStatement pstmtMovie = connection.prepareStatement(sqlInsertMovie,
+                    Statement.RETURN_GENERATED_KEYS);  // ID for the added movie in the generated key
+                 PreparedStatement pstmtActor = connection.prepareStatement(sqlInsertActor);
+                 PreparedStatement pstmtGenre = connection.prepareStatement(sqlInsertGenre)) {
+                pstmtMovie.setString(1, movie.getTitle());
+                pstmtMovie.setInt(2, movie.getReleaseYear());
+                pstmtMovie.setString(3, movie.getDirector());
+                pstmtMovie.executeUpdate();
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                // Retrieve the id generated for the added movie
+                ResultSet rs = pstmtMovie.getGeneratedKeys();
+                int generatedMovieId = 0;
+                if (rs.next()) {
+                    generatedMovieId = rs.getInt(1);
+                }
 
-            pstmt.setString(1, movie.getTitle());
-            pstmt.setInt(2, movie.getReleaseYear());
-            pstmt.setString(3, movie.getDirector());
-            pstmt.executeUpdate();
+                // Add the actors to their join table
+                for (int actorId : movie.getActorIds()) {
+                    pstmtActor.setInt(1, generatedMovieId);
+                    pstmtActor.setInt(2, actorId);
+                    pstmtActor.executeUpdate();
+                }
+                // Add the genres to their join table
+                for (int genreId : movie.getGenreIds()) {
+                    pstmtGenre.setInt(1, generatedMovieId);
+                    pstmtGenre.setInt(2, genreId);
+                    pstmtGenre.executeUpdate();
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -134,58 +162,49 @@ public class MovieDao {
      * - Improve efficiency by checking first if dependencies need updating at all
      */
     public void update(Movie updatedMovie) {
-        // Update movie information
+        // Define all the SQL queries
         String sqlUpdateMovie = "UPDATE movies SET title = ?, release_year = ?, director = ? WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sqlUpdateMovie)) {
-            pstmt.setString(1, updatedMovie.getTitle());
-            pstmt.setInt(2, updatedMovie.getReleaseYear());
-            pstmt.setString(3, updatedMovie.getDirector());
-            pstmt.setInt(4, updatedMovie.getId());
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        // Delete old genre dependencies
         String sqlDeleteGenre = "DELETE FROM movie_genres WHERE movie_id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sqlDeleteGenre)) {
-            pstmt.setInt(1, updatedMovie.getId());
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        // Add new genre dependencies
-        for (Integer genreId : updatedMovie.getGenreIds()) {
-            String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sqlInsertGenre)) {
-                pstmt.setInt(1, updatedMovie.getId());
-                pstmt.setInt(2, genreId);
-                pstmt.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        // Delete old actor dependencies
+        String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
         String sqlDeleteActor = "DELETE FROM movie_actors WHERE movie_id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sqlDeleteActor)) {
-            pstmt.setInt(1, updatedMovie.getId());
-            pstmt.executeUpdate();
+        String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
+
+        try {
+            // Update the main movie details
+            try (PreparedStatement pstmt = connection.prepareStatement(sqlUpdateMovie)) {
+                pstmt.setString(1, updatedMovie.getTitle());
+                pstmt.setInt(2, updatedMovie.getReleaseYear());
+                pstmt.setString(3, updatedMovie.getDirector());
+                pstmt.setInt(4, updatedMovie.getId());
+                pstmt.executeUpdate();
+            }
+
+            // Delete old genre dependencies and add new ones
+            try (PreparedStatement pstmtDelete = connection.prepareStatement(sqlDeleteGenre);
+                 PreparedStatement pstmtInsert = connection.prepareStatement(sqlInsertGenre)) {
+                pstmtDelete.setInt(1, updatedMovie.getId());
+                pstmtDelete.executeUpdate();
+
+                for (Integer genreId : updatedMovie.getGenreIds()) {
+                    pstmtInsert.setInt(1, updatedMovie.getId());
+                    pstmtInsert.setInt(2, genreId);
+                }
+            }
+
+            // Delete old actor dependencies and add new ones
+            try (PreparedStatement pstmtDelete = connection.prepareStatement(sqlDeleteActor);
+                 PreparedStatement pstmtInsert = connection.prepareStatement(sqlInsertActor)) {
+                pstmtDelete.setInt(1, updatedMovie.getId());
+                pstmtDelete.executeUpdate();
+
+                for (Integer actorId : updatedMovie.getActorIds()) {
+                    pstmtInsert.setInt(1, updatedMovie.getId());
+                    pstmtInsert.setInt(2, actorId);
+                    pstmtInsert.executeUpdate();
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-
-        // Add new actor dependencies
-        for (Integer actorId : updatedMovie.getActorIds()) {
-            String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sqlInsertActor)) {
-                pstmt.setInt(1, updatedMovie.getId());
-                pstmt.setInt(2, actorId);
-                pstmt.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -203,7 +222,6 @@ public class MovieDao {
 
     /**
      * TODO:
-     *  - delete method
      *  - search methods
      *  - sorting methods
      *  - find methods
