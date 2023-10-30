@@ -1,8 +1,11 @@
 package com.moviedb.dao;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Connection;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -13,64 +16,79 @@ import com.moviedb.models.Genre;
  */
 public class GenreDao {
 
-    /** Filepath to the csv file. */
-    private final String path;
+    /** Connection used to execute SQL queries and interact with the database. */
+    private Connection connection;
+
+    /** The URL pointing to the SQLite database location. */
+    private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
+
 
     /**
-     * Default constructor.
-     * Initializes the path to the default CSV file.
+     * Default constructor that initializes the connection to the default SQLite database.
      */
     public GenreDao() {
-        // TODO: check if filepath exist
-        this("../../resources/data/genres.csv");
+        this(DB_URL);
     }
 
 
     /**
-     * Constructor that accepts a specific path.
+     * Constructor that accepts a specific database URL.
      *
-     * @param path The path to the CSV file.
+     * @param dbUrl The URL to the SQLite database.
      */
-    public GenreDao(String path) {
-        // TODO: check if filepath exist
-        this.path = path;
+    public GenreDao(String dbUrl) {
+        try {
+            connection = DriverManager.getConnection(dbUrl);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
     /**
-     * Reads all genres from the CSV file and returns them as a list.
+     * Reads all genres from the SQL database and returns them as a list.
      *
      * @return A list of all genres.
-     * @throws IOException If there's an error reading the file.
+     * @throws SQLException If there's an error during the database operation.
      */
     public List<Genre> readAll() throws IOException {
         List<Genre> genres = new ArrayList<>();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(";");
-                int id = Integer.parseInt(parts[0]);
-                String name = parts[1];
-                genres.add(new Genre(id, name));
+        String sql = "SELECT id, name FROM genres";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                // Insert the values of name and id from every row to the ArrayList
+                genres.add(new Genre(rs.getInt("id"), rs.getString("name")));
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return genres;
     }
 
 
     /**
-     * Retrieves a genre by its ID.
+     * Retrieves a genre from the SQL database based on its ID.
      *
      * @param id The ID of the genre to retrieve.
      * @return The genre if found, otherwise an empty optional.
-     * @throws IOException If there's an error reading the file.
+     * @throws SQLException If there's an error during the database operation.
      */
-    public Optional<Genre> getGenreById(int id) throws IOException {
-        List<Genre> genres = readAll();
-        return genres.stream()
-                .filter(g -> g.getId() == id)
-                .findFirst();
+    public Optional<Genre> getGenreById(int id) {
+        String sql = "SELECT id FROM genres WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+
+            // Wrap the result in Optional if found
+            if (rs.next()) {
+                return Optional.of(new Genre(rs.getInt("id"), rs.getString("name")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
     }
 
 
@@ -79,14 +97,21 @@ public class GenreDao {
      *
      * @param name The name of the genre to retrieve.
      * @return The genre if found, otherwise an empty optional.
-     * @throws IOException If there's an error reading the file.
+     * @throws SQLException If there's an error during the database operation.
      */
-    public Optional<Genre> getGenreByName(String name) throws IOException {
-        List<Genre> genres = readAll();
-        return genres.stream()
-                .filter(g -> g.getName().equalsIgnoreCase(name))
-                .findFirst();
+    public Optional<Genre> getGenreByName(String name) {
+        String sql = "SELECT name FROM genres WHERE name = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            ResultSet rs = pstmt.executeQuery();
+
+            // Wrap the result in Opitonal if found
+            if (rs.next()) {
+                return Optional.of(new Genre(rs.getInt("id"), rs.getString("name")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
     }
-
 }
-
