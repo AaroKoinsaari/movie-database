@@ -70,8 +70,6 @@
             <groupId>fi.mit.jyu</groupId>
             <artifactId>fxgui</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/libs/ohj2/fxgui.jar</systemPath>
         </dependency>
     </dependencies>
 
