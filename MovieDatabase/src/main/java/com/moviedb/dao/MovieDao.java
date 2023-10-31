@@ -6,6 +6,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import com.moviedb.models.Movie;
@@ -101,9 +102,18 @@ public class MovieDao {
      * @return A List of Integers representing actor or genre IDs associated with the given movie ID.
      * @throws SQLException If there's an error during the database operation.
      */
-    private List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) {
+    private List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
         List<Integer> ids = new ArrayList<>();
-        String sql = "SELECT" + columnName + "FROM" + tableName + "WHERE movie_id = ?";
+
+        // Whitelist allowed table and column names
+        List<String> allowedTables = Arrays.asList("movie_actors", "movie_genres");
+        List<String> allowedColumns = Arrays.asList("actor_id", "genre_id");
+
+        if (!allowedTables.contains(tableName) || (!allowedColumns.contains(columnName))) {
+            throw new IllegalArgumentException();
+        }
+
+        String sql = "SELECT " + columnName + "FROM " + tableName + "WHERE movie_id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, movieId);
@@ -112,8 +122,6 @@ public class MovieDao {
             while (rs.next()) {
                 ids.add(rs.getInt(columnName));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return ids;
     }
