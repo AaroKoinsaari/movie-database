@@ -50,12 +50,16 @@ public class MovieDao {
      * Creates and adds a movie to the SQL database.
      *
      * @param movie The movie to be added.
+     * @return The generated ID of the added movie, or -1 if an error occurs.
+     * @throws SQLException If there's an error during the database operation.
      */
-    public void create(Movie movie) {
+    public int create(Movie movie) {
         // Define the SQL queries
         String sqlInsertMovie = "INSERT INTO movies(title, release_year, director) VALUES(?, ?, ?)";
         String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
         String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
+
+        int generatedMovieId = -1;  // -1 for default error state
 
         try {
             // Insert the main details
@@ -70,9 +74,13 @@ public class MovieDao {
 
                 // Retrieve the id generated for the added movie
                 ResultSet rs = pstmtMovie.getGeneratedKeys();
-                int generatedMovieId = 0;
                 if (rs.next()) {
                     generatedMovieId = rs.getInt(1);
+                }
+
+                // Ensure to have a valid movie ID before proceeding
+                if (generatedMovieId <= 0) {
+                    throw new SQLException();
                 }
 
                 // Add the actors to their join table
@@ -91,6 +99,7 @@ public class MovieDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return generatedMovieId;
     }
 
 
