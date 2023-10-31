@@ -1,15 +1,15 @@
 package com.moviedb.dao;
 
-import com.moviedb.database.MoviedatabaseTest;
+import com.moviedb.database.EmptyDBSetup;
 import com.moviedb.models.Movie;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-class MovieDaoTest extends MoviedatabaseTest {
+class MovieDaoEmptyDBTest extends EmptyDBSetup {
 
     @Test
     void create() {
