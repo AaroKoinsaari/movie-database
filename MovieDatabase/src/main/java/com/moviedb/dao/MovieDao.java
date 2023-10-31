@@ -173,14 +173,17 @@ public class MovieDao {
      * Updates the details of a specified movie in the SQL database.
      * If associated actors or genres are modified, the relevant links in the database are updated accordingly.
      *
-     * @param updatedMovie The movie object containing updated information.
+     * @param updatedMovie The movie object containing updated details with the correct ID of the movie to be updated.
+     * @return boolean true if the update was successful, otherwise false.
      * @throws SQLException If there's an error during the database operation.
      *
      * TODO:
      * - Modify deleting and inserting into their own methods
      * - Improve efficiency by checking first if dependencies need updating at all
      */
-    public void update(Movie updatedMovie) {
+    public boolean update(Movie updatedMovie) {
+        boolean updateSuccessful = false;
+
         // Define all the SQL queries
         String sqlUpdateMovie = "UPDATE movies SET title = ?, release_year = ?, director = ? WHERE id = ?";
         String sqlDeleteGenre = "DELETE FROM movie_genres WHERE movie_id = ?";
@@ -199,50 +202,61 @@ public class MovieDao {
             }
 
             // Delete old genre dependencies and add new ones
-            try (PreparedStatement pstmtDelete = connection.prepareStatement(sqlDeleteGenre);
-                 PreparedStatement pstmtInsert = connection.prepareStatement(sqlInsertGenre)) {
+            try (PreparedStatement pstmtDelete = connection.prepareStatement(sqlDeleteGenre)) {
                 pstmtDelete.setInt(1, updatedMovie.getId());
                 pstmtDelete.executeUpdate();
+            }
 
+            try (PreparedStatement pstmtInsert = connection.prepareStatement(sqlInsertGenre)) {
                 for (Integer genreId : updatedMovie.getGenreIds()) {
                     pstmtInsert.setInt(1, updatedMovie.getId());
                     pstmtInsert.setInt(2, genreId);
+                    pstmtInsert.executeUpdate();
                 }
             }
 
             // Delete old actor dependencies and add new ones
-            try (PreparedStatement pstmtDelete = connection.prepareStatement(sqlDeleteActor);
-                 PreparedStatement pstmtInsert = connection.prepareStatement(sqlInsertActor)) {
+            try (PreparedStatement pstmtDelete = connection.prepareStatement(sqlDeleteActor)) {
                 pstmtDelete.setInt(1, updatedMovie.getId());
                 pstmtDelete.executeUpdate();
+            }
 
+            try (PreparedStatement pstmtInsert = connection.prepareStatement(sqlInsertActor)) {
                 for (Integer actorId : updatedMovie.getActorIds()) {
                     pstmtInsert.setInt(1, updatedMovie.getId());
                     pstmtInsert.setInt(2, actorId);
                     pstmtInsert.executeUpdate();
                 }
             }
+
+            updateSuccessful = true;  // No exceptions, update was succesful
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return updateSuccessful;
     }
 
 
     /**
-     * Deletes a movie from the SQL database.
+     * Deletes a movie from the SQL database based on its ID.
      *
-     * @param deletedMovie The movie to be deleted.
+     * @param movieId The ID of the movie to be deleted.
+     * @return true if the movie was successfully deleted, false otherwise.
+     * @throws SQLException If there's an error during the database operation.
      */
-    public void delete(Movie deletedMovie) {
+    public boolean delete(int movieId) {
         String sql = "DELETE FROM movies WHERE id = ?";
+        int rowsAffected = 0;  // To make sure the SQL query affected at least one row
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, deletedMovie.getId());
-            pstmt.executeUpdate();
+            pstmt.setInt(1, movieId);
+            rowsAffected = pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return rowsAffected > 0;
     }
+
 
     /**
      * TODO:
