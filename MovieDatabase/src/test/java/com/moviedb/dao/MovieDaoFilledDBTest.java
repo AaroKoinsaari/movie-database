@@ -1,5 +1,7 @@
 package com.moviedb.dao;
 
-public class MovieDaoFilledDBTest {
+import com.moviedb.database.FilledDBSetup;
+
+public class MovieDaoFilledDBTest extends FilledDBSetup {
     // TODO
 }
