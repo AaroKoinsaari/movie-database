@@ -28,21 +28,21 @@ public class MovieDao {
      * Default constructor that initializes the connection to the default SQLite database.
      */
     public MovieDao() {
-        this(DB_URL);
+        try {
+            this.connection = DriverManager.getConnection(DB_URL);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
     /**
-     * Constructor that accepts a specific database URL.
+     * Constructor that accepts a specific database connection.
      *
-     * @param dbUrl The URL to the SQLite database.
+     * @param connection The specific connection to database.
      */
-    public MovieDao(String dbUrl) {
-        try {
-            connection = DriverManager.getConnection(dbUrl);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public MovieDao(Connection connection) {
+        this.connection = connection;
     }
 
 
@@ -52,6 +52,8 @@ public class MovieDao {
      * @param movie The movie to be added.
      * @return The generated ID of the added movie, or -1 if an error occurs.
      * @throws SQLException If there's an error during the database operation.
+     *
+     * TODO: Handling for situation if the database is empty at the beginning.
      */
     public int create(Movie movie) {
         // Define the SQL queries
@@ -122,7 +124,7 @@ public class MovieDao {
             throw new IllegalArgumentException();
         }
 
-        String sql = "SELECT " + columnName + "FROM " + tableName + "WHERE movie_id = ?";
+        String sql = "SELECT " + columnName + " FROM " + tableName + " WHERE movie_id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, movieId);

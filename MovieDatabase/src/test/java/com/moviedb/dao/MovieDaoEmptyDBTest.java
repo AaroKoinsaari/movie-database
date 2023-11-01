@@ -24,7 +24,7 @@ class MovieDaoEmptyDBTest extends EmptyDBSetup {
         genreIds.addAll(Arrays.asList(1, 2, 3, 4));
         Movie testMovie = new Movie(title, releaseYear, director, actorIds, genreIds);
 
-        MovieDao dao = new MovieDao();
+        MovieDao dao = new MovieDao(connection);
         int generatedId = dao.create(testMovie);
 
         assertTrue(generatedId > 0);  // Confirm that the movie has been added to the database
@@ -51,7 +51,7 @@ class MovieDaoEmptyDBTest extends EmptyDBSetup {
         genreIds.addAll(Arrays.asList(1, 2));
         Movie testMovie = new Movie(title, releaseYear, director, actorIds, genreIds);
 
-        MovieDao dao = new MovieDao();
+        MovieDao dao = new MovieDao(connection);
         int generatedId = dao.create(testMovie);
 
         // Read the movie from the database
@@ -77,7 +77,7 @@ class MovieDaoEmptyDBTest extends EmptyDBSetup {
         List<Integer> originalGenreIds = Arrays.asList(1, 2);
         Movie originalMovie = new Movie(originalTitle, originalReleaseYear, originalDirector, originalActorIds, originalGenreIds);
 
-        MovieDao dao = new MovieDao();
+        MovieDao dao = new MovieDao(connection);
         int movieId = dao.create(originalMovie);
 
         // Update the test movie information
@@ -116,7 +116,7 @@ class MovieDaoEmptyDBTest extends EmptyDBSetup {
         genreIds.addAll(Arrays.asList(1, 2));
         Movie testMovie = new Movie(title, releaseYear, director, actorIds, genreIds);
 
-        MovieDao dao = new MovieDao();
+        MovieDao dao = new MovieDao(connection);
         int generatedId = dao.create(testMovie);
 
         // Confirm that the movie is in the database
