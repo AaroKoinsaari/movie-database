@@ -14,11 +14,22 @@ public class Genre {
 
     /**
      * Constructs a new {@code Genre} object with given id and name.
+     *
      * @param id The unique identifier of the genre.
      * @param name The name of the genre.
      */
     public Genre(int id, String name) {
         this.id = id;
+        this.name = name;
+    }
+
+
+    /**
+     * Constructs a new {@code Genre} object with given name (ID is handled in the database).
+     *
+     * @param name The name of the genre.
+     */
+    public Genre(String name) {
         this.name = name;
     }
 
@@ -45,6 +56,7 @@ public class Genre {
 
     /**
      * Returns the name of the genre.
+     *
      * @return The name of the genre.
      */
     public String getName() {
@@ -54,6 +66,7 @@ public class Genre {
 
     /**
      * Sets the name of the genre.
+     *
      * @param name The name to be set.
      */
     public void setName(String name) {

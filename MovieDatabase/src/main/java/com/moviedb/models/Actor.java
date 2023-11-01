@@ -14,11 +14,21 @@ public class Actor {
 
     /**
      * Constructs a new {@code Actor} object with given id and name.
+     *
      * @param id The unique identifier of the actor.
      * @param name The name of the actor.
      */
     public Actor(int id, String name) {
         this.id = id;
+        this.name = name;
+    }
+
+    /**
+     * Constructs a new {@code Actor} object with given name (ID is handled in the database).
+     *
+     * @param name The name of the actor.
+     */
+    public Actor(String name) {
         this.name = name;
     }
 
@@ -45,6 +55,7 @@ public class Actor {
 
     /**
      * Returns the name of the actor.
+     *
      * @return The name of the actor.
      */
     public String getName() {
@@ -54,6 +65,7 @@ public class Actor {
 
     /**
      * Sets the name of the actor.
+     *
      * @param name The name to be set.
      */
     public void setName(String name) {
