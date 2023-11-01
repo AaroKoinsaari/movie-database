@@ -27,7 +27,7 @@ public abstract class EmptyDBSetup {
 
                 // Create genres table
                 stmt.execute("CREATE TABLE genres ("
-                        + "id INTEGER AUTO_INCREMENT,"
+                        + "id INTEGER,"
                         + "name VARCHAR(255) NOT NULL,"
                         + "PRIMARY KEY(id))");
 
