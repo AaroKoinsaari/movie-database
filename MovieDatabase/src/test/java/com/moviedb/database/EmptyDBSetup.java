@@ -1,19 +1,20 @@
 package com.moviedb.database;
 
-import org.junit.jupiter.api.BeforeEach;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.fail;
+
 
 public abstract class EmptyDBSetup {
 
     private Connection connection;
 
     @BeforeEach
-    public void setUpEmptyDB() {
+    public void setUpDB() {
         try {
             // Use connection to H2 database for testing
             connection = DriverManager.getConnection("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", "");

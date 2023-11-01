@@ -1,14 +1,14 @@
 package com.moviedb.dao;
 
-import com.moviedb.database.EmptyDBSetup;
-import com.moviedb.models.Movie;
-import org.junit.jupiter.api.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import com.moviedb.database.EmptyDBSetup;
+import com.moviedb.models.Movie;
 
 class MovieDaoEmptyDBTest extends EmptyDBSetup {
 
