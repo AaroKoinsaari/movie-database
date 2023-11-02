@@ -1,23 +1,35 @@
 package com.moviedb.database;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.DriverManager;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
+/**
+ * Sets up a temporary in-memory H2 database for testing, replicating the
+ * structure of the production SQLite database. This ensures that tests can run
+ * against a database schema that is created and destroyed with each test,
+ * without persisting data or requiring SQLite-specific setup.
+ */
 public abstract class EmptyDBSetup {
 
-    private Connection connection;
+    protected Connection connection;
 
+
+    /**
+     * Prepares the in-memory database with the necessary tables and static data before each test.
+     */
     @BeforeEach
     public void setUpDB() {
         try {
             // Use connection to H2 database for testing
-            connection = DriverManager.getConnection("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", "");
+            connection = DriverManager.getConnection("jdbc:h2:mem:test", "sa", "");
 
             try (Statement stmt = connection.createStatement()) {
                 // Create actors table
@@ -28,7 +40,7 @@ public abstract class EmptyDBSetup {
 
                 // Create genres table
                 stmt.execute("CREATE TABLE genres ("
-                        + "id INTEGER,"
+                        + "id INTEGER AUTO_INCREMENT,"
                         + "name VARCHAR(255) NOT NULL,"
                         + "PRIMARY KEY(id))");
 
@@ -55,10 +67,55 @@ public abstract class EmptyDBSetup {
                         + "PRIMARY KEY(movie_id, genre_id),"
                         + "FOREIGN KEY(movie_id) REFERENCES movies(id) ON DELETE CASCADE,"
                         + "FOREIGN KEY(genre_id) REFERENCES genres(id) ON DELETE CASCADE)");
+
+                // Insert static genres
+                stmt.execute("INSERT INTO genres (name) VALUES ('Action')");        // 1
+                stmt.execute("INSERT INTO genres (name) VALUES ('Adventure')");     // 2
+                stmt.execute("INSERT INTO genres (name) VALUES ('Comedy')");        // 3
+                stmt.execute("INSERT INTO genres (name) VALUES ('Crime')");         // 4
+                stmt.execute("INSERT INTO genres (name) VALUES ('Drama')");         // 5
+                stmt.execute("INSERT INTO genres (name) VALUES ('Fantasy')");       // 6
+                stmt.execute("INSERT INTO genres (name) VALUES ('Historical')");    // 7
+                stmt.execute("INSERT INTO genres (name) VALUES ('Horror')");        // 8
+                stmt.execute("INSERT INTO genres (name) VALUES ('Mystery')");       // 9
+                stmt.execute("INSERT INTO genres (name) VALUES ('Romance')");       // 10
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
             fail("Error creating database structure");
+        }
+    }
+
+
+    /**
+     * Cleans up the database connection after each test to ensure a fresh start for the next one.
+     */
+    @AfterEach
+    public void tearDown() throws SQLException {
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
+        }
+    }
+
+
+    /**
+     * Adds a specified number of test actors to the actors table in the database.
+     *
+     * @param numberOfActors The number of test actors to create.
+     */
+    protected void addActorsToDB(int numberOfActors) {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO actors (name) VALUES (?)")) {
+            for (int i = 1; i <= numberOfActors; i++) {
+                ps.setString(1, "Actor " + i);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            fail("Error adding actors to database");
         }
     }
 }

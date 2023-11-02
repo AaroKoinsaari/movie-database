@@ -4,13 +4,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.moviedb.database.EmptyDBSetup;
 import com.moviedb.models.Movie;
 
+/**
+ * This class contains unit tests for the MovieDao class using an empty database setup.
+ * Each test method is designed to test a single functionality of the MovieDao class.
+ */
 class MovieDaoEmptyDBTest extends EmptyDBSetup {
+
+    /**
+     * Additional setup for the empty database for each test.
+     */
+    @BeforeEach
+    public void setUp() {
+        addActorsToDB(10);  // Add 10 test actors to database
+    }
+
 
     @Test
     void create() {
@@ -38,6 +52,7 @@ class MovieDaoEmptyDBTest extends EmptyDBSetup {
         assertEquals(genreIds, fetchedMovie.getGenreIds());
         assertEquals(generatedId, fetchedMovie.getId());
     }
+
 
     @Test
     void read() {
