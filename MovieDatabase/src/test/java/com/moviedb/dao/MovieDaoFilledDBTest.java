@@ -2,6 +2,7 @@ package com.moviedb.dao;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -18,15 +19,10 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
         String title = "Test Movie";
         int releaseYear = 2023;
         String director = "Test Director";
-
-        // Add some existing actors and genres from the test db
         List<Integer> actorIds = new ArrayList<>();
         List<Integer> genreIds = new ArrayList<>();
-        actorIds.add(2);  // Leonardo Di Caprio
-        actorIds.add(3);  // Cate Blanchett
-        genreIds.add(3);  // Crime
-        genreIds.add(9);  // Mystery
-
+        actorIds.addAll(Arrays.asList(1, 2, 5));  // RDN, MS, MR
+        genreIds.addAll(Arrays.asList(1, 2, 3, 5));  // Action, adventure, comedy, drama
         Movie testMovie = new Movie(title, releaseYear, director, actorIds, genreIds);
 
         MovieDao dao = new MovieDao(connection);
@@ -41,5 +37,26 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
         assertEquals(director, fetchedMovie.getDirector());
         assertEquals(actorIds, fetchedMovie.getActorIds());
         assertEquals(genreIds, fetchedMovie.getGenreIds());
+        assertEquals(generatedId, fetchedMovie.getId());
+    }
+
+
+    @Test
+    void read() {
+        MovieDao dao = new MovieDao(connection);
+        int movieId = 2;  // The Wolf of Wall Street
+        Movie retrievedMovie = dao.read(movieId);
+
+        assertNotNull(retrievedMovie);
+        assertEquals(movieId, retrievedMovie.getId());
+        assertEquals("The Wolf of Wall Street", retrievedMovie.getTitle());
+        assertEquals(2013, retrievedMovie.getReleaseYear());
+        assertEquals("Martin Scorsese", retrievedMovie.getDirector());
+
+        // Check that the actors and genres are properly linked
+        List<Integer> expectedActorIds = Arrays.asList(5, 6); // Leonardo Di Caprio
+        List<Integer> expectedGenreIds = Arrays.asList(3, 5); // Comedy, Drama
+        assertEquals(expectedActorIds, retrievedMovie.getActorIds());
+        assertEquals(expectedGenreIds, retrievedMovie.getGenreIds());
     }
 }
