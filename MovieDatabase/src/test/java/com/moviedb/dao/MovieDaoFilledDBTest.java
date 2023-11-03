@@ -4,6 +4,7 @@ package com.moviedb.dao;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -89,5 +90,23 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
         assertEquals(newDirector, fetchedUpdatedMovie.getDirector());
         assertEquals(newActorIds, fetchedUpdatedMovie.getActorIds());
         assertEquals(newGenreIds, fetchedUpdatedMovie.getGenreIds());
+    }
+
+
+    @Test
+    void delete() {
+        MovieDao dao = new MovieDao(connection);
+
+        int movieIdToDelete1 = 1;  // Inception
+        int movieIdToDelete2 = 4;  // The Deer Hunter
+        dao.delete(movieIdToDelete1);
+        dao.delete(movieIdToDelete2);
+
+        // Try to fetch deleted movies (should return null)
+        Movie deletedMovie1 = dao.read(movieIdToDelete1);
+        Movie deletedMovie2 = dao.read(movieIdToDelete2);
+
+        assertNull(deletedMovie1);
+        assertNull(deletedMovie2);
     }
 }
