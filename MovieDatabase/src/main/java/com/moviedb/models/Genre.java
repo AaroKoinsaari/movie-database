@@ -1,5 +1,7 @@
 package com.moviedb.models;
 
+import java.util.Objects;
+
 /**
  * A genre object with id and genre name attributes.
  */
@@ -71,5 +73,39 @@ public class Genre {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+
+    /**
+     * Compares the genre with the specified object for equality.
+     * The equality of two genres is determined by the equality of their id and name fields.
+     *
+     * @param o the object to be compared for equality with the genre.
+     * @return true if the specified object is equal to the genre, otherwise false.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;  // Same instance
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;  // Different type or null
+        }
+
+        Genre genre = (Genre) o;  // Cast the object to genre
+
+        return id == genre.id && Objects.equals(name, genre.name);
+    }
+
+
+    /**
+     * Returns the hash code value for the genre.
+     * The hash code of a genre is computed by its id and name fields.
+     *
+     * @return the hash code value for the genre.
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
     }
 }

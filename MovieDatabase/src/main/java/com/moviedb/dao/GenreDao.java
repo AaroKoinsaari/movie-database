@@ -26,21 +26,21 @@ public class GenreDao {
      * Default constructor that initializes the connection to the default SQLite database.
      */
     public GenreDao() {
-        this(DB_URL);
+        try {
+            this.connection = DriverManager.getConnection(DB_URL);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
     /**
-     * Constructor that accepts a specific database URL.
+     * Constructor that accepts a specific database connection.
      *
-     * @param dbUrl The URL to the SQLite database.
+     * @param connection The specific connection to database.
      */
-    public GenreDao(String dbUrl) {
-        try {
-            connection = DriverManager.getConnection(dbUrl);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public GenreDao(Connection connection) {
+        this.connection = connection;
     }
 
 
@@ -75,7 +75,7 @@ public class GenreDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public Optional<Genre> getGenreById(int id) {
-        String sql = "SELECT id FROM genres WHERE id = ?";
+        String sql = "SELECT id, name FROM genres WHERE id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, id);
@@ -100,7 +100,7 @@ public class GenreDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public Optional<Genre> getGenreByName(String name) {
-        String sql = "SELECT name FROM genres WHERE name = ?";
+        String sql = "SELECT id, name FROM genres WHERE name = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, name);
