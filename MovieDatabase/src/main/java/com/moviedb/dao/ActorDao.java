@@ -109,39 +109,46 @@ public class ActorDao {
      * Updates the name of an actor in the SQL database.
      *
      * @param updatedActor The movie object containing updated information.
+     * @return boolean true if the update was successful, otherwise false.
      * @throws SQLException If there's an error during the database operation.
      */
-    public void update(Actor updatedActor) {
+    public boolean update(Actor updatedActor) {
         String sql = "UPDATE actors SET name = ? WHERE id = ?";
+        boolean isUpdated = false;
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, updatedActor.getName());
             pstmt.setInt(2, updatedActor.getId());
-            pstmt.executeUpdate();
+            int affectedRows = pstmt.executeUpdate();
+            isUpdated = affectedRows > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return isUpdated;
     }
 
 
     /**
      * Deletes an actor from the SQL database.
      *
-     * @param deletedActor The movie to be deleted.
+     * @param actorId The ID of the actor to be deleted.
+     * @throws SQLException If there's an error during the database operation.
      */
-    public void delete(Actor deletedActor) throws SQLException {
-        if (!isActorLinkedToMovie(deletedActor.getId())) {
-            String sql = "DELETE FROM actors WHERE ID = ?";
+    public boolean delete(int actorId) throws SQLException {
+        if (!isActorLinkedToMovie(actorId)) {
+            String sql = "DELETE FROM actors WHERE id = ?";
 
             try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                pstmt.setInt(1, deletedActor.getId());
-                pstmt.executeUpdate();
+                pstmt.setInt(1, actorId);
+                int affectedRows = pstmt.executeUpdate();
+                return affectedRows > 0;  // Return true if deletion was successful
             } catch (SQLException e) {
                 e.printStackTrace();
-                throw e;  // re-throw the exception
+                throw e;  // Re-throw exception
             }
         } else {
-            throw new SQLException();  // generic exception
+            // Throw an exception if the actor is linked to one or more movies
+            throw new SQLException("Actor is linked to one or more movies.");
         }
     }
 
@@ -161,7 +168,7 @@ public class ActorDao {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                return rs.getInt(1) > 0;  // true if there actor is in ANY movie
+                return rs.getInt(1) > 0;  // true if the actor is associated with any movie
             }
         } catch (SQLException e) {
             e.printStackTrace();
