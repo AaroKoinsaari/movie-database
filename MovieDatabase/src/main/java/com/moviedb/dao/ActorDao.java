@@ -5,10 +5,14 @@ import java.sql.ResultSet;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Connection;
+import java.sql.Statement;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
+
 import com.moviedb.models.Actor;
+
 
 /**
  * Data Access Object for the Actor class.
@@ -26,21 +30,21 @@ public class ActorDao {
      * Default constructor that initializes the connection to the default SQLite database.
      */
     public ActorDao() {
-        this(DB_URL);
+        try {
+            this.connection = DriverManager.getConnection(DB_URL);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 
     /**
-     * Constructor that accepts a specific database URL.
+     * Constructor that accepts a specific database connection.
      *
-     * @param dbUrl The URL to the SQLite database.
+     * @param connection The specific connection to database.
      */
-    public ActorDao(String dbUrl) {
-        try {
-            connection = DriverManager.getConnection(dbUrl);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public ActorDao(Connection connection) {
+        this.connection = connection;
     }
 
 
@@ -48,16 +52,56 @@ public class ActorDao {
      * Creates and adds an actor to the SQL database.
      *
      * @param actor The actor to be added.
+     * @return The generated ID of the added actor, or -1 if an error occurs.
      */
-    public void create(Actor actor) {
+    public int create(Actor actor) {
         String sql = "INSERT INTO actors(name) VALUES(?)";
+        int actorId = -1;  // Default error state
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql,
+                Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, actor.getName());
-            pstmt.executeUpdate();
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        actorId = generatedKeys.getInt(1);
+                    }
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return actorId;
+    }
+
+
+    /**
+     * Retrieves an actor based on its ID.
+     *
+     * @param id The unique identifier of the actor to be fetched.
+     * @return The actor of found, an empty optional otherwise.
+     */
+    public Optional<Actor> read(int id) {
+        String sql = "SELECT name, id FROM actors where id = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String name = rs.getString("name");
+                return Optional.of(new Actor(id, name));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+            System.out.println("Error reading the actor from database");
+        }
+        return Optional.empty();
     }
 
 
@@ -76,6 +120,28 @@ public class ActorDao {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * Deletes an actor from the SQL database.
+     *
+     * @param deletedActor The movie to be deleted.
+     */
+    public void delete(Actor deletedActor) throws SQLException {
+        if (!isActorLinkedToMovie(deletedActor.getId())) {
+            String sql = "DELETE FROM actors WHERE ID = ?";
+
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setInt(1, deletedActor.getId());
+                pstmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                throw e;  // re-throw the exception
+            }
+        } else {
+            throw new SQLException();  // generic exception
         }
     }
 
@@ -101,28 +167,6 @@ public class ActorDao {
             e.printStackTrace();
         }
         return false;
-    }
-
-
-    /**
-     * Deletes an actor from the SQL database.
-     *
-     * @param deletedActor The movie to be deleted.
-     */
-    public void delete(Actor deletedActor) throws SQLException {
-        if (!isActorLinkedToMovie(deletedActor.getId())) {
-            String sql = "DELETE FROM actors WHERE ID = ?";
-
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                pstmt.setInt(1, deletedActor.getId());
-                pstmt.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                throw e;  // re-throw the exception
-            }
-        } else {
-            throw new SQLException();  // generic exception
-        }
     }
 
 
