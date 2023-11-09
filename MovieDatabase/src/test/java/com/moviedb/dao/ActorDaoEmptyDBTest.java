@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class ActorDaoTestEmptyDBTest extends EmptyDBSetup {
+public class ActorDaoEmptyDBTest extends EmptyDBSetup {
 
     private ActorDao dao;
 
@@ -61,6 +61,10 @@ public class ActorDaoTestEmptyDBTest extends EmptyDBSetup {
             assertEquals(name, actor.getName(), "Actor name should match");
             assertEquals(actorId, actor.getId(), "Actor ID should match");
         });
+
+        // Assert that non-existent actor is not in the database
+        Optional<Actor> fetchedActor = dao.read(99);  // Should return an empty Optional
+        assertTrue(fetchedActor.isEmpty(), "Actor should not be present");
     }
 
 
