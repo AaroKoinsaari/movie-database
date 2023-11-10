@@ -41,20 +41,25 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
 
 
     @Test
-    void readTest() {
-        // Assert that an existing actor exists in the database
+    void readExistingActorTest() {
         Optional<Actor> fetchedExistingActor = dao.read(6);  // Leonardo Di Caprio
         assertTrue(fetchedExistingActor.isPresent(), "Actor should be present");
         fetchedExistingActor.ifPresent(actor -> {
             assertEquals("Leonardo Di Caprio", actor.getName(), "Actor name should match");
             assertEquals(6, actor.getId(), "Actor ID should match");
         });
+    }
 
-        // Assert that non-existing actor is not in the database
+
+    @Test
+    void readNonExistingActorTest() {
         Optional<Actor> fetchedNonExistentActor = dao.read(99);
         assertTrue(fetchedNonExistentActor.isEmpty(), "Actor should not be present");
+    }
 
-        // Assert that new inserted actor can be read
+
+    @Test
+    void readNewInsertedActorTest() {
         String name = "Test Actor 1";
         Actor testActor = new Actor(name);
         int actorId = dao.create(testActor);
@@ -102,7 +107,7 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
 
     @Test
     void deleteLinkedActorTest() {
-        int actorId = 3;  // Jamie Foxx
+        int actorId = 5;  //  Margot Robbie
 
         // Assert that SQLException is thrown when trying to delete actor that is linked to a movie
         assertThrows(SQLException.class, () -> {
@@ -112,7 +117,7 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
 
 
     @Test
-    void deleteLinkedActorAfterDeletingMovie() throws SQLException {
+    void deleteLinkedActorAfterDeletingMovieTest() throws SQLException {
         // Delete movie where actor is linked
         MovieDao movieDao = new MovieDao(connection);
         movieDao.delete(3);  // Django Unchained
