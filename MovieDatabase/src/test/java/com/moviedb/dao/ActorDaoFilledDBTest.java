@@ -5,10 +5,12 @@ import com.moviedb.models.Actor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.sql.SQLException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ActorDaoFilledDBTest extends FilledDBSetup {
     private ActorDao dao;
@@ -88,5 +90,35 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
         assertTrue(updatedOptionalActor.isPresent(), "Updated actor should still be in the database");
         Actor updatedActor = updatedOptionalActor.get();
         assertEquals(updatedName, updatedActor.getName(), "Actor's name should be updated in the database");
+    }
+
+
+    @Test
+    void deleteNonLinkedActorTest() throws SQLException {
+        int newActorId = dao.create(new Actor("Test Actor"));
+        assertTrue(dao.delete(newActorId));
+    }
+
+
+    @Test
+    void deleteLinkedActorTest() {
+        int actorId = 3;  // Jamie Foxx
+
+        // Assert that SQLException is thrown when trying to delete actor that is linked to a movie
+        assertThrows(SQLException.class, () -> {
+            dao.delete(actorId);
+        }, "Should throw an exception, but didn't");
+    }
+
+
+    @Test
+    void deleteLinkedActorAfterDeletingMovie() throws SQLException {
+        // Delete movie where actor is linked
+        MovieDao movieDao = new MovieDao(connection);
+        movieDao.delete(3);  // Django Unchained
+
+        // Delete the actor and assert that deletion was successful
+        int actorId = 3;  // Jamie Foxx
+        assertTrue(dao.delete(actorId));
     }
 }
