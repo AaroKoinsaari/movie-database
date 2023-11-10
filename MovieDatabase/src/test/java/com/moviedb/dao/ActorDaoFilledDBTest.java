@@ -2,6 +2,7 @@ package com.moviedb.dao;
 
 import com.moviedb.database.FilledDBSetup;
 import com.moviedb.models.Actor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -12,13 +13,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ActorDaoFilledDBTest extends FilledDBSetup {
     private ActorDao dao;
 
+    @BeforeEach
+    void setUp() {
+        dao = new ActorDao(connection);
+    }
+
     @Test
     void createTest() {
         String name = "New Actor";
         Actor newActor = new Actor(name);
 
         // Insert new actor to database and fetch it
-        dao = new ActorDao(connection);
         int actorId = dao.create(newActor);
         Optional<Actor> fetchedActor = dao.read(actorId);
 
@@ -35,8 +40,6 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
 
     @Test
     void readTest() {
-        dao = new ActorDao(connection);
-
         // Assert that an existing actor exists in the database
         Optional<Actor> fetchedExistingActor = dao.read(6);  // Leonardo Di Caprio
         assertTrue(fetchedExistingActor.isPresent(), "Actor should be present");
@@ -63,5 +66,27 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
     }
 
 
+    @Test
+    void updateTest() {
+        int actorId = 2;  // Meryl Streep
+        String updatedName = "Test Name";
 
+        // Fetch the actor from database
+        Optional<Actor> actorOptional = dao.read(actorId);
+        assertTrue(actorOptional.isPresent(), "Actor should be in the database");
+
+        // Update the fetched actor
+        Actor actorToUpdate = actorOptional.get();
+        actorToUpdate.setName(updatedName);
+
+        // Assert that the update was successful
+        boolean updateSuccessful = dao.update(actorToUpdate);
+        assertTrue(updateSuccessful, "Actor update should be successful");
+
+        // Confirm the the update worked correctly
+        Optional<Actor> updatedOptionalActor = dao.read(actorId);
+        assertTrue(updatedOptionalActor.isPresent(), "Updated actor should still be in the database");
+        Actor updatedActor = updatedOptionalActor.get();
+        assertEquals(updatedName, updatedActor.getName(), "Actor's name should be updated in the database");
+    }
 }
