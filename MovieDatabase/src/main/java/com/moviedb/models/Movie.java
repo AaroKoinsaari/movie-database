@@ -1,7 +1,7 @@
 package com.moviedb.models;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 /**
  * A movie object with attributes such as title, release year, director,
@@ -57,6 +57,7 @@ public class Movie {
 
     /**
      * Constructs a new {@code Movie} object with given details (without id).
+     *
      * @param title The title of the movie.
      * @param releaseYear The release year of the movie.
      * @param director The director of the movie.
@@ -123,10 +124,21 @@ public class Movie {
     }
 
 
+    /**
+     * Returns the list of associated genre IDs.
+     *
+     * @return The list of genre IDs.
+     */
     public List<Integer> getGenreIds() {
         return this.genreIds;
     }
 
+
+    /**
+     * Returns the list of associated actor IDs.
+     *
+     * @return The list of actor IDs.
+     */
     public List<Integer> getActorIds() {
         return this.actorIds;
     }

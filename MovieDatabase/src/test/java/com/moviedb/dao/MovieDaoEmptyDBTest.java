@@ -6,10 +6,14 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.moviedb.database.EmptyDBSetup;
 import com.moviedb.models.Movie;
+
 
 /**
  * This class contains unit tests for the MovieDao class using an empty database setup.
@@ -17,22 +21,24 @@ import com.moviedb.models.Movie;
  * Each test method is designed to test a single functionality of the MovieDao class.
  */
 class MovieDaoEmptyDBTest extends EmptyDBSetup {
-
-    private MovieDao dao;
+    private MovieDao dao;  // Instance of MovieDao used across all test cases
 
     /**
      * Additional setup for the empty database for each test.
+     * Initializes the connection to the test database for each test.
      */
     @BeforeEach
     public void setUp() {
         dao = new MovieDao(connection);
-        addActorsToDB(10);  // Add 10 test actors to database
     }
 
 
+    /** Tests the creation of a new movie in the database. */
     @Test
     void createTest() {
-        // Create new test movie
+        addActorsToDB(10);  // Add 10 test actors to database
+
+        // Create a new test movie
         String title = "Test Movie";
         int releaseYear = 2023;
         String director = "Test Director";
@@ -56,6 +62,7 @@ class MovieDaoEmptyDBTest extends EmptyDBSetup {
     }
 
 
+    /** Tests the reading of a non-existent movie. */
     @Test
     void readTest() {
         int nonExistentMovieId = 99;
@@ -64,6 +71,7 @@ class MovieDaoEmptyDBTest extends EmptyDBSetup {
     }
 
 
+    /** Tests updating of a non-existent movie.  */
     @Test
     void updateTest() {
         int nonExistentMovieId = 99;
@@ -83,6 +91,7 @@ class MovieDaoEmptyDBTest extends EmptyDBSetup {
     }
 
 
+    /** Tests deletion of a non-existent movie. */
     @Test
     void deleteTest() {
         int nonExistentMovieId = 99;

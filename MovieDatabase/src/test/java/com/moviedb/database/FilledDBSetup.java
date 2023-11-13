@@ -91,7 +91,9 @@ public abstract class FilledDBSetup extends EmptyDBSetup {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
             fail("Error inserting actor: " + name);
         }
         return -1; // If insertion failed
@@ -120,7 +122,9 @@ public abstract class FilledDBSetup extends EmptyDBSetup {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
             fail("Error inserting movie: " + title);
         }
         return -1; // If insertion failed
@@ -145,7 +149,9 @@ public abstract class FilledDBSetup extends EmptyDBSetup {
                 pstmt.setInt(2, actorId);
                 pstmt.executeUpdate();
             } catch (SQLException e) {
-                e.printStackTrace();
+                System.out.println("SQLState: " + e.getSQLState());
+                System.out.println("Error Code: " + e.getErrorCode());
+                System.out.println("Message: " + e.getMessage());
                 fail("Error linking movie " + movieId + " with actor " + actorName);
             }
         } else {
@@ -169,7 +175,9 @@ public abstract class FilledDBSetup extends EmptyDBSetup {
                 return rs.getInt("id");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
             fail("Error retrieving actor ID for: " + actorName);
         }
         return -1; // If actor not found
@@ -194,7 +202,9 @@ public abstract class FilledDBSetup extends EmptyDBSetup {
                 pstmt.setInt(2, genreId);
                 pstmt.executeUpdate();
             } catch (SQLException e) {
-                e.printStackTrace();
+                System.out.println("SQLState: " + e.getSQLState());
+                System.out.println("Error Code: " + e.getErrorCode());
+                System.out.println("Message: " + e.getMessage());
                 fail("Error linking movie " + movieId + " with genre " + genreName);
             }
         } else {
@@ -218,7 +228,9 @@ public abstract class FilledDBSetup extends EmptyDBSetup {
                 return rs.getInt("id");
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
             fail("Error retrieving genre ID for: " + genreName);
         }
         return -1; // If genre not found

@@ -1,23 +1,41 @@
 package com.moviedb.dao;
 
-import com.moviedb.database.FilledDBSetup;
-import com.moviedb.models.Genre;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import com.moviedb.database.FilledDBSetup;
+import com.moviedb.models.Genre;
+
+
+/**
+ * This class contains unit tests for the GenreDao class using a pre-filled database setup.
+ * It operates under the assumption that genres already exist in the database,
+ * with known IDs that are used within the tests.
+ * Each test method is designed to test a single functionality of the GenreDao class,
+ * verifying the expected behavior against the known state of the database.
+ */
 public class GenreDaoTest extends FilledDBSetup {
-    private GenreDao dao;
-    private List<Genre> expectedGenres;
+    private GenreDao dao;  // Instance of GenreDao used across all test cases
 
+    private List<Genre> expectedGenres;  // Instance of the predefined genres in the setup
+
+
+    /**
+     * Additional setup for the database for each test.
+     * Initializes the connection to the test database for each test and collects
+     * all the predefined genres from the database to a list.
+     */
     @BeforeEach
     void setUp() {
         dao = new GenreDao(connection);
@@ -33,7 +51,6 @@ public class GenreDaoTest extends FilledDBSetup {
                 expectedGenres.add(new Genre(id, name));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
             System.out.println("Message: " + e.getMessage());
@@ -42,6 +59,7 @@ public class GenreDaoTest extends FilledDBSetup {
     }
 
 
+    /** Tests the reading of all genres from the database. */
     @Test
     void readAllTest() {
         List<Genre> fetchedGenres = dao.readAll();
@@ -49,6 +67,7 @@ public class GenreDaoTest extends FilledDBSetup {
     }
 
 
+    /** Tests getting all the genres from the database by their ID. */
     @Test
     void getGenreByIdTest() {
         Genre expectedActionGenre = new Genre(1, "Action");
@@ -72,6 +91,7 @@ public class GenreDaoTest extends FilledDBSetup {
     }
 
 
+    /** Tests getting all the genres from the database by their name. */
     @Test
     void getGenreByNameTest() {
         Genre expectedActionGenre = new Genre(1, "Action");

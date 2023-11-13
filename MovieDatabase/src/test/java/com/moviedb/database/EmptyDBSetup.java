@@ -12,15 +12,15 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
- * Sets up a temporary in-memory H2 database for testing, replicating the
- * structure of the production SQLite database. This ensures that tests can run
- * against a database schema that is created and destroyed with each test,
- * without persisting data or requiring SQLite-specific setup.
+ * This class sets up a temporary in-memory H2 database that replicates the
+ * structure of the production SQLite database for testing purposes.
+ * It defines the database schema and populates genres, which works the
+ * static reference data. The database setup's lifecycle is tied to
+ * individual tests, ensuring isolation and no side effects across test cases.
  */
 public abstract class EmptyDBSetup {
 
     protected Connection connection;
-
 
     /**
      * Prepares the in-memory database with the necessary tables and static data before each test.
@@ -81,11 +81,10 @@ public abstract class EmptyDBSetup {
                 stmt.execute("INSERT INTO genres (name) VALUES ('Romance')");       // 10
             }
         } catch (SQLException e) {
-            e.printStackTrace();
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
             System.out.println("Message: " + e.getMessage());
-            fail("Error creating database structure");
+            fail("Error creating the empty database structure");
         }
     }
 
@@ -114,7 +113,9 @@ public abstract class EmptyDBSetup {
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
             fail("Error adding actors to database");
         }
     }

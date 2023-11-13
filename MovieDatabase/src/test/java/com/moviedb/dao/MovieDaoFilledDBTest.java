@@ -1,32 +1,51 @@
 package com.moviedb.dao;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.moviedb.database.FilledDBSetup;
 import com.moviedb.models.Movie;
 
-public class MovieDaoFilledDBTest extends FilledDBSetup {
 
+/**
+ * This class contains unit tests for the MovieDao class using a pre-filled database setup.
+ * It operates under the assumption that certain movies, genres, and actors already exist in the database,
+ * with known IDs that are used within the tests. These IDs are annotated within the test methods.
+ * Each test method is designed to test a single functionality of the MovieDao class, verifying
+ * the expected behavior against the known state of the database.
+ */
+public class MovieDaoFilledDBTest extends FilledDBSetup {
+    private MovieDao dao;  // Instance of MovieDao used across all test cases
+
+    /**
+     * Additional setup for the filled database for each test.
+     * Initializes the connection to the test database for each test.
+     */
+    @BeforeEach
+    public void setUp() {
+        dao = new MovieDao(connection);
+    }
+
+
+    /** Tests the creation of a new movie in the database. */
     @Test
-    void create() {
+    void createTest() {
         // Create new test movie
         String title = "Test Movie";
         int releaseYear = 2023;
         String director = "Test Director";
-        List<Integer> actorIds = new ArrayList<>();
-        List<Integer> genreIds = new ArrayList<>();
-        actorIds.addAll(Arrays.asList(1, 2, 5));  // RDN, MS, MR
-        genreIds.addAll(Arrays.asList(1, 2, 3, 5));  // Action, adventure, comedy, drama
+        List<Integer> actorIds = new ArrayList<>(Arrays.asList(1, 2, 5));  // RDN, MS, MR
+        List<Integer> genreIds = new ArrayList<>(Arrays.asList(1, 2, 3, 5));  // Action, adventure, comedy, drama
         Movie testMovie = new Movie(title, releaseYear, director, actorIds, genreIds);
 
-        MovieDao dao = new MovieDao(connection);
         int generatedId = dao.create(testMovie);
 
         assertTrue(generatedId > 0);  // Confirm that the movie has been added to the database
@@ -42,9 +61,9 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
     }
 
 
+    /** Tests reading for a pre-existing Movie from the database. */
     @Test
-    void read() {
-        MovieDao dao = new MovieDao(connection);
+    void readTest() {
         int movieId = 2;  // The Wolf of Wall Street
         Movie retrievedMovie = dao.read(movieId);
 
@@ -62,10 +81,10 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
     }
 
 
+    /** Tests updating of a pre-existing Movie from the database. */
     @Test
-    void update() {
+    void updateTest() {
         // Fetch the original movie
-        MovieDao dao = new MovieDao(connection);
         Movie originalMovie = dao.read(3);  // Django Unchained
 
         int originalMovieId = originalMovie.getId();
@@ -93,10 +112,9 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
     }
 
 
+    /** Tests deletion of pre-existing Movies from the database. */
     @Test
-    void delete() {
-        MovieDao dao = new MovieDao(connection);
-
+    void deleteTest() {
         int movieIdToDelete1 = 1;  // Inception
         int movieIdToDelete2 = 4;  // The Deer Hunter
         dao.delete(movieIdToDelete1);

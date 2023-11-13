@@ -2,6 +2,7 @@ package com.moviedb.models;
 
 import java.util.Objects;
 
+
 /**
  * A genre object with id and genre name attributes.
  */

@@ -2,6 +2,7 @@ package com.moviedb.models;
 
 import java.util.Objects;
 
+
 /**
  * An actor object with id and actor name attributes.
  */
@@ -24,6 +25,7 @@ public class Actor {
         this.id = id;
         this.name = name;
     }
+
 
     /**
      * Constructs a new {@code Actor} object with given name (ID is handled in the database).
