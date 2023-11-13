@@ -11,7 +11,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/19"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.moviedb.controllers.LaunchController"
+            fx:controller="com.moviedb.controllers.LaunchViewController"
             prefHeight="400.0" prefWidth="600.0">
     <center>
         <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="20.0" BorderPane.alignment="CENTER">
