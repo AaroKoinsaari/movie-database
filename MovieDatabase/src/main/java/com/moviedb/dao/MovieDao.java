@@ -259,6 +259,20 @@ public class MovieDao {
     }
 
 
+    public List<String> getAllMovieTitles() throws SQLException {
+        List<String> movieTitles = new ArrayList<>();
+        String query = "SELECT title FROM movies";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            while (rs.next()) {
+                movieTitles.add(rs.getString("title"));
+            }
+        }
+        return movieTitles;
+    }
+
+
     /**
      * TODO:
      *  - search methods
