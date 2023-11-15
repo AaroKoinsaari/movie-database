@@ -73,7 +73,7 @@ public class MainViewController {
 
 
     private void openDatabaseConnection() {
-        String dbPath = "../database/" + databaseName + ".db";
+        String dbPath = "src/main/java/com/moviedb/database/" + databaseName + ".db";
 
         try {
             this.connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);

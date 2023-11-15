@@ -37,7 +37,7 @@ public class LaunchViewController {
     @FXML
     public void handleOkButton(ActionEvent event) {
         String dbName = databaseNameField.getText();
-        String dbPath = "../database/" + dbName + ".db";
+        String dbPath = "src/main/java/com/moviedb/database/" + dbName + ".db";
 
         if (databaseExists(dbPath)) {
             openMainView(dbName);
