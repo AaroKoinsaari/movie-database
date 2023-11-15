@@ -259,6 +259,12 @@ public class MovieDao {
     }
 
 
+    /**
+     * Gets all the movie titles from movies table in the database.
+     *
+     * @return List of all the movies in the database.
+     * @throws SQLException If there's an error during the database operation.
+     */
     public List<String> getAllMovieTitles() throws SQLException {
         List<String> movieTitles = new ArrayList<>();
         String query = "SELECT title FROM movies";

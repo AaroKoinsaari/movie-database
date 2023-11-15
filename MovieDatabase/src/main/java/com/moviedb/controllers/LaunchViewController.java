@@ -1,5 +1,6 @@
 package com.moviedb.controllers;
 
+import com.moviedb.database.DatabaseInitializer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,6 +11,9 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 import fi.jyu.mit.fxgui.*;
 
@@ -38,8 +42,12 @@ public class LaunchViewController {
         if (databaseExists(dbPath)) {
             openMainView(dbName);
         } else {
-            Dialogs.showQuestionDialog("Database does not exist", "Do you want to create a new database?",
+            boolean answer = Dialogs.showQuestionDialog("Database does not exist", "Do you want to create a new database?",
                     "Yes", "No");
+            if (answer) {
+                createNewDatabase(dbName);
+                openMainView(dbName);
+            }
         }
     }
 
@@ -72,6 +80,18 @@ public class LaunchViewController {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+
+    private void createNewDatabase(String dbPath) {
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:src/main/java/com/moviedb/database/" + dbPath + ".db");
+            DatabaseInitializer.initialize(connection);
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            Dialogs.showMessageDialog("Failed to create a new database.");
         }
     }
 }
