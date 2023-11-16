@@ -89,16 +89,33 @@ public class MainViewController {
     /**
      * Initializes the database connection and sets up the DAOs to allow
      * the application to interact with the database during runtime.
+     * Adds a SelectionListener to Movie list.
      *
      * @param dbName The name of the database file (without the file extension) to connect to.
      */
     public void initializeDatabase(String dbName) {
+        // Establish connections and load Movies
         this.databaseName = dbName;
         openDatabaseConnection();
         this.movieDao = new MovieDao(connection);
         this.actorDao = new ActorDao(connection);
         this.genreDao = new GenreDao(connection);
         loadMoviesFromDB();
+
+        // Add a selection listener to the moviesListChooser to fill the information of selected movie
+        moviesListChooser.addSelectionListener(event -> {
+            String selectedMovieTitle = moviesListChooser.getSelectedText();
+            if (selectedMovieTitle != null) {
+                try {
+                    Movie selectedMovie = movieDao.getMovieByTitle(selectedMovieTitle);
+                    fillMovieDetails(selectedMovie);
+                } catch (SQLException e) {
+                    System.out.println("SQLState: " + e.getSQLState());
+                    System.out.println("Error Code: " + e.getErrorCode());
+                    System.out.println("Message: " + e.getMessage());
+                }
+            }
+        });
     }
 
 
@@ -141,9 +158,6 @@ public class MainViewController {
             System.out.println("Message: " + e.getMessage());
         }
     }
-
-    
-    // TODO: Handler for selecting a Movie from the moviesListChooser
 
 
     /**

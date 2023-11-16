@@ -303,6 +303,39 @@ public class MovieDao {
 
 
     /**
+     * Retrieves a movie based on its ID.
+     *
+     * @param movieTitle The unique identifier of the movie to be fetched.
+     * @return The Movie object if found, null otherwise.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    public Movie getMovieByTitle(String movieTitle) throws SQLException {
+        String sql = "SELECT id, release_year, director FROM movies WHERE title = ?";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, movieTitle);
+            ResultSet rs = pstmt.executeQuery();
+
+            // If result is found, convert it to a Movie object
+            if (rs.next()) {
+                int id = rs.getInt("id");
+                int releaseYear = rs.getInt("release_year");
+                String director = rs.getString("director");
+
+                // Fetch the list of actors and genres
+                List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
+                List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
+
+                return new Movie(id, movieTitle, releaseYear, director, actorIds, genreIds);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**
      * TODO:
      *  - search methods
      *  - sorting methods
