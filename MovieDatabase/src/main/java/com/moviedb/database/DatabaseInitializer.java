@@ -1,6 +1,7 @@
 package com.moviedb.database;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -52,17 +53,36 @@ public class DatabaseInitializer {
 
     /**
      * Creates the 'genres' table in the database if it doesn't exist.
-     * This table stores genre information with fields for ID and name.
+     * This table stores genre information with fields for ID and name. ID is set with
+     * the AUTOINCREMENT method in the order in which they're presented, starting from 1.
+     * If the table is created for the first time or is empty, it is populated with a predefined set of genres.
      *
      * @param connection The connection to the database.
-     * @throws SQLException if there is an error creating the table.
+     * @throws SQLException if there is an error creating the table or inserting genres.
      */
     private static void createGenresTable(Connection connection) throws SQLException {
-        String sql = "CREATE TABLE IF NOT EXISTS genres (" +
+        // Create genres table if it doesn't exist yet
+        String createTableSql = "CREATE TABLE IF NOT EXISTS genres (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT NOT NULL)";
         try (Statement stmt = connection.createStatement()) {
-            stmt.execute(sql);
+            stmt.execute(createTableSql);
+        }
+
+        // Check if the table is empty
+        String checkTableSql = "SELECT COUNT(*) FROM genres";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(checkTableSql)) {
+            if (rs.next() && rs.getInt(1) == 0) {
+                // Lisää genret tauluun
+                String[] genres = {"Action", "Adventure", "Animation", "Biography", "Comedy", "Crime", "Documentary",
+                        "Drama", "Family", "Fantasy", "Film Noir", "History", "Horror", "Musical", "Mystery", "Romance",
+                        "Sci-Fi", "Sport", "Thriller", "War", "Western"};
+                for (String genre : genres) {
+                    String insertSQL = "INSERT INTO genres (name) VALUES ('" + genre + "')";
+                    stmt.executeUpdate(insertSQL);
+                }
+            }
         }
     }
 
