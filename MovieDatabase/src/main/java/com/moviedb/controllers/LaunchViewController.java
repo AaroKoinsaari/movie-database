@@ -24,40 +24,88 @@ public class LaunchViewController {
     private Button cancelButton;
 
     @FXML
-    private TextField databaseNameField;
+    protected TextField databaseNameField;
 
     @FXML
     private Button okButton;
 
+
+    /**
+     * Handles the Cancel button click in the launch window.
+     * Closes the program.
+     * @param event The action event triggered by the button click.
+     */
     @FXML
     void handleCancelButton(ActionEvent event) {
-        Dialogs.showMessageDialog("Not working yet");
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
     }
 
+
+    /**
+     * Handles the OK button click in the launch window.
+     * Checks if the specified database exists, and if it does, opens the main view for that,
+     * otherwise prompts user to create a new database by the given name and opens
+     * the main view for that if the user clicks Yes.
+     *
+     * @param event The action event triggered by the button click.
+     */
     @FXML
     public void handleOkButton(ActionEvent event) {
-        String dbName = databaseNameField.getText();
-        String dbPath = "src/main/java/com/moviedb/database/" + dbName + ".db";
+        // Validate the database name
+        String dbName = databaseNameField.getText().trim();
+        if (dbName.isEmpty()) {
+            Dialogs.showMessageDialog("Database name can not be empty");
+            databaseNameField.clear();
+            return;
+        }
 
+        // Format the database name and save the new path
+        String formattedDBName = formatDatabaseName(dbName);
+        String dbPath = "src/main/java/com/moviedb/database/" + formattedDBName + ".db";
+
+        // Check if the database exists, and if not prompt the user to create a new one with that name
         if (databaseExists(dbPath)) {
             openMainView(dbName);
         } else {
             boolean answer = Dialogs.showQuestionDialog("Database does not exist", "Do you want to create a new database?",
                     "Yes", "No");
             if (answer) {
-                createNewDatabase(dbName);
+                createNewDatabase(formattedDBName);
                 openMainView(dbName);
             }
         }
     }
 
 
+    /**
+     * Formats the database name by removing all spaces and converting to lower case.
+     *
+     * @param dbName The original database name.
+     * @return The formatted database name.
+     */
+    private String formatDatabaseName(String dbName) {
+        return dbName.replaceAll("\\s+", "").toLowerCase();
+    }
+
+
+    /**
+     * Checks if a given database exists.
+     *
+     * @param dbPath Path of the database to check.
+     * @return true if the database already exists in the given path, otherwise false.
+     */
     private boolean databaseExists(String dbPath) {
         File dbFile = new File(dbPath);
         return dbFile.exists();
     }
 
 
+    /**
+     * Opens the main window of the program after getting the database name from the user.
+     *
+     * @param dbName Name of the database.
+     */
     private void openMainView(String dbName) {
         try {
             // Load the FXML file
@@ -65,7 +113,7 @@ public class LaunchViewController {
             Parent root = loader.load();
 
             MainViewController controller = loader.getController();
-            controller.initializeDatabase(dbName);
+            controller.initializeDatabase(formatDatabaseName(dbName));
 
             // Create new Scene and set it as current window
             Scene scene = new Scene(root);
@@ -84,9 +132,14 @@ public class LaunchViewController {
     }
 
 
-    private void createNewDatabase(String dbPath) {
+    /**
+     * Creates a new database based on a given name.
+     *
+     * @param dbName Name of the new database.
+     */
+    private void createNewDatabase(String dbName) {
         try {
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:src/main/java/com/moviedb/database/" + dbPath + ".db");
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:src/main/java/com/moviedb/database/" + dbName + ".db");
             DatabaseInitializer.initialize(connection);
             connection.close();
         } catch (SQLException e) {
