@@ -88,7 +88,7 @@
             <items>
                 <BorderPane maxWidth="150.0" minWidth="100.0" prefWidth="138.0">
                     <center>
-                        <ListChooser fx:id="moviesListChooser" maxHeight="1.7976931348623157E308" rivit="1917&#10;A Beautiful Mind&#10;Apocalypse Now&#10;Blade Runner&#10;Django Unchained&#10;Forrest Gump" BorderPane.alignment="CENTER" />
+                        <ListChooser fx:id="moviesListChooser" maxHeight="1.7976931348623157E308" rivit="" BorderPane.alignment="CENTER" />
                     </center>
                     <top>
                         <VBox BorderPane.alignment="CENTER">
@@ -117,29 +117,14 @@
                                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <children>
                                         <Label text="title" />
                                         <Label text="release year" GridPane.rowIndex="1" />
                                         <Label text="director" GridPane.rowIndex="2" />
-                                        <Label text="rating" GridPane.rowIndex="3" />
-                                        <Label text="cast" GridPane.rowIndex="4" />
-                                        <Label text="budget" GridPane.rowIndex="5" />
-                                        <Label text="writer(s)" GridPane.rowIndex="6" />
-                                        <Label text="oscars" GridPane.rowIndex="7" />
-                                        <TextField text="1917" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
-                                        <TextField text="2019" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
-                                        <TextField text="Sam Mendes" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" />
-                                        <TextField text="8,2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" />
-                                        <TextField text="Dean-Charles Chapman, George MacKay" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" />
-                                        <TextField text="95000000" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="5" />
-                                        <TextField text="Sam Mendes, Krysty Wilson-Cairns" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="6" />
-                                        <TextField text="3" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="7" />
+                                        <TextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
+                                        <TextField fx:id="releaseYearTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
+                                        <TextField fx:id="directorTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" />
                                     </children>
                                     <opaqueInsets>
                                         <Insets left="10.0" top="10.0" />
@@ -181,11 +166,11 @@
             <right>
                 <HBox spacing="10.0" BorderPane.alignment="CENTER">
                     <children>
-                        <Button fx:id="addButton" mnemonicParsing="true" onAction="#handleAdd" prefWidth="70.0" text="Add">
+                        <Button fx:id="addActorOrGenreButton" mnemonicParsing="true" onAction="#handleAdd" prefWidth="70.0" text="Add">
                             <tooltip>
                                 <Tooltip text="Adds new genre for movie" />
                             </tooltip></Button>
-                        <Button fx:id="deleteButton" mnemonicParsing="false" onAction="#handleDelete" prefWidth="70.0" text="Delete">
+                        <Button fx:id="deleteActorOrGenreButton" mnemonicParsing="false" onAction="#handleDelete" prefWidth="70.0" text="Delete">
                             <tooltip>
                                 <Tooltip text="Deletes the current genre" />
                             </tooltip></Button>
@@ -203,13 +188,13 @@
             <VBox prefHeight="200.0" prefWidth="100.0">
                <children>
                   <Label alignment="CENTER" contentDisplay="RIGHT" maxWidth="1.7976931348623157E308" text="Actors" VBox.vgrow="ALWAYS" />
-                  <ListChooser />
+                  <ListChooser fx:id="actorsListChooser" />
                </children>
             </VBox>
             <VBox prefHeight="200.0" prefWidth="100.0">
                <children>
                   <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Genres" />
-                  <ListChooser />
+                  <ListChooser fx:id="genresListChooser" />
                </children>
             </VBox>
          </items>

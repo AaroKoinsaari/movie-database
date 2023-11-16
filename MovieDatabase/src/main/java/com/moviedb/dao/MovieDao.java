@@ -137,6 +137,29 @@ public class MovieDao {
     }
 
 
+    public List<Movie> readAll() throws SQLException {
+        List<Movie> movies = new ArrayList<>();
+        String sql = "SELECT * FROM movies";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String title = rs.getString("title");
+                int releaseYear = rs.getInt("release_year");
+                String director = rs.getString("director");
+                List<Integer> actors = fetchAssociatedIds(id, "movie_actors", "actor_id");
+                List<Integer> genres = fetchAssociatedIds(id, "movie_genres", "genre_id");
+
+                Movie movie = new Movie(id, title, releaseYear, director, actors, genres);
+                movies.add(movie);
+            }
+        }
+        return movies;
+    }
+
+
     /**
      * Fetches a list of either actor or genre IDs based on a specified movie ID and table name.
      *
