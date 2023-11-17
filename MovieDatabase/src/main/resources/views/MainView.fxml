@@ -148,15 +148,11 @@
             <left>
                 <HBox spacing="10.0" BorderPane.alignment="CENTER">
                     <children>
-                        <Button fx:id="addMovieButton" onAction="#handleAddMovie" prefWidth="80.0" text="_Add movie">
+                        <Button fx:id="saveButton" onAction="#handleSave" prefWidth="80.0" text="Save">
                             <tooltip>
                                 <Tooltip text="Adds new movie" />
                             </tooltip>
                         </Button>
-                        <Button fx:id="saveButton" mnemonicParsing="false" onAction="#handleSave" prefWidth="70.0" text="Save">
-                            <tooltip>
-                                <Tooltip text="Saves the information of the movie" />
-                            </tooltip></Button>
                     </children>
                     <padding>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
@@ -166,11 +162,11 @@
             <right>
                 <HBox spacing="10.0" BorderPane.alignment="CENTER">
                     <children>
-                        <Button fx:id="addActorOrGenreButton" mnemonicParsing="true" onAction="#handleAdd" prefWidth="70.0" text="Add">
+                        <Button fx:id="addButton" mnemonicParsing="true" onAction="#handleAdd" prefWidth="70.0" text="Add">
                             <tooltip>
                                 <Tooltip text="Adds new genre for movie" />
                             </tooltip></Button>
-                        <Button fx:id="deleteActorOrGenreButton" mnemonicParsing="false" onAction="#handleDelete" prefWidth="70.0" text="Delete">
+                        <Button fx:id="deleteButton" mnemonicParsing="false" onAction="#handleDelete" prefWidth="70.0" text="Delete">
                             <tooltip>
                                 <Tooltip text="Deletes the current genre" />
                             </tooltip></Button>

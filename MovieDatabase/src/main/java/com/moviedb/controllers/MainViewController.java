@@ -8,8 +8,7 @@ import javafx.scene.control.TextField;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import fi.jyu.mit.fxgui.ComboBoxChooser;
 import fi.jyu.mit.fxgui.ListChooser;
@@ -35,17 +34,15 @@ public class MainViewController {
     @FXML
     private ComboBoxChooser<?> searchComboBox;
 
-    @FXML
-    private Button addMovieButton;
 
     @FXML
     private Button saveButton;
 
     @FXML
-    public Button addActorOrGenreButton;
+    public Button addButton;
 
     @FXML
-    public Button deleteActorOrGenreButton;
+    public Button deleteButton;
 
     @FXML
     private ListChooser<String> moviesListChooser;
@@ -66,22 +63,17 @@ public class MainViewController {
     public TextField directorTextField;
 
     @FXML
+    void handleSave(ActionEvent event) {
+
+    }
+
+    @FXML
     void handleAdd(ActionEvent event) {
 
     }
 
     @FXML
-    void handleAddMovie(ActionEvent event) {
-
-    }
-
-    @FXML
     void handleDelete(ActionEvent event) {
-
-    }
-
-    @FXML
-    void handleSave(ActionEvent event) {
 
     }
 
@@ -100,11 +92,15 @@ public class MainViewController {
         this.movieDao = new MovieDao(connection);
         this.actorDao = new ActorDao(connection);
         this.genreDao = new GenreDao(connection);
+    }
+
+
+    public void initializeUI() {
         loadMoviesFromDB();
 
         // Add a selection listener to the moviesListChooser to fill the information of selected movie
         moviesListChooser.addSelectionListener(event -> {
-            String selectedMovieTitle = moviesListChooser.getSelectedText();
+            String selectedMovieTitle = moviesListChooser.getSelectedObject();
             if (selectedMovieTitle != null) {
                 try {
                     Movie selectedMovie = movieDao.getMovieByTitle(selectedMovieTitle);
@@ -117,7 +113,6 @@ public class MainViewController {
             }
         });
     }
-
 
 
     /**
