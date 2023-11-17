@@ -113,8 +113,8 @@ public class LaunchViewController {
             Parent root = loader.load();
 
             MainViewController controller = loader.getController();
-            controller.initializeDatabase(formatDatabaseName(dbName));
-            controller.initializeUI();
+            controller.setDatabaseName(dbName);
+            controller.initializeAndSetupDatabase();
 
             // Create new Scene and set it as current window
             Scene scene = new Scene(root);

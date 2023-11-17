@@ -13,11 +13,10 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.moviedb.controllers.MovieDialogController">
+<BorderPane xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.moviedb.controllers.MovieDialogViewController">
     <bottom>
         <VBox BorderPane.alignment="CENTER">
             <children>
-                <Label fx:id="labelError" maxWidth="1000.0" />
                 <HBox />
                 <ButtonBar prefHeight="40.0" prefWidth="200.0">
                     <buttons>
@@ -43,29 +42,14 @@
                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                     <children>
                         <Label text="title" />
                         <Label text="release year" GridPane.rowIndex="1" />
                         <Label text="director" GridPane.rowIndex="2" />
-                        <Label text="cast" GridPane.rowIndex="3" />
-                        <Label text="budget" GridPane.rowIndex="4" />
-                        <Label text="writer(s)" GridPane.rowIndex="5" />
-                        <Label text="rating" GridPane.rowIndex="6" />
-                        <Label text="duration" GridPane.rowIndex="7" />
-                        <TextField fx:id="editTitle" text="1917" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
-                        <TextField fx:id="editRelYear" text="2019" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
-                        <TextField fx:id="editDirector" text="Sam Mendes" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" />
-                        <TextField fx:id="editCast" text="Dean-Charles Chapman " GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" />
-                        <TextField fx:id="editBudget" text="95000000" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" />
-                        <TextField fx:id="editWriters" text="Sam Mendes" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="5" />
-                        <TextField fx:id="editRating" text="8,2" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="6" />
-                        <TextField fx:id="editDuration" text="119" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="7" />
+                        <TextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
+                        <TextField fx:id="releaseYearTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
+                        <TextField fx:id="directorTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" />
                     </children>
                     <opaqueInsets>
                         <Insets left="10.0" top="10.0" />

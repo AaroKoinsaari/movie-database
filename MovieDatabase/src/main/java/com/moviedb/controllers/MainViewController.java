@@ -2,9 +2,15 @@ package com.moviedb.controllers;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 
+import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -19,14 +25,24 @@ import com.moviedb.dao.ActorDao;
 import com.moviedb.models.Actor;
 import com.moviedb.models.Genre;
 import com.moviedb.models.Movie;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
-public class MainViewController {
+public class MainViewController implements Initializable {
 
     private String databaseName;
+
     private Connection connection;
+
     private MovieDao movieDao;
+
     private ActorDao actorDao;
+
     private GenreDao genreDao;
+
+    private boolean isMovieListFocused;
+
+    private boolean isActorListFocused;
 
     @FXML
     private TextField searchTextField;
@@ -62,6 +78,10 @@ public class MainViewController {
     @FXML
     public TextField directorTextField;
 
+    public void setDatabaseName(String dbName) {
+        this.databaseName = dbName;
+    }
+
     @FXML
     void handleSave(ActionEvent event) {
 
@@ -69,7 +89,36 @@ public class MainViewController {
 
     @FXML
     void handleAdd(ActionEvent event) {
+        System.out.println("Add button clicked. Movie focused: " + isMovieListFocused +
+                ", Actor focused: " + isActorListFocused);
 
+        if(isMovieListFocused) {
+            openAddMovieDialog();
+        } else if (isActorListFocused) {
+            //openAddActorDialog();
+        }
+    }
+
+    private void openAddMovieDialog() {
+        try {
+            // Load the FXML file
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/MovieDialogView.fxml"));
+            Parent root = loader.load();
+
+            // Create new scene and stage
+            Scene scene = new Scene(root);
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("New Movie Details");
+            dialogStage.setScene(scene);
+
+            // Set the stage as modal
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.initOwner(moviesListChooser.getScene().getWindow());
+            dialogStage.showAndWait();  // Wait until the user closes the window
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Message: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -78,28 +127,16 @@ public class MainViewController {
     }
 
 
-    /**
-     * Initializes the database connection and sets up the DAOs to allow
-     * the application to interact with the database during runtime.
-     * Adds a SelectionListener to Movie list.
-     *
-     * @param dbName The name of the database file (without the file extension) to connect to.
-     */
-    public void initializeDatabase(String dbName) {
-        // Establish connections and load Movies
-        this.databaseName = dbName;
-        openDatabaseConnection();
-        this.movieDao = new MovieDao(connection);
-        this.actorDao = new ActorDao(connection);
-        this.genreDao = new GenreDao(connection);
-    }
-
-
-    public void initializeUI() {
-        loadMoviesFromDB();
-
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
         // Add a selection listener to the moviesListChooser to fill the information of selected movie
-        moviesListChooser.addSelectionListener(event -> {
+        moviesListChooser.setOnMouseClicked(event -> {
+            System.out.println("Movies lista aktivoitu");
+
+            // Update the focus variables
+            isMovieListFocused = true;
+            isActorListFocused = false;
+
             String selectedMovieTitle = moviesListChooser.getSelectedObject();
             if (selectedMovieTitle != null) {
                 try {
@@ -112,6 +149,40 @@ public class MainViewController {
                 }
             }
         });
+
+        actorsListChooser.setOnMouseClicked(event -> {
+            System.out.println("Actors lista aktivoitu");
+
+            // Update the focus variables
+            isActorListFocused = true;
+            isMovieListFocused = false;
+
+            // TODO
+        });
+    }
+
+
+    /**
+     * Initializes the database connection and sets up the DAOs to allow
+     * the application to interact with the database during runtime.
+     */
+    public void initializeAndSetupDatabase() {
+        if (databaseName == null || databaseName.isEmpty()) {
+            return;
+        }
+
+        // Establish connections and load Movies
+        openDatabaseConnection();
+        this.movieDao = new MovieDao(connection);
+        this.actorDao = new ActorDao(connection);
+        this.genreDao = new GenreDao(connection);
+
+        loadMoviesFromDB();
+    }
+
+
+    public void initializeUI() {
+
     }
 
 
