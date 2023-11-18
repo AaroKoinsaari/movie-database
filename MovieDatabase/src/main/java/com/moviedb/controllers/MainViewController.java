@@ -66,10 +66,10 @@ public class MainViewController implements Initializable {
     private ListChooser<Movie> moviesListChooser;
 
     @FXML
-    public ListChooser<String> actorsListChooser;
+    public ListChooser<Actor> actorsListChooser;
 
     @FXML
-    public ListChooser<String> genresListChooser;
+    public ListChooser<Genre> genresListChooser;
 
     @FXML
     public TextField titleTextField;
@@ -205,11 +205,15 @@ public class MainViewController implements Initializable {
         this.actorDao = new ActorDao(connection);
         this.genreDao = new GenreDao(connection);
 
-//        try {
-//            movieDao.create(new Movie("test", 2023, "testi", Arrays.asList(1, 2), Arrays.asList(2, 4)));
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
+        actorDao.create(new Actor("test actor 1"));
+        actorDao.create(new Actor("test actor 2"));
+
+        try {
+            movieDao.create(new Movie("test", 2023, "testi",
+                    Arrays.asList(1, 2), Arrays.asList(2, 4)));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
 
         loadMoviesFromDB();
@@ -276,13 +280,13 @@ public class MainViewController implements Initializable {
         // Add all actors to its ListChooser component
         for (Integer actorId : selectedMovie.getActorIds()) {
             Optional<Actor> actorOptional = actorDao.getActorById(actorId);
-            actorOptional.ifPresent(actor -> actorsListChooser.add(actor.getName()));  // Add actor to list if it exists
+            actorOptional.ifPresent(actor -> actorsListChooser.add(actor));  // Add actor to list if it exists
         }
 
         // Add all genres to its ListChooser component
         for (Integer genreId : selectedMovie.getGenreIds()) {
             Optional<Genre> genreOptional = genreDao.getGenreById(genreId);
-            genreOptional.ifPresent(genre -> genresListChooser.add(genre.getName()));  // Add genre to list if it exists
+            genreOptional.ifPresent(genre -> genresListChooser.add(genre));  // Add genre to list if it exists
         }
     }
 }

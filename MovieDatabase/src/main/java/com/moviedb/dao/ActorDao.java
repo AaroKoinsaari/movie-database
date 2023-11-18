@@ -207,7 +207,7 @@ public class ActorDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public Optional<Actor> getActorById(int id) {
-        String sql = "SELECT id FROM actors WHERE id = ?";
+        String sql = "SELECT id, name FROM actors WHERE id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, id);
@@ -225,7 +225,7 @@ public class ActorDao {
 
 
     /**
-     * Retrieves a actor by its name.
+     * Retrieves an actor by its name.
      *
      * @param name The name of the actor to retrieve.
      * @return The actor if found, otherwise an empty optional.
