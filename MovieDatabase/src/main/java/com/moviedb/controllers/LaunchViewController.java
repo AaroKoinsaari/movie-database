@@ -66,13 +66,13 @@ public class LaunchViewController {
 
         // Check if the database exists, and if not prompt the user to create a new one with that name
         if (databaseExists(dbPath)) {
-            openMainView(dbName);
+            openMainView(formattedDBName);
         } else {
             boolean answer = Dialogs.showQuestionDialog("Database does not exist", "Do you want to create a new database?",
                     "Yes", "No");
             if (answer) {
                 createNewDatabase(formattedDBName);
-                openMainView(dbName);
+                openMainView(formattedDBName);
             }
         }
     }
