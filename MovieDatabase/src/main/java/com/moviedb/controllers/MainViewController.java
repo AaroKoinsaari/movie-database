@@ -106,6 +106,9 @@ public class MainViewController implements Initializable {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/ActorDialogView.fxml"));
             Parent root = loader.load();
 
+            ActorDialogViewController controller = loader.getController();
+            controller.setConnection(this.connection);  // Pass the connection
+
             // Create new scene and stage
             Scene scene = new Scene(root);
             Stage dialogStage = new Stage();
