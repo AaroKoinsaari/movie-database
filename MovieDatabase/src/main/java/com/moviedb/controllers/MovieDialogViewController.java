@@ -3,28 +3,45 @@ package com.moviedb.controllers;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 
 public class MovieDialogViewController {
 
     @FXML
-    private TextField titleTextField;
+    private ListView<String> actorList;
 
     @FXML
-    private TextField releaseYearTextField;
+    private Button addActorButton;
 
     @FXML
-    private TextField directorTextField;
-
-    @FXML
-    private Button okButton;
+    private Button addGenreButton;
 
     @FXML
     private Button cancelButton;
 
     @FXML
-    void handleOK(ActionEvent event) {
+    private TextField directorTextField;
+
+    @FXML
+    private ListView<String> genresList;
+
+    @FXML
+    private Button okButton;
+
+    @FXML
+    private TextField releaseYearTextField;
+
+    @FXML
+    private TextField titleTextField;
+
+    @FXML
+    void handleAddActor(ActionEvent event) {
+
+    }
+
+    @FXML
+    void handleAddGenre(ActionEvent event) {
 
     }
 
@@ -32,4 +49,10 @@ public class MovieDialogViewController {
     void handleCancel(ActionEvent event) {
 
     }
+
+    @FXML
+    void handleOK(ActionEvent event) {
+
+    }
+
 }

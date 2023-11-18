@@ -64,10 +64,10 @@ public class MainViewController implements Initializable {
     private ListChooser<String> moviesListChooser;
 
     @FXML
-    public ListChooser actorsListChooser;
+    public ListChooser<String> actorsListChooser;
 
     @FXML
-    public ListChooser genresListChooser;
+    public ListChooser<String> genresListChooser;
 
     @FXML
     public TextField titleTextField;
@@ -95,9 +95,33 @@ public class MainViewController implements Initializable {
         if(isMovieListFocused) {
             openAddMovieDialog();
         } else if (isActorListFocused) {
-            //openAddActorDialog();
+            openAddActorDialog();
         }
     }
+
+
+    private void openAddActorDialog() {
+        try {
+            // Load the FXML file
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/ActorDialogView.fxml"));
+            Parent root = loader.load();
+
+            // Create new scene and stage
+            Scene scene = new Scene(root);
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("New Actor Details");
+            dialogStage.setScene(scene);
+
+            // Set the stage as modal
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.initOwner(actorsListChooser.getScene().getWindow());
+            dialogStage.showAndWait();  // Wait until the user closes the window
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
 
     private void openAddMovieDialog() {
         try {
@@ -156,8 +180,6 @@ public class MainViewController implements Initializable {
             // Update the focus variables
             isActorListFocused = true;
             isMovieListFocused = false;
-
-            // TODO
         });
     }
 
@@ -246,13 +268,13 @@ public class MainViewController implements Initializable {
         // Add all actors to its ListChooser component
         for (Integer actorId : selectedMovie.getActorIds()) {
             Optional<Actor> actorOptional = actorDao.getActorById(actorId);
-            actorOptional.ifPresent(actor -> actorsListChooser.add(actor));  // Add actor to list if it exists
+            actorOptional.ifPresent(actor -> actorsListChooser.add(actor.getName()));  // Add actor to list if it exists
         }
 
         // Add all genres to its ListChooser component
         for (Integer genreId : selectedMovie.getGenreIds()) {
             Optional<Genre> genreOptional = genreDao.getGenreById(genreId);
-            genreOptional.ifPresent(genre -> genresListChooser.add(genre));  // Add genre to list if it exists
+            genreOptional.ifPresent(genre -> genresListChooser.add(genre.getName()));  // Add genre to list if it exists
         }
     }
 }
