@@ -142,4 +142,10 @@ public class Movie {
     public List<Integer> getActorIds() {
         return this.actorIds;
     }
+
+
+    @Override
+    public String toString() {
+        return this.getTitle();
+    }
 }

@@ -34,6 +34,8 @@ public class MainViewController implements Initializable {
 
     private Connection connection;
 
+    private Movie currentMovie;
+
     private MovieDao movieDao;
 
     private ActorDao actorDao;
@@ -61,7 +63,7 @@ public class MainViewController implements Initializable {
     public Button deleteButton;
 
     @FXML
-    private ListChooser<String> moviesListChooser;
+    private ListChooser<Movie> moviesListChooser;
 
     @FXML
     public ListChooser<String> actorsListChooser;
@@ -100,6 +102,12 @@ public class MainViewController implements Initializable {
     }
 
 
+    @FXML
+    void handleDelete(ActionEvent event) {
+
+    }
+
+
     private void openAddActorDialog() {
         try {
             // Load the FXML file
@@ -108,6 +116,7 @@ public class MainViewController implements Initializable {
 
             ActorDialogViewController controller = loader.getController();
             controller.setConnection(this.connection);  // Pass the connection
+            controller.setCurrentMovie(this.currentMovie);
 
             // Create new scene and stage
             Scene scene = new Scene(root);
@@ -148,11 +157,6 @@ public class MainViewController implements Initializable {
         }
     }
 
-    @FXML
-    void handleDelete(ActionEvent event) {
-
-    }
-
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -164,14 +168,13 @@ public class MainViewController implements Initializable {
             isMovieListFocused = true;
             isActorListFocused = false;
 
-            String selectedMovieTitle = moviesListChooser.getSelectedObject();
-            if (selectedMovieTitle != null) {
+            Movie selectedMovie = moviesListChooser.getSelectedObject();
+            if (selectedMovie != null) {
                 try {
-                    Movie selectedMovie = movieDao.getMovieByTitle(selectedMovieTitle);
                     fillMovieDetails(selectedMovie);
-                } catch (SQLException e) {
-                    System.out.println("SQLState: " + e.getSQLState());
-                    System.out.println("Error Code: " + e.getErrorCode());
+                    currentMovie = selectedMovie;
+                } catch (Exception e) {
+                    e.printStackTrace();
                     System.out.println("Message: " + e.getMessage());
                 }
             }
@@ -202,12 +205,14 @@ public class MainViewController implements Initializable {
         this.actorDao = new ActorDao(connection);
         this.genreDao = new GenreDao(connection);
 
+//        try {
+//            movieDao.create(new Movie("test", 2023, "testi", Arrays.asList(1, 2), Arrays.asList(2, 4)));
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+
+
         loadMoviesFromDB();
-    }
-
-
-    public void initializeUI() {
-
     }
 
 
@@ -241,7 +246,7 @@ public class MainViewController implements Initializable {
             }
             moviesListChooser.clear();
             for (Movie movie : movies) {
-                moviesListChooser.add(movie.getTitle());
+                moviesListChooser.add(movie);
             }
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
