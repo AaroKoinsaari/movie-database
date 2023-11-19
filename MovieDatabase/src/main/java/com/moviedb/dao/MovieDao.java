@@ -54,11 +54,13 @@ public class MovieDao {
      * @return The generated ID of the added movie, or -1 if an error occurs.
      * @throws SQLException If there's an error during the database operation.
      */
-    public int create(Movie movie) {
+    public int create(Movie movie) throws SQLException {
         // Define the SQL queries
         String sqlInsertMovie = "INSERT INTO movies(title, release_year, director) VALUES(?, ?, ?)";
         String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
         String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
+
+        String sqlLastInsertId = "SELECT last_insert_rowid()";
 
         int generatedMovieId = -1;  // -1 for default error state
 
@@ -74,9 +76,11 @@ public class MovieDao {
                 pstmtMovie.executeUpdate();
 
                 // Retrieve the id generated for the added movie
-                ResultSet rs = pstmtMovie.getGeneratedKeys();
-                if (rs.next()) {
-                    generatedMovieId = rs.getInt(1);
+                try (Statement stmt = connection.createStatement();
+                     ResultSet rs = stmt.executeQuery(sqlLastInsertId)) {
+                    if (rs.next()) {
+                        generatedMovieId = rs.getInt(1);
+                    }
                 }
 
                 // Ensure to have a valid movie ID before proceeding
