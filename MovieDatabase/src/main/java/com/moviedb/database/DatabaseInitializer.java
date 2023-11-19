@@ -36,17 +36,23 @@ public class DatabaseInitializer {
 
     /**
      * Creates the 'actors' table in the database if it doesn't exist.
-     * This table stores actor information with fields for ID and name.
+     * This table stores actor information with fields for ID and name,
+     * also creating index on 'name' column for better search efficiency
      *
      * @param connection The connection to the database.
      * @throws SQLException if there is an error creating the table.
      */
     private static void createActorsTable(Connection connection) throws SQLException {
-        String sql = "CREATE TABLE IF NOT EXISTS actors (" +
+        String createTablesql = "CREATE TABLE IF NOT EXISTS actors (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT NOT NULL)";
+
+        // Create indexing for names column
+        String createIndexSql = "CREATE INDEX IF NOT EXISTS idx_actor_name ON actors (name)";
+
         try (Statement stmt = connection.createStatement()) {
-            stmt.execute(sql);
+            stmt.execute(createTablesql);
+            stmt.execute(createIndexSql);
         }
     }
 

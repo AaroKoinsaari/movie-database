@@ -247,4 +247,20 @@ public class ActorDao {
         }
         return Optional.empty();
     }
+
+
+    public List<String> findActorsByStartingName(String nameStart) throws SQLException {
+        List<String> foundActors = new ArrayList<>();
+        String sql = "SELECT name FROM actors WHERE name LIKE ? ORDER BY name LIMIT 10";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, nameStart + "%");
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                foundActors.add(rs.getString("name"));
+            }
+        }
+        return foundActors;
+    }
 }
