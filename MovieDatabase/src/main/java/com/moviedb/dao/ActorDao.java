@@ -54,26 +54,27 @@ public class ActorDao {
      * @return The generated ID of the added actor, or -1 if an error occurs.
      */
     public int create(Actor actor) {
-        String sql = "INSERT INTO actors(name) VALUES(?)";
-        int actorId = -1;  // Default error state
+        String sqlInsert = "INSERT INTO actors(name) VALUES(?)";
+        String sqlLastId = "SELECT last_insert_rowid()";
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql,
-                Statement.RETURN_GENERATED_KEYS)) {
-            pstmt.setString(1, actor.getName());
-            int rowsAffected = pstmt.executeUpdate();
+        try (PreparedStatement pstmtInsert = connection.prepareStatement(sqlInsert);
+             Statement stmtLastId = connection.createStatement()) {
+            pstmtInsert.setString(1, actor.getName());
+            pstmtInsert.executeUpdate();
 
-            if (rowsAffected > 0) {
-                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        actorId = generatedKeys.getInt(1);
-                    }
+            try (ResultSet rs = stmtLastId.executeQuery(sqlLastId)) {
+                if (rs.next()) {
+                    return rs.getInt(1);  // Return the latest added row
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
         }
-        return actorId;
+        return -1;  // In an error case, return -1
     }
+
 
 
     /**
@@ -232,7 +233,7 @@ public class ActorDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public Optional<Actor> getActorByName(String name) {
-        String sql = "SELECT name FROM actors WHERE name = ?";
+        String sql = "SELECT name, id FROM actors WHERE name = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, name);
@@ -243,7 +244,9 @@ public class ActorDao {
                 return Optional.of(new Actor(rs.getInt("id"), rs.getString("name")));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
         }
         return Optional.empty();
     }
@@ -258,7 +261,8 @@ public class ActorDao {
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                foundActors.add(rs.getString("name"));
+                String actorName = rs.getString("name");
+                foundActors.add(actorName);
             }
         }
         return foundActors;
