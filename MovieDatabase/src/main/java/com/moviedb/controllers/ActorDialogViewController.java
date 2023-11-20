@@ -45,6 +45,9 @@ public class ActorDialogViewController implements Initializable {
     @FXML
     private ListView<Actor> listView;
 
+    @FXML
+    private Label alertLabel;
+
 
     public void setConnection(Connection connection) {
         this.connection = connection;
@@ -82,22 +85,48 @@ public class ActorDialogViewController implements Initializable {
 
     @FXML
     public void handleAdd(ActionEvent actionEvent) {
+        alertLabel.setVisible(false);  // Reset the alert label
+
         String actorName = nameTextField.getText().trim();
+        if (actorName.isEmpty()) {
+            Dialogs.showMessageDialog("Actor name can not be empty");
+            return;
+        }
+
         Optional<Actor> actorOpt = actorDao.getActorByName(actorName);
 
-        if (actorOpt.isPresent() && !isActorOnTheList(actorOpt.get())) {
-            listView.getItems().add(actorOpt.get());  // Add actor straight to list if exists
-        } else if (actorOpt.isEmpty()) {
-            try {  // Create new and add it to list with the ID database gives after creating new Actor
-                Actor newActor = new Actor(actorName);
-                int newActorId = actorDao.create(newActor);
-                Optional<Actor> createdActorOpt = actorDao.read(newActorId);
-                createdActorOpt.ifPresent(createdActor -> {
-                    listView.getItems().add(createdActor);
-                });
-            } catch (Exception e) {
-                System.out.println("Message: " + e.getMessage());
-            }
+        // Check if the actor already exists and if it's already on the list
+        if (actorOpt.isPresent()) {
+            addActorToListIfNotExists(actorOpt.get());
+        } else {  // If the actor does not exist yet, create it and add it to the list
+            createAndAddNewActor(actorName);
+        }
+    }
+
+
+    private void addActorToListIfNotExists(Actor actor) {
+        if (!isActorOnTheList(actor)) {
+            listView.getItems().add(actor);
+            nameTextField.clear();  // Empty the text field after successful add
+        } else {
+            alertLabel.setVisible(true);
+            // Dialogs.showMessageDialog("Actor '" + actor.getName() + "' is already in the list.");
+            nameTextField.clear();
+        }
+    }
+
+
+    private void createAndAddNewActor(String actorName) {
+        try {
+            Actor newActor = new Actor(actorName);
+            int newActorId = actorDao.create(newActor);
+            Optional<Actor> createdActorOpt = actorDao.read(newActorId);
+            createdActorOpt.ifPresent(listView.getItems()::add);
+
+            nameTextField.clear();  // Empty the text field after successful add
+        } catch (Exception e) {
+            Dialogs.showMessageDialog("Error creating actor: " + e.getMessage());
+            nameTextField.clear();
         }
     }
 

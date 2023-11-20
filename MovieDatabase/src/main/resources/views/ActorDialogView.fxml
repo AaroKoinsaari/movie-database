@@ -43,12 +43,14 @@
                     <rowConstraints>
                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                     <children>
                         <Label text="name" />
                         <TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
                   <Button fx:id="addButton" mnemonicParsing="false" onAction="#handleAdd" text="Add" GridPane.columnIndex="2" />
                   <ListView fx:id="listView" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Label fx:id="alertLabel" alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" text="Actor is already in the list!" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                     </children>
                     <opaqueInsets>
                         <Insets left="10.0" top="10.0" />
