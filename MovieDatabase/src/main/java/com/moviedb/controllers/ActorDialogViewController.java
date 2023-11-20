@@ -1,6 +1,7 @@
 package com.moviedb.controllers;
 
 import com.moviedb.dao.ActorDao;
+import com.moviedb.dao.MovieDao;
 import com.moviedb.models.Actor;
 import com.moviedb.models.Movie;
 import fi.jyu.mit.fxgui.Dialogs;
@@ -24,11 +25,11 @@ import org.controlsfx.control.textfield.AutoCompletionBinding;
 
 public class ActorDialogViewController implements Initializable {
 
-    private Connection connection;
-
     private Movie currentMovie;
 
     private ActorDao actorDao;
+
+    private MovieDao movieDao;
 
     @FXML
     private TextField nameTextField;
@@ -50,8 +51,8 @@ public class ActorDialogViewController implements Initializable {
 
 
     public void setConnection(Connection connection) {
-        this.connection = connection;
         this.actorDao = new ActorDao(connection);
+        this.movieDao = new MovieDao(connection);
     }
 
     public void setCurrentMovie(Movie currentMovie) {
@@ -138,9 +139,26 @@ public class ActorDialogViewController implements Initializable {
 
 
     @FXML
-    void handleOK(ActionEvent event) {
+    void handleOK(ActionEvent event) {  // TODO: Update the movie object too
+        try {
+            List<Integer> existingActorIds = movieDao.fetchAssociatedIds(currentMovie.getId(),
+                    "movie_actors", "actor_id");
 
+            for (Actor actor : listView.getItems()) {
+                if (!existingActorIds.contains(actor.getId())) {
+                    movieDao.addActorToMovie(actor.getId(), currentMovie.getId());
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
+
+        Stage stage = (Stage) okButton.getScene().getWindow();
+        stage.close();
     }
+
 
     @FXML
     void handleCancel(ActionEvent event) {

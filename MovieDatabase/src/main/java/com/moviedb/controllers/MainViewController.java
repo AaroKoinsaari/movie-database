@@ -128,6 +128,8 @@ public class MainViewController implements Initializable {
             dialogStage.initModality(Modality.APPLICATION_MODAL);
             dialogStage.initOwner(actorsListChooser.getScene().getWindow());
             dialogStage.showAndWait();  // Wait until the user closes the window
+
+            fillMovieDetails(currentMovie);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Message: " + e.getMessage());
@@ -151,6 +153,8 @@ public class MainViewController implements Initializable {
             dialogStage.initModality(Modality.APPLICATION_MODAL);
             dialogStage.initOwner(moviesListChooser.getScene().getWindow());
             dialogStage.showAndWait();  // Wait until the user closes the window
+
+            fillMovieDetails(currentMovie);
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Message: " + e.getMessage());
@@ -205,8 +209,10 @@ public class MainViewController implements Initializable {
         this.actorDao = new ActorDao(connection);
         this.genreDao = new GenreDao(connection);
 
-        actorDao.create(new Actor("test actor 1"));
-        actorDao.create(new Actor("test actor 2"));
+        actorDao.create(new Actor("leo di caprio"));
+        actorDao.create(new Actor("robert de niro"));
+        actorDao.create(new Actor("robert downey jr."));
+
 
         try {
             movieDao.create(new Movie("test", 2023, "testi",

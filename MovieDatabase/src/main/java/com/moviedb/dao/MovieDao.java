@@ -172,7 +172,7 @@ public class MovieDao {
      * @return A List of Integers representing actor or genre IDs associated with the given movie ID.
      * @throws SQLException If there's an error during the database operation.
      */
-    private List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
+    public List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
         List<Integer> ids = new ArrayList<>();
 
         // Whitelist allowed table and column names
@@ -336,6 +336,16 @@ public class MovieDao {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void addActorToMovie(int actorId, int movieId) throws SQLException {
+        String sql = "INSERT INTO movie_actors (movie_id, actor_id) VALUES (?, ?)";
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, movieId);
+            pstmt.setInt(2, actorId);
+            pstmt.executeUpdate();
+        }
     }
 
 
