@@ -43,7 +43,7 @@ public class ActorDialogViewController implements Initializable {
     private Button cancelButton;
 
     @FXML
-    private ListChooser<Actor> listChooser;
+    private ListView<Actor> listView;
 
 
     public void setConnection(Connection connection) {
@@ -85,21 +85,26 @@ public class ActorDialogViewController implements Initializable {
         String actorName = nameTextField.getText().trim();
         Optional<Actor> actorOpt = actorDao.getActorByName(actorName);
 
-        if (actorOpt.isPresent()) {
-            // TODO: Tähän tarkistus onko kyseinen näyttelijä jo listassa
-            listChooser.add(actorOpt.get());  // Add actor straight to list if exists
-        } else {
+        if (actorOpt.isPresent() && !isActorOnTheList(actorOpt.get())) {
+            listView.getItems().add(actorOpt.get());  // Add actor straight to list if exists
+        } else if (actorOpt.isEmpty()) {
             try {  // Create new and add it to list with the ID database gives after creating new Actor
                 Actor newActor = new Actor(actorName);
                 int newActorId = actorDao.create(newActor);
                 Optional<Actor> createdActorOpt = actorDao.read(newActorId);
                 createdActorOpt.ifPresent(createdActor -> {
-                    listChooser.add(createdActor);
+                    listView.getItems().add(createdActor);
                 });
             } catch (Exception e) {
                 System.out.println("Message: " + e.getMessage());
             }
         }
+    }
+
+
+    private boolean isActorOnTheList(Actor actor) {
+        return listView.getItems().stream()
+                .anyMatch(existingActor -> existingActor.getId() == actor.getId());
     }
 
 
