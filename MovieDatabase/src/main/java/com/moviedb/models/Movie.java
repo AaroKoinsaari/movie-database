@@ -144,6 +144,15 @@ public class Movie {
     }
 
 
+    /**
+     * Sets the genres for the movie.
+     *
+     * @param genreIds The list of genres to set.
+     */
+    public void setGenreIds(List<Integer> genreIds) {
+        this.genreIds = genreIds;
+    }
+
     @Override
     public String toString() {
         return this.getTitle();

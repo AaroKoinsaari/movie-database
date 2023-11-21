@@ -1,5 +1,6 @@
 package com.moviedb.controllers;
 
+import fi.jyu.mit.fxgui.Dialogs;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -45,6 +46,8 @@ public class MainViewController implements Initializable {
     private boolean isMovieListFocused;
 
     private boolean isActorListFocused;
+
+    private boolean isGenresListFocused;
 
     @FXML
     private TextField searchTextField;
@@ -92,12 +95,14 @@ public class MainViewController implements Initializable {
     @FXML
     void handleAdd(ActionEvent event) {
         System.out.println("Add button clicked. Movie focused: " + isMovieListFocused +
-                ", Actor focused: " + isActorListFocused);
+                ", Actor focused: " + isActorListFocused + ", Genres focused: " + isGenresListFocused);
 
-        if(isMovieListFocused) {
+        if (isMovieListFocused) {
             openAddMovieDialog();
         } else if (isActorListFocused) {
             openAddActorDialog();
+        } else if (isGenresListFocused) {
+            openAddGenreDialog();
         }
     }
 
@@ -115,7 +120,7 @@ public class MainViewController implements Initializable {
             Parent root = loader.load();
 
             ActorDialogViewController controller = loader.getController();
-            controller.setConnection(this.connection);  // Pass the connection
+            controller.setConnection(this.connection);  // Pass the current connection
             controller.setCurrentMovie(this.currentMovie);
 
             // Create new scene and stage
@@ -128,6 +133,43 @@ public class MainViewController implements Initializable {
             dialogStage.initModality(Modality.APPLICATION_MODAL);
             dialogStage.initOwner(actorsListChooser.getScene().getWindow());
             dialogStage.showAndWait();  // Wait until the user closes the window
+
+            // Update the selected movie by fetching the updated version from DB
+            currentMovie = movieDao.read(currentMovie.getId());
+            fillMovieDetails(currentMovie);
+        } catch (IOException e) {
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+
+    private void openAddGenreDialog() {
+        try {
+            // Load the FXML file
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/GenreDialogView.fxml"));
+            Parent root = loader.load();
+
+            GenreDialogViewController controller = loader.getController();
+            controller.setCurrentMovie(this.currentMovie);
+            controller.setConnection(this.connection);  // Pass the current connection
+
+            // Create new scene and stage
+            Scene scene = new Scene(root);
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Choose the Genres");
+            dialogStage.setScene(scene);
+
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.initOwner(genresListChooser.getScene().getWindow());
+            dialogStage.showAndWait();
+
+            try {
+                movieDao.update(currentMovie);
+            } catch (SQLException e) {
+                System.out.println("SQLState: " + e.getSQLState());
+                System.out.println("Error Code: " + e.getErrorCode());
+                System.out.println("Message: " + e.getMessage());
+            }
 
             fillMovieDetails(currentMovie);
         } catch (IOException e) {
@@ -154,9 +196,17 @@ public class MainViewController implements Initializable {
             dialogStage.initOwner(moviesListChooser.getScene().getWindow());
             dialogStage.showAndWait();  // Wait until the user closes the window
 
+            // Update the current movie by using the update method
+            try {
+                movieDao.update(currentMovie);
+            } catch (SQLException e) {
+                System.out.println("SQLState: " + e.getSQLState());
+                System.out.println("Error Code: " + e.getErrorCode());
+                System.out.println("Message: " + e.getMessage());
+            }
+
             fillMovieDetails(currentMovie);
         } catch (IOException e) {
-            e.printStackTrace();
             System.out.println("Message: " + e.getMessage());
         }
     }
@@ -164,13 +214,14 @@ public class MainViewController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Add a selection listener to the moviesListChooser to fill the information of selected movie
+        // Listener for movies list to fill the information of selected movie when clicked
         moviesListChooser.setOnMouseClicked(event -> {
             System.out.println("Movies lista aktivoitu");
 
             // Update the focus variables
             isMovieListFocused = true;
             isActorListFocused = false;
+            isGenresListFocused = false;
 
             Movie selectedMovie = moviesListChooser.getSelectedObject();
             if (selectedMovie != null) {
@@ -178,19 +229,30 @@ public class MainViewController implements Initializable {
                     fillMovieDetails(selectedMovie);
                     currentMovie = selectedMovie;
                 } catch (Exception e) {
-                    e.printStackTrace();
                     System.out.println("Message: " + e.getMessage());
                 }
             }
         });
 
+        // Listener for the actors list
         actorsListChooser.setOnMouseClicked(event -> {
             System.out.println("Actors lista aktivoitu");
 
             // Update the focus variables
             isActorListFocused = true;
+            isGenresListFocused = false;
             isMovieListFocused = false;
         });
+
+        genresListChooser.setOnMouseClicked(event -> {
+            System.out.println("Genres lista aktivoitu");
+
+            // Update the focus variables
+            isGenresListFocused = true;
+            isActorListFocused = false;
+            isMovieListFocused = false;
+        });
+
     }
 
 
@@ -218,9 +280,10 @@ public class MainViewController implements Initializable {
             movieDao.create(new Movie("test", 2023, "testi",
                     Arrays.asList(1, 2), Arrays.asList(2, 4)));
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
         }
-
 
         loadMoviesFromDB();
     }
