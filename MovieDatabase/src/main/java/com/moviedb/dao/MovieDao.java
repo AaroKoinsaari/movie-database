@@ -212,7 +212,7 @@ public class MovieDao {
         Movie existingMovie = read(updatedMovie.getId());
 
         try {
-            connection.setAutoCommit(false);
+            connection.setAutoCommit(false);  // Start transaction
 
             // Update movie details if they are updated
             if (!existingMovie.getTitle().equals(updatedMovie.getTitle()) ||
@@ -234,12 +234,12 @@ public class MovieDao {
             connection.commit();
             updateSuccessful = true;
         } catch (SQLException e) {
-            connection.rollback();  // Undo changes if there's an error
+            connection.rollback();  // Rollback transactions on error
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
             System.out.println("Message: " + e.getMessage());
         } finally {
-            connection.setAutoCommit(true);
+            connection.setAutoCommit(true);  // Restore default behavior
         }
 
         return updateSuccessful;
@@ -329,7 +329,7 @@ public class MovieDao {
      *                 or genre's IDs (either 'actor_id' or 'genre_id').
      * @throws SQLException If there's an error during the database operation.
      */
-    private void removeLinkFromMovie(int movieId, int id, String table, String idColumn) throws SQLException {
+    public void removeLinkFromMovie(int movieId, int id, String table, String idColumn) throws SQLException {
         String sql = "DELETE FROM " + table + " WHERE movie_id = ? AND " + idColumn + " = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -361,24 +361,50 @@ public class MovieDao {
 
 
     /**
-     * Deletes a movie from the SQL database based on its ID.
+     * Deletes a movie and its associations from the SQL database based on its ID.
+     * This includes deleting entries from movie_actors and movie_genres tables.
      *
      * @param movieId The ID of the movie to be deleted.
-     * @return true if the movie was successfully deleted, false otherwise.
+     * @return true if the movie and its associations were successfully deleted, false otherwise.
      * @throws SQLException If there's an error during the database operation.
      */
-    public boolean delete(int movieId) {
-        String sql = "DELETE FROM movies WHERE id = ?";
-        int rowsAffected = 0;  // To make sure the SQL query affected at least one row
+    public boolean delete(int movieId) throws SQLException {
+        String deleteActorsSql = "DELETE FROM movie_actors WHERE movie_id = ?";
+        String deleteGenresSql = "DELETE FROM movie_genres WHERE movie_id = ?";
+        String deleteMovieSql = "DELETE FROM movies WHERE id = ?";
+        int rowsAffected = 0;
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, movieId);
-            rowsAffected = pstmt.executeUpdate();
+        try {
+            connection.setAutoCommit(false); // Start transaction
+
+            // Delete associations from movie_actors
+            try (PreparedStatement pstmt = connection.prepareStatement(deleteActorsSql)) {
+                pstmt.setInt(1, movieId);
+                pstmt.executeUpdate();
+            }
+
+            // Delete associations from movie_genres
+            try (PreparedStatement pstmt = connection.prepareStatement(deleteGenresSql)) {
+                pstmt.setInt(1, movieId);
+                pstmt.executeUpdate();
+            }
+
+            // Delete the movie
+            try (PreparedStatement pstmt = connection.prepareStatement(deleteMovieSql)) {
+                pstmt.setInt(1, movieId);
+                rowsAffected = pstmt.executeUpdate();
+            }
+
+            connection.commit();
         } catch (SQLException e) {
+            connection.rollback(); // Rollback transaction on error
             e.printStackTrace();
+        } finally {
+            connection.setAutoCommit(true); // Restore default behavior
         }
         return rowsAffected > 0;
     }
+
 
 
     /**

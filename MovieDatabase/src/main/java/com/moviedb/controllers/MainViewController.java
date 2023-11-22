@@ -134,6 +134,12 @@ public class MainViewController implements Initializable {
     }
 
 
+    /**
+     * Handles the 'Save' button click event.
+     * Updates the selected movie details to the database by collecting the data from UI.
+     *
+     * @param event The ActionEvent triggered by the 'Save' button click.
+     */
     @FXML
     void handleSave(ActionEvent event) {
         System.out.println("Save button clicked!");
@@ -172,15 +178,6 @@ public class MainViewController implements Initializable {
     }
 
 
-    private void clearFields() {
-        titleTextField.clear();
-        releaseYearTextField.clear();
-        directorTextField.clear();
-        actorsListView.getItems().clear();
-        genresListView.getItems().clear();
-    }
-
-
     /**
      * Handles the 'Add' button click event.
      * Determines which entity (movie, actor, or genre) is currently focused based on the focus variables.
@@ -205,7 +202,62 @@ public class MainViewController implements Initializable {
 
     @FXML
     void handleDelete(ActionEvent event) {
+        if (isMovieListFocused) {
+            Movie selectedMovie = moviesListView.getSelectionModel().getSelectedItem();
+            if (selectedMovie != null) {
+                deleteMovie(selectedMovie);
+            }
+        } else if (isActorListFocused && currentMovie != null) {
+            Actor selectedActor = actorsListView.getSelectionModel().getSelectedItem();
+            if (selectedActor != null) {
+                deleteActor(currentMovie, selectedActor);
+            }
+        } else if (isGenresListFocused && currentMovie != null) {
+            Genre selectedGenre = genresListView.getSelectionModel().getSelectedItem();
+            if (selectedGenre != null) {
+                deleteGenre(currentMovie, selectedGenre);
+            }
+        }
+    }
 
+    private void deleteMovie(Movie selectedMovie) {
+        try {
+            movieDao.delete(selectedMovie.getId());
+            clearFields();
+            loadMoviesFromDB();
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+
+    private void deleteActor(Movie selectedMovie, Actor selectedActor) {
+        try {
+            movieDao.removeLinkFromMovie(selectedMovie.getId(), selectedActor.getId(),
+                    "movie_actors", "actor_id");
+            clearFields();
+            loadMoviesFromDB();
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+
+    private void deleteGenre(Movie selectedMovie, Genre selectedGenre) {
+        try {
+            movieDao.removeLinkFromMovie(selectedMovie.getId(), selectedGenre.getId(),
+                    "movie_genres", "genre_id");
+            clearFields();
+            loadMoviesFromDB();
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
     }
 
 
@@ -310,6 +362,18 @@ public class MainViewController implements Initializable {
             Optional<Genre> genreOptional = genreDao.getGenreById(genreId);
             genreOptional.ifPresent(genre -> genresListView.getItems().add(genre));  // Add genre to list if it exists
         }
+    }
+
+
+    /**
+     * Clears all input fields and selections in the UI.
+     */
+    private void clearFields() {
+        titleTextField.clear();
+        releaseYearTextField.clear();
+        directorTextField.clear();
+        actorsListView.getItems().clear();
+        genresListView.getItems().clear();
     }
 
 
