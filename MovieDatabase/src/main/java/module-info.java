@@ -1,4 +1,4 @@
- module com.moviedb {
+module com.moviedb {
     requires javafx.controls;
     requires javafx.fxml;
 
@@ -12,4 +12,5 @@
     exports com.moviedb.app;
     exports com.moviedb.controllers;
     exports com.moviedb.dao;
+    exports com.moviedb.models;
 }

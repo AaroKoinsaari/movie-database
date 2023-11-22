@@ -1,6 +1,10 @@
 package com.moviedb.controllers;
 
-import com.moviedb.database.DatabaseInitializer;
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,36 +14,24 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
-import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import com.moviedb.database.DatabaseInitializer;
 
-import fi.jyu.mit.fxgui.*;
+import fi.jyu.mit.fxgui.Dialogs;
 
 
+/**
+ * Controller class that is responsible for handling the UI logic related to the launch window.
+ * It includes checking and validating the given name of the database and creating or
+ * simply opening an existing one to the Main View.
+ */
 public class LaunchViewController {
 
     @FXML
     private Button cancelButton;
-
     @FXML
-    protected TextField databaseNameField;
-
+    private TextField databaseNameField;
     @FXML
     private Button okButton;
-
-
-    /**
-     * Handles the Cancel button click in the launch window.
-     * Closes the program.
-     * @param event The action event triggered by the button click.
-     */
-    @FXML
-    void handleCancelButton(ActionEvent event) {
-        Stage stage = (Stage) cancelButton.getScene().getWindow();
-        stage.close();
-    }
 
 
     /**
@@ -48,10 +40,10 @@ public class LaunchViewController {
      * otherwise prompts user to create a new database by the given name and opens
      * the main view for that if the user clicks Yes.
      *
-     * @param event The action event triggered by the button click.
+     * @param event The ActionEvent triggered by the 'OK' button click.
      */
     @FXML
-    public void handleOkButton(ActionEvent event) {
+    void handleOkButton(ActionEvent event) {
         // Validate the database name
         String dbName = databaseNameField.getText().trim();
         if (dbName.isEmpty()) {
@@ -79,6 +71,18 @@ public class LaunchViewController {
 
 
     /**
+     * Handles the Cancel button click in the launch window by simply closing the program.
+     *
+     * @param event The ActionEvent triggered by the 'Cancel' button click.
+     */
+    @FXML
+    void handleCancelButton(ActionEvent event) {
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
+    }
+
+
+    /**
      * Formats the database name by removing all spaces and converting to lower case.
      *
      * @param dbName The original database name.
@@ -98,6 +102,23 @@ public class LaunchViewController {
     private boolean databaseExists(String dbPath) {
         File dbFile = new File(dbPath);
         return dbFile.exists();
+    }
+
+
+    /**
+     * Creates a new database based on a given name.
+     *
+     * @param dbName Name of the new database.
+     */
+    private void createNewDatabase(String dbName) {
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:src/main/java/com/moviedb/database/" + dbName + ".db");
+            DatabaseInitializer.initialize(connection);
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            Dialogs.showMessageDialog("Failed to create a new database.");
+        }
     }
 
 
@@ -129,23 +150,6 @@ public class LaunchViewController {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Message: " + e.getMessage());
-        }
-    }
-
-
-    /**
-     * Creates a new database based on a given name.
-     *
-     * @param dbName Name of the new database.
-     */
-    private void createNewDatabase(String dbName) {
-        try {
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:src/main/java/com/moviedb/database/" + dbName + ".db");
-            DatabaseInitializer.initialize(connection);
-            connection.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            Dialogs.showMessageDialog("Failed to create a new database.");
         }
     }
 }
