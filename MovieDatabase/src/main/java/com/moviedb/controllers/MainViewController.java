@@ -5,10 +5,7 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,12 +14,12 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import fi.jyu.mit.fxgui.ComboBoxChooser;
-import fi.jyu.mit.fxgui.ListChooser;
 
 import com.moviedb.dao.MovieDao;
 import com.moviedb.dao.GenreDao;
@@ -61,11 +58,11 @@ public class MainViewController implements Initializable {
     @FXML
     public Button deleteButton;
     @FXML
-    private ListChooser<Movie> moviesListChooser;
+    private ListView<Movie> moviesListView;
     @FXML
-    public ListChooser<Actor> actorsListChooser;
+    public ListView<Actor> actorsListView;
     @FXML
-    public ListChooser<Genre> genresListChooser;
+    public ListView<Genre> genresListView;
     @FXML
     public TextField titleTextField;
     @FXML
@@ -96,7 +93,7 @@ public class MainViewController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // Listener for movies list to fill the information of selected movie when clicked
-        moviesListChooser.setOnMouseClicked(event -> {
+        moviesListView.setOnMouseClicked(event -> {
             System.out.println("Movies lista aktivoitu");
 
             // Update the focus variables
@@ -104,7 +101,7 @@ public class MainViewController implements Initializable {
             isActorListFocused = false;
             isGenresListFocused = false;
 
-            Movie selectedMovie = moviesListChooser.getSelectedObject();
+            Movie selectedMovie = moviesListView.getSelectionModel().getSelectedItem();
             if (selectedMovie != null) {
                 try {
                     fillMovieDetails(selectedMovie);
@@ -116,7 +113,7 @@ public class MainViewController implements Initializable {
         });
 
         // Listener for the actors list
-        actorsListChooser.setOnMouseClicked(event -> {
+        actorsListView.setOnMouseClicked(event -> {
             System.out.println("Actors lista aktivoitu");
 
             // Update the focus variables
@@ -126,7 +123,7 @@ public class MainViewController implements Initializable {
         });
 
         // Listener for the genres list
-        genresListChooser.setOnMouseClicked(event -> {
+        genresListView.setOnMouseClicked(event -> {
             System.out.println("Genres lista aktivoitu");
 
             // Update the focus variables
@@ -139,7 +136,48 @@ public class MainViewController implements Initializable {
 
     @FXML
     void handleSave(ActionEvent event) {
+        System.out.println("Save button clicked!");
 
+        try {
+            String updatedMovieTitle = titleTextField.getText();
+            int updatedReleaseYear = Integer.parseInt(releaseYearTextField.getText());
+            String updatedDirector = directorTextField.getText();
+
+            List<Integer> updatedActorIds = new ArrayList<>();
+            for (Actor actor : actorsListView.getItems()) {
+                updatedActorIds.add(actor.getId());
+            }
+
+            List<Integer> updatedGenreIds = new ArrayList<>();
+            for (Genre genre : genresListView.getItems()) {
+                updatedGenreIds.add(genre.getId());
+            }
+
+            int originalMovieId = currentMovie.getId();
+
+            Movie updatedMovie = new Movie(originalMovieId, updatedMovieTitle, updatedReleaseYear,
+                    updatedDirector, updatedActorIds, updatedGenreIds);
+
+            if (movieDao.update(updatedMovie)) {
+                currentMovie = updatedMovie;
+                clearFields();
+                loadMoviesFromDB();
+            }
+
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+
+    private void clearFields() {
+        titleTextField.clear();
+        releaseYearTextField.clear();
+        directorTextField.clear();
+        actorsListView.getItems().clear();
+        genresListView.getItems().clear();
     }
 
 
@@ -229,12 +267,12 @@ public class MainViewController implements Initializable {
         try {
             List<Movie> movies = movieDao.readAll();
             if (movies.isEmpty()) {
-                moviesListChooser.clear();
+                moviesListView.getItems().clear();
                 return;
             }
-            moviesListChooser.clear();
+            moviesListView.getItems().clear();
             for (Movie movie : movies) {
-                moviesListChooser.add(movie);
+                moviesListView.getItems().add(movie);
             }
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
@@ -258,19 +296,19 @@ public class MainViewController implements Initializable {
         directorTextField.setText(selectedMovie.getDirector());
 
         // Clear the current lists
-        actorsListChooser.clear();
-        genresListChooser.clear();
+        actorsListView.getItems().clear();
+        genresListView.getItems().clear();
 
         // Add all actors to its ListChooser component
         for (Integer actorId : selectedMovie.getActorIds()) {
             Optional<Actor> actorOptional = actorDao.getActorById(actorId);
-            actorOptional.ifPresent(actor -> actorsListChooser.add(actor));  // Add actor to list if it exists
+            actorOptional.ifPresent(actor -> actorsListView.getItems().add(actor));  // Add actor to list if it exists
         }
 
         // Add all genres to its ListChooser component
         for (Integer genreId : selectedMovie.getGenreIds()) {
             Optional<Genre> genreOptional = genreDao.getGenreById(genreId);
-            genreOptional.ifPresent(genre -> genresListChooser.add(genre));  // Add genre to list if it exists
+            genreOptional.ifPresent(genre -> genresListView.getItems().add(genre));  // Add genre to list if it exists
         }
     }
 
@@ -299,7 +337,7 @@ public class MainViewController implements Initializable {
 
             // Set the stage as modal
             dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(actorsListChooser.getScene().getWindow());
+            dialogStage.initOwner(actorsListView.getScene().getWindow());
             dialogStage.showAndWait();  // Wait until the user closes the window
 
             // Update the selected movie by fetching the updated version from DB
@@ -334,7 +372,7 @@ public class MainViewController implements Initializable {
             dialogStage.setScene(scene);
 
             dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(genresListChooser.getScene().getWindow());
+            dialogStage.initOwner(genresListView.getScene().getWindow());
             dialogStage.showAndWait();
 
             try {
@@ -372,7 +410,7 @@ public class MainViewController implements Initializable {
 
             // Set the stage as modal
             dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(moviesListChooser.getScene().getWindow());
+            dialogStage.initOwner(moviesListView.getScene().getWindow());
             dialogStage.showAndWait();  // Wait until the user closes the window
 
             // Update the current movie by using the update method

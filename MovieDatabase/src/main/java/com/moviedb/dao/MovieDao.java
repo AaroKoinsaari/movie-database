@@ -259,6 +259,7 @@ public class MovieDao {
             pstmt.setString(1, updatedMovie.getTitle());
             pstmt.setInt(2, updatedMovie.getReleaseYear());
             pstmt.setString(3, updatedMovie.getDirector());
+            pstmt.setInt(4, updatedMovie.getId());
             pstmt.executeUpdate();
         }
     }
