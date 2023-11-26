@@ -11,6 +11,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -193,7 +194,7 @@ public class MainViewController implements Initializable {
         if (isMovieListFocused) {
             openAddMovieDialog();
         } else if (isActorListFocused) {
-            openAddActorDialog();
+            openAddActorDialog(event);
         } else if (isGenresListFocused) {
             openAddGenreDialog();
         }
@@ -220,6 +221,7 @@ public class MainViewController implements Initializable {
         }
     }
 
+
     private void deleteMovie(Movie selectedMovie) {
         try {
             movieDao.delete(selectedMovie.getId());
@@ -239,6 +241,7 @@ public class MainViewController implements Initializable {
                     "movie_actors", "actor_id");
             clearFields();
             loadMoviesFromDB();
+            fillMovieDetails(selectedMovie);
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
@@ -253,6 +256,7 @@ public class MainViewController implements Initializable {
                     "movie_genres", "genre_id");
             clearFields();
             loadMoviesFromDB();
+            fillMovieDetails(selectedMovie);
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
@@ -383,26 +387,13 @@ public class MainViewController implements Initializable {
      * Passes the current database connection and selected movie to the dialog controller.
      * After the dialog is closed, updates the movie details with any changes made.
      */
-    private void openAddActorDialog() {
+    private void openAddActorDialog(ActionEvent event) {
         try {
-            // Load the FXML file
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/ActorDialogView.fxml"));
-            Parent root = loader.load();
+            // Get the stage object from ActionEvent
+            Node source = (Node) event.getSource();
+            Stage ownerStage = (Stage) source.getScene().getWindow();
 
-            ActorDialogViewController controller = loader.getController();
-            controller.setConnection(this.connection);  // Pass the current connection
-            controller.setCurrentMovie(this.currentMovie);
-
-            // Create new scene and stage
-            Scene scene = new Scene(root);
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("New Actor Details");
-            dialogStage.setScene(scene);
-
-            // Set the stage as modal
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(actorsListView.getScene().getWindow());
-            dialogStage.showAndWait();  // Wait until the user closes the window
+            ViewManager.openActorDialog(currentMovie, connection, ownerStage);
 
             // Update the selected movie by fetching the updated version from DB
             currentMovie = movieDao.read(currentMovie.getId());
@@ -465,6 +456,9 @@ public class MainViewController implements Initializable {
             // Load the FXML file
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/MovieDialogView.fxml"));
             Parent root = loader.load();
+
+            MovieDialogViewController controller = loader.getController();
+            controller.setConnection(this.connection);
 
             // Create new scene and stage
             Scene scene = new Scene(root);
