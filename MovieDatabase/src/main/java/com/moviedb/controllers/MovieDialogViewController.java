@@ -1,33 +1,50 @@
 package com.moviedb.controllers;
 
+import com.moviedb.dao.ActorDao;
+import com.moviedb.dao.MovieDao;
+import com.moviedb.models.Actor;
+import com.moviedb.models.Genre;
+import com.moviedb.models.Movie;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MovieDialogViewController {
 
-    @FXML
-    private ListView<String> actorList;
+    Connection connection;
+
+    MovieDao movieDao;
+
+    ActorDao actorDao;
 
     @FXML
-    private Button addActorButton;
+    private ListView<Actor> actorsListView;
 
     @FXML
-    private Button addGenreButton;
+    private Button addButton;
+
+    @FXML
+    private Button deleteButton;
 
     @FXML
     private Button cancelButton;
 
     @FXML
+    private Button saveButton;
+
+    @FXML
     private TextField directorTextField;
 
     @FXML
-    private ListView<String> genresList;
-
-    @FXML
-    private Button okButton;
+    private ListView<Genre> genresListView;
 
     @FXML
     private TextField releaseYearTextField;
@@ -35,24 +52,81 @@ public class MovieDialogViewController {
     @FXML
     private TextField titleTextField;
 
+
+    protected void setConnection(Connection connection) {
+        this.movieDao = new MovieDao(connection);
+        this.actorDao = new ActorDao(connection);
+    }
+
     @FXML
-    void handleAddActor(ActionEvent event) {
+    void handleAdd(ActionEvent event) {
+        if (actorsListView.isFocused()) {
+            openActorDialog();
+        } else if (genresListView.isFocused()) {
+            openGenreDialog();
+        }
+    }
+
+
+    private void openActorDialog() {
+
+    }
+
+
+    private void openGenreDialog() {
+
+    }
+
+
+    @FXML
+    void handleDelete(ActionEvent event) {
 
     }
 
     @FXML
-    void handleAddGenre(ActionEvent event) {
+    void handleSave(ActionEvent event) {
+        System.out.println("Save button clicked!");
 
+        try {
+            String updatedMovieTitle = titleTextField.getText();
+            int updatedReleaseYear = Integer.parseInt(releaseYearTextField.getText());
+            String updatedDirector = directorTextField.getText();
+
+            List<Integer> updatedActorIds = new ArrayList<>();
+            for (Actor actor : actorsListView.getItems()) {
+                updatedActorIds.add(actor.getId());
+            }
+
+            List<Integer> updatedGenreIds = new ArrayList<>();
+            for (Genre genre : genresListView.getItems()) {
+                updatedGenreIds.add(genre.getId());
+            }
+
+            int newMovieId = movieDao.create(new Movie(updatedMovieTitle, updatedReleaseYear,
+                    updatedDirector, updatedActorIds, updatedGenreIds));
+
+            if (newMovieId > 0) {
+                closeView();
+            }
+
+            // TODO: in case of error
+
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
     }
+
 
     @FXML
     void handleCancel(ActionEvent event) {
-
+        closeView();
     }
 
-    @FXML
-    void handleOK(ActionEvent event) {
 
+    private void closeView() {
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
     }
-
 }
