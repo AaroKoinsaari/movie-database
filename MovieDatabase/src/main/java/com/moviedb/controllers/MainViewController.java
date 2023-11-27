@@ -196,7 +196,7 @@ public class MainViewController implements Initializable {
         } else if (isActorListFocused) {
             openAddActorDialog(event);
         } else if (isGenresListFocused) {
-            openAddGenreDialog();
+            openAddGenreDialog(event);
         }
     }
 
@@ -225,8 +225,22 @@ public class MainViewController implements Initializable {
     private void deleteMovie(Movie selectedMovie) {
         try {
             movieDao.delete(selectedMovie.getId());
+            currentMovie = null;  // Reset the selected movie
             clearFields();
             loadMoviesFromDB();
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+    private void updateSelectedMovie(Movie movie) {
+        try {
+            Movie updatedMovie = movieDao.read(movie.getId());
+            if (updatedMovie != null) {
+                currentMovie = updatedMovie;
+            }
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
@@ -239,9 +253,8 @@ public class MainViewController implements Initializable {
         try {
             movieDao.removeLinkFromMovie(selectedMovie.getId(), selectedActor.getId(),
                     "movie_actors", "actor_id");
-            clearFields();
-            loadMoviesFromDB();
-            fillMovieDetails(selectedMovie);
+            updateSelectedMovie(selectedMovie);
+            fillMovieDetails(currentMovie);
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
@@ -254,9 +267,8 @@ public class MainViewController implements Initializable {
         try {
             movieDao.removeLinkFromMovie(selectedMovie.getId(), selectedGenre.getId(),
                     "movie_genres", "genre_id");
-            clearFields();
-            loadMoviesFromDB();
-            fillMovieDetails(selectedMovie);
+            updateSelectedMovie(selectedMovie);
+            fillMovieDetails(currentMovie);
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
@@ -382,10 +394,8 @@ public class MainViewController implements Initializable {
 
 
     /**
-     * Opens the 'Add Actor' dialog.
-     * Loads the ActorDialogView FXML, sets up the controller, and displays the dialog in a modal window.
-     * Passes the current database connection and selected movie to the dialog controller.
-     * After the dialog is closed, updates the movie details with any changes made.
+     * Opens the 'Add Actor' dialog and after closing,
+     * updates the movie details with any changes made.
      */
     private void openAddActorDialog(ActionEvent event) {
         try {
@@ -396,49 +406,39 @@ public class MainViewController implements Initializable {
             ViewManager.openActorDialog(currentMovie, connection, ownerStage);
 
             // Update the selected movie by fetching the updated version from DB
-            currentMovie = movieDao.read(currentMovie.getId());
-            fillMovieDetails(currentMovie);
+            try {
+                currentMovie = movieDao.read(currentMovie.getId());
+                if (currentMovie != null) {
+                    fillMovieDetails(currentMovie);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("SQLState: " + e.getSQLState());
+                System.out.println("Error Code: " + e.getErrorCode());
+                System.out.println("Message: " + e.getMessage());
+            }
+
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("Message: " + e.getMessage());
         }
     }
 
 
     /**
-     * Opens the 'Add Genre' dialog.
-     * Loads the GenreDialogView FXML, sets up the controller, and displays the dialog in a modal window.
-     * Provides the current movie and database connection to the dialog controller.
-     * Updates the movie information from the database after the dialog is closed.
+     * Opens the 'Add Genre' dialog and updates the movie information
+     * in the database after the dialog is closed.
      */
-    private void openAddGenreDialog() {
+    private void openAddGenreDialog(ActionEvent event) {
         try {
-            // Load the FXML file
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/GenreDialogView.fxml"));
-            Parent root = loader.load();
+            // Get the stage object from ActionEvent
+            Node source = (Node) event.getSource();
+            Stage ownerStage = (Stage) source.getScene().getWindow();
 
-            GenreDialogViewController controller = loader.getController();
-            controller.setCurrentMovie(this.currentMovie);
-            controller.setConnection(this.connection);  // Pass the current connection
-
-            // Create new scene and stage
-            Scene scene = new Scene(root);
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Choose the Genres");
-            dialogStage.setScene(scene);
-
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(genresListView.getScene().getWindow());
-            dialogStage.showAndWait();
-
-            try {
-                movieDao.update(currentMovie);
-            } catch (SQLException e) {
-                System.out.println("SQLState: " + e.getSQLState());
-                System.out.println("Error Code: " + e.getErrorCode());
-                System.out.println("Message: " + e.getMessage());
-            }
+            ViewManager.openGenreDialog(currentMovie, connection, ownerStage);
 
             fillMovieDetails(currentMovie);
+
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Message: " + e.getMessage());

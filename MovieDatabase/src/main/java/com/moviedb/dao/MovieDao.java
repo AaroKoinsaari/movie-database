@@ -117,7 +117,7 @@ public class MovieDao {
      * @return The Movie object if found, null otherwise.
      * @throws SQLException If there's an error during the database operation.
      */
-    public Movie read(int id) {
+    public Movie read(int id) throws SQLException {
         String sql = "SELECT title, release_year, director FROM movies WHERE id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -136,8 +136,6 @@ public class MovieDao {
 
                 return new Movie(id, title, releaseYear, director, actorIds, genreIds);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }

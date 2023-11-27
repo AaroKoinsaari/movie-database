@@ -1,6 +1,7 @@
 package com.moviedb.controllers;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,8 @@ import com.moviedb.models.Movie;
  * for a movie by listing all available genres as CheckBoxes.
  */
 public class GenreDialogViewController {
+
+    private MovieDao movieDao;
 
     private Movie currentMovie;  // The movie currently being edited in the dialog
 
@@ -56,7 +59,7 @@ public class GenreDialogViewController {
      * @param connection The SQLite database connection to be used.
      */
     protected void setConnection(Connection connection) {
-        MovieDao movieDao = new MovieDao(connection);
+        this.movieDao = new MovieDao(connection);
         this.genreDao = new GenreDao(connection);
         loadGenres();
     }
@@ -81,6 +84,14 @@ public class GenreDialogViewController {
             }
         }
         currentMovie.setGenreIds(selectedGenreIds);
+
+        try {
+            movieDao.update(currentMovie);
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
 
         Stage stage = (Stage) okButton.getScene().getWindow();
         stage.close();
