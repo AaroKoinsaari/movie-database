@@ -146,12 +146,25 @@ public class MovieDialogViewController implements Initializable {
     }
 
 
-
-
     @FXML
     void handleDelete(ActionEvent event) {
-
+        if (activeListView != null) {
+            if (activeListView.equals(actorsListView)) {
+                deleteSelectedItem(actorsListView);
+            } else if (activeListView.equals(genresListView)) {
+                deleteSelectedItem(genresListView);
+            }
+        }
     }
+
+
+    private <T> void deleteSelectedItem(ListView<T> listView) {
+        int selectedIndex = listView.getSelectionModel().getSelectedIndex();
+        if (selectedIndex != -1) {
+            listView.getItems().remove(selectedIndex);
+        }
+    }
+
 
     @FXML
     void handleSave(ActionEvent event) {
