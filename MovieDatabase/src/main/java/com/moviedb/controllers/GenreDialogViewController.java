@@ -31,6 +31,10 @@ public class GenreDialogViewController {
 
     private GenreDao genreDao;
 
+    private MovieDialogViewController movieDialogViewController;
+
+    private List<Integer> temporarySelectedGenres = new ArrayList<>();
+
     @FXML
     private Button okButton;
 
@@ -40,6 +44,11 @@ public class GenreDialogViewController {
     @FXML
     private ListView<CheckBox> listView;
 
+
+    protected void setTemporarySelectedGenres(List<Integer> selectedGenres) {
+        this.temporarySelectedGenres = selectedGenres;
+        loadGenres();
+    }
 
     /**
      * Sets the current movie object allowing the dialog to
@@ -61,8 +70,16 @@ public class GenreDialogViewController {
     protected void setConnection(Connection connection) {
         this.movieDao = new MovieDao(connection);
         this.genreDao = new GenreDao(connection);
-        loadGenres();
+        if (currentMovie != null) {
+            loadGenres();
+        }
     }
+
+
+    public void setMovieDialogViewController(MovieDialogViewController controller) {
+        this.movieDialogViewController = controller;
+    }
+
 
 
     /**
@@ -83,14 +100,22 @@ public class GenreDialogViewController {
                 selectedGenreIds.add(genre.getId());
             }
         }
-        currentMovie.setGenreIds(selectedGenreIds);
 
-        try {
-            movieDao.update(currentMovie);
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
+        if (currentMovie != null) {
+            currentMovie.setGenreIds(selectedGenreIds);
+
+            try {
+                movieDao.update(currentMovie);
+            } catch (SQLException e) {
+                System.out.println("SQLState: " + e.getSQLState());
+                System.out.println("Error Code: " + e.getErrorCode());
+                System.out.println("Message: " + e.getMessage());
+            }
+        } else {
+            // If movie is null, add genres to temporary list which
+            // is handled in MovieDialog controller
+            temporarySelectedGenres = selectedGenreIds;
+            movieDialogViewController.addGenresToList(selectedGenreIds);
         }
 
         Stage stage = (Stage) okButton.getScene().getWindow();
@@ -117,7 +142,9 @@ public class GenreDialogViewController {
      */
     private void loadGenres() {
         List<Genre> genres = genreDao.readAll();
-        List<Integer> selectedGenreIds = currentMovie.getGenreIds();  // Currently selected genres
+        List<Integer> selectedGenreIds = (currentMovie != null) ? currentMovie.getGenreIds() : temporarySelectedGenres;
+
+        //listView.getItems().clear();
 
         for (Genre genre : genres) {
             CheckBox cb = new CheckBox(genre.getName());

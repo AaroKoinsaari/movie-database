@@ -1,6 +1,7 @@
 package com.moviedb.controllers;
 
 import com.moviedb.dao.ActorDao;
+import com.moviedb.dao.GenreDao;
 import com.moviedb.dao.MovieDao;
 import com.moviedb.models.Actor;
 import com.moviedb.models.Genre;
@@ -20,6 +21,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class MovieDialogViewController implements Initializable {
@@ -29,6 +31,8 @@ public class MovieDialogViewController implements Initializable {
     private MovieDao movieDao;
 
     private ActorDao actorDao;
+
+    private GenreDao genreDao;
 
     private Movie currentMovie;
 
@@ -71,24 +75,22 @@ public class MovieDialogViewController implements Initializable {
     }
 
 
-    public void setCurrentMovie(Movie currentMovie) {
-        this.currentMovie = currentMovie;
-    }
-
-
     protected void setConnection(Connection connection) {
         this.connection = connection;
         this.movieDao = new MovieDao(connection);
         this.actorDao = new ActorDao(connection);
+        this.genreDao = new GenreDao(connection);
     }
 
 
     @FXML
     void handleAdd(ActionEvent event) {
         if (activeListView == actorsListView) {
+            System.out.println("Actors lista aktivoitu");
             openActorDialog(event);
         } else if (activeListView == genresListView) {
-            openGenreDialog();
+            System.out.println("Genres lista aktivoitu");
+            openGenreDialog(event);
         }
     }
 
@@ -106,7 +108,7 @@ public class MovieDialogViewController implements Initializable {
     }
 
 
-    public void addActorToList(Actor actor) {
+    protected void addActorToList(Actor actor) {
         boolean isAlreadyListed = selectedActors.stream()
                 .anyMatch(existingActor -> existingActor.getId() == actor.getId());
 
@@ -117,9 +119,33 @@ public class MovieDialogViewController implements Initializable {
     }
 
 
-    private void openGenreDialog() {
+    private void openGenreDialog(ActionEvent event) {
+        Node source = (Node) event.getSource();
+        Stage ownerStage = (Stage) source.getScene().getWindow();
 
+        try {
+            List<Integer> selectedGenreIds = getSelectedGenres();
+            ViewManager.openGenreDialog(currentMovie, connection, ownerStage, this, selectedGenreIds);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Message: " + e.getMessage());
+        }
     }
+
+
+
+    protected void addGenresToList(List<Integer> genreIdList) {
+        List<Genre> genresToShow = new ArrayList<>();
+
+        for (Integer genreId : genreIdList) {
+            Optional<Genre> genreOpt = genreDao.getGenreById(genreId);
+            genreOpt.ifPresent(genresToShow::add);
+        }
+
+        genresListView.getItems().setAll(genresToShow);
+    }
+
+
 
 
     @FXML
@@ -173,4 +199,17 @@ public class MovieDialogViewController implements Initializable {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
     }
+
+
+    public List<Integer> getSelectedGenres() {
+        List<Integer> selectedGenreIds = new ArrayList<>();
+
+        for (Genre genre : genresListView.getItems()) {
+            selectedGenreIds.add(genre.getId());
+        }
+
+        return selectedGenreIds;
+    }
+
+
 }

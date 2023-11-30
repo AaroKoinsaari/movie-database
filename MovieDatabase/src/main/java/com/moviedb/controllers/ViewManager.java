@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.List;
 
 public class ViewManager {
 
@@ -54,15 +55,22 @@ public class ViewManager {
      * Loads the GenreDialogView FXML, sets up the controller, and displays the dialog in a modal window.
      * Provides the current movie and database connection to the dialog controller.
      */
-    public static void openGenreDialog(Movie currentMovie, Connection connection, Stage ownerStage)
+    public static void openGenreDialog(Movie currentMovie, Connection connection, Stage ownerStage,
+                                       MovieDialogViewController movieDialogViewController, List<Integer> selectedGenres)
         throws IOException {
         // Load the FXML file
         FXMLLoader loader = new FXMLLoader(ViewManager.class.getResource("/views/GenreDialogView.fxml"));
         Parent root = loader.load();
 
         GenreDialogViewController controller = loader.getController();
-        controller.setCurrentMovie(currentMovie);
         controller.setConnection(connection);  // Pass the current connection
+
+        if (currentMovie == null) {
+            controller.setMovieDialogViewController(movieDialogViewController);
+            controller.setTemporarySelectedGenres(selectedGenres);
+        } else {
+            controller.setCurrentMovie(currentMovie);
+        }
 
         // Create new scene and stage
         Scene scene = new Scene(root);

@@ -435,7 +435,7 @@ public class MainViewController implements Initializable {
             Node source = (Node) event.getSource();
             Stage ownerStage = (Stage) source.getScene().getWindow();
 
-            ViewManager.openGenreDialog(currentMovie, connection, ownerStage);
+            ViewManager.openGenreDialog(currentMovie, connection, ownerStage, null, null);
 
             fillMovieDetails(currentMovie);
 
