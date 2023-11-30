@@ -19,7 +19,8 @@ public class ViewManager {
      * Passes the current database connection and selected movie to the dialog controller.
      * After the dialog is closed, updates the movie details with any changes made.
      */
-    public static void openActorDialog(Movie currentMovie, Connection connection, Stage ownerStage)
+    public static void openActorDialog(Movie currentMovie, Connection connection, Stage ownerStage,
+                                       MovieDialogViewController movieDialogViewController)
         throws IOException {
         // Load the FXML file
         FXMLLoader loader = new FXMLLoader(ViewManager.class.getResource("/views/ActorDialogView.fxml"));
@@ -27,7 +28,13 @@ public class ViewManager {
 
         ActorDialogViewController controller = loader.getController();
         controller.setConnection(connection);  // Pass the current connection
-        controller.setCurrentMovie(currentMovie);
+
+        if (currentMovie == null) {
+            controller.setMovieDialogViewController(movieDialogViewController);
+        } else {
+            controller.setCurrentMovie(currentMovie);
+        }
+
 
         // Create new scene and stage
         Scene scene = new Scene(root);
@@ -70,7 +77,25 @@ public class ViewManager {
     }
 
 
-    public static void openMovieDialog(Movie currentMovie, Connection connection, Stage ownerStage) {
-        
+    public static void openMovieDialog(Connection connection, Stage ownerStage)
+        throws IOException {
+        // Load the FXML file
+        FXMLLoader loader = new FXMLLoader(ViewManager.class.getResource("/views/MovieDialogView.fxml"));
+        Parent root = loader.load();
+
+        MovieDialogViewController controller = loader.getController();
+        // controller.setCurrentMovie(currentMovie);
+        controller.setConnection(connection);  // Pass the current connection
+
+        // Create new scene and stage
+        Scene scene = new Scene(root);
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Add new movie details");
+        dialogStage.setScene(scene);
+
+        // Set the stage as modal
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        dialogStage.initOwner(ownerStage);
+        dialogStage.showAndWait();  // Wait until the user closes the window
     }
 }

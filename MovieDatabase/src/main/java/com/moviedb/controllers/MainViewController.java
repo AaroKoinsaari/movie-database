@@ -192,7 +192,7 @@ public class MainViewController implements Initializable {
                 ", Actor focused: " + isActorListFocused + ", Genres focused: " + isGenresListFocused);
 
         if (isMovieListFocused) {
-            openAddMovieDialog();
+            openAddMovieDialog(event);
         } else if (isActorListFocused) {
             openAddActorDialog(event);
         } else if (isGenresListFocused) {
@@ -403,7 +403,7 @@ public class MainViewController implements Initializable {
             Node source = (Node) event.getSource();
             Stage ownerStage = (Stage) source.getScene().getWindow();
 
-            ViewManager.openActorDialog(currentMovie, connection, ownerStage);
+            ViewManager.openActorDialog(currentMovie, connection, ownerStage, null);
 
             // Update the selected movie by fetching the updated version from DB
             try {
@@ -451,25 +451,13 @@ public class MainViewController implements Initializable {
      * Loads the MovieDialogView FXML and displays the dialog in a modal window.
      * Updates the movie details in the database after the dialog is closed.
      */
-    private void openAddMovieDialog() {
+    private void openAddMovieDialog(ActionEvent event) {
         try {
-            // Load the FXML file
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/MovieDialogView.fxml"));
-            Parent root = loader.load();
+            // Get the stage object from ActionEvent
+            Node source = (Node) event.getSource();
+            Stage ownerStage = (Stage) source.getScene().getWindow();
 
-            MovieDialogViewController controller = loader.getController();
-            controller.setConnection(this.connection);
-
-            // Create new scene and stage
-            Scene scene = new Scene(root);
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("New Movie Details");
-            dialogStage.setScene(scene);
-
-            // Set the stage as modal
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(moviesListView.getScene().getWindow());
-            dialogStage.showAndWait();  // Wait until the user closes the window
+            ViewManager.openMovieDialog(connection, ownerStage);
 
             // Update the current movie by using the update method
             try {
@@ -480,8 +468,8 @@ public class MainViewController implements Initializable {
                 System.out.println("Message: " + e.getMessage());
             }
 
-            fillMovieDetails(currentMovie);
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("Message: " + e.getMessage());
         }
     }

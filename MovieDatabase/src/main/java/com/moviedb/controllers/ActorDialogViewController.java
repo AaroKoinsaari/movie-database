@@ -34,11 +34,15 @@ import com.moviedb.models.Movie;
  */
 public class ActorDialogViewController implements Initializable {
 
+    private Connection connection;
+
     private Movie currentMovie;  // The movie currently being edited in the dialog
 
     private ActorDao actorDao;
 
     private MovieDao movieDao;
+
+    private MovieDialogViewController movieDialogViewController;
 
     @FXML
     private TextField nameTextField;
@@ -79,6 +83,10 @@ public class ActorDialogViewController implements Initializable {
     protected void setConnection(Connection connection) {
         this.actorDao = new ActorDao(connection);
         this.movieDao = new MovieDao(connection);
+    }
+
+    protected void setMovieDialogViewController(MovieDialogViewController controller) {
+        this.movieDialogViewController = controller;
     }
 
 
@@ -151,20 +159,12 @@ public class ActorDialogViewController implements Initializable {
      */
     @FXML
     void handleOK(ActionEvent event) {
-        try {
-            List<Integer> existingActorIds = movieDao.fetchAssociatedIds(currentMovie.getId(),
-                    "movie_actors", "actor_id");
-
-            // Go through each Actor on the list and compare them to existing ones before linking to the movie
+        if (currentMovie != null) {
+            addActorsToMovie();
+        } else if (movieDialogViewController != null) {
             for (Actor actor : listView.getItems()) {
-                if (!existingActorIds.contains(actor.getId())) {
-                    movieDao.addActorToMovie(actor.getId(), currentMovie.getId());
-                }
+                movieDialogViewController.addActorToList(actor);
             }
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
         }
 
         Stage stage = (Stage) okButton.getScene().getWindow();
@@ -181,6 +181,24 @@ public class ActorDialogViewController implements Initializable {
     void handleCancel(ActionEvent event) {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
+    }
+
+
+    private void addActorsToMovie() {
+        try {
+            List<Integer> existingActorIds = movieDao.fetchAssociatedIds(currentMovie.getId(),
+                    "movie_actors", "actor_id");
+
+            for (Actor actor : listView.getItems()) {
+                if (!existingActorIds.contains(actor.getId())) {
+                    movieDao.addActorToMovie(actor.getId(), currentMovie.getId());
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
     }
 
 

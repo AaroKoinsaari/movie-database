@@ -7,23 +7,34 @@ import com.moviedb.models.Genre;
 import com.moviedb.models.Movie;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 
-public class MovieDialogViewController {
+public class MovieDialogViewController implements Initializable {
 
-    Connection connection;
 
-    MovieDao movieDao;
+    private Connection connection;
+    private MovieDao movieDao;
 
-    ActorDao actorDao;
+    private ActorDao actorDao;
+
+    private Movie currentMovie;
+
+    private List<Actor> selectedActors = new ArrayList<>();
+
+    private ListView activeListView;
 
     @FXML
     private ListView<Actor> actorsListView;
@@ -53,23 +64,56 @@ public class MovieDialogViewController {
     private TextField titleTextField;
 
 
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        actorsListView.setOnMouseClicked(event -> activeListView = actorsListView);
+        genresListView.setOnMouseClicked(event -> activeListView = genresListView);
+    }
+
+
+    public void setCurrentMovie(Movie currentMovie) {
+        this.currentMovie = currentMovie;
+    }
+
+
     protected void setConnection(Connection connection) {
+        this.connection = connection;
         this.movieDao = new MovieDao(connection);
         this.actorDao = new ActorDao(connection);
     }
 
+
     @FXML
     void handleAdd(ActionEvent event) {
-        if (actorsListView.isFocused()) {
-            openActorDialog();
-        } else if (genresListView.isFocused()) {
+        if (activeListView == actorsListView) {
+            openActorDialog(event);
+        } else if (activeListView == genresListView) {
             openGenreDialog();
         }
     }
 
 
-    private void openActorDialog() {
+    private void openActorDialog(ActionEvent event) {
+        Node source = (Node) event.getSource();
+        Stage ownerStage = (Stage) source.getScene().getWindow();
 
+        try {
+            ViewManager.openActorDialog(currentMovie, connection, ownerStage, this);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+
+    public void addActorToList(Actor actor) {
+        boolean isAlreadyListed = selectedActors.stream()
+                .anyMatch(existingActor -> existingActor.getId() == actor.getId());
+
+        if (!isAlreadyListed) {
+            selectedActors.add(actor);
+            actorsListView.getItems().setAll(selectedActors);
+        }
     }
 
 
