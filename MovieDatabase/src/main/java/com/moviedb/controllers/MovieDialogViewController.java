@@ -72,6 +72,15 @@ public class MovieDialogViewController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         actorsListView.setOnMouseClicked(event -> activeListView = actorsListView);
         genresListView.setOnMouseClicked(event -> activeListView = genresListView);
+
+        // Listener for release year field
+        releaseYearTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.isEmpty() && !InputValidator.isValidReleaseYear(newValue)) {
+                releaseYearTextField.setStyle("-fx-control-inner-background: #ffdddd;");
+            } else {
+                releaseYearTextField.setStyle("-fx-control-inner-background: white;");
+            }
+        });
     }
 
 

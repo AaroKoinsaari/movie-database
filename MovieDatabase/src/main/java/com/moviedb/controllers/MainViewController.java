@@ -140,12 +140,11 @@ public class MainViewController implements Initializable {
             isMovieListFocused = false;
         });
 
+        // Listener for release year field
         releaseYearTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty() && !InputValidator.isValidReleaseYear(newValue)) {
-                // Virheellinen syöte, aseta punainen tausta
-                releaseYearTextField.setStyle("-fx-control-inner-background: #ffdddd;"); // haalean punainen
+                releaseYearTextField.setStyle("-fx-control-inner-background: #ffdddd;");
             } else {
-                // Kelvollinen tai tyhjä syöte, aseta normaali tausta
                 releaseYearTextField.setStyle("-fx-control-inner-background: white;");
             }
         });
