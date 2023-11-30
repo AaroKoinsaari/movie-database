@@ -63,13 +63,14 @@ public class ViewManager {
         Parent root = loader.load();
 
         GenreDialogViewController controller = loader.getController();
-        controller.setConnection(connection);  // Pass the current connection
 
         if (currentMovie == null) {
+            controller.setConnection(connection);
             controller.setMovieDialogViewController(movieDialogViewController);
             controller.setTemporarySelectedGenres(selectedGenres);
         } else {
             controller.setCurrentMovie(currentMovie);
+            controller.setConnection(connection);
         }
 
         // Create new scene and stage

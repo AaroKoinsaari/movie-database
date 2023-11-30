@@ -459,14 +459,7 @@ public class MainViewController implements Initializable {
 
             ViewManager.openMovieDialog(connection, ownerStage);
 
-            // Update the current movie by using the update method
-            try {
-                movieDao.update(currentMovie);
-            } catch (SQLException e) {
-                System.out.println("SQLState: " + e.getSQLState());
-                System.out.println("Error Code: " + e.getErrorCode());
-                System.out.println("Message: " + e.getMessage());
-            }
+            loadMoviesFromDB();
 
         } catch (IOException e) {
             e.printStackTrace();
