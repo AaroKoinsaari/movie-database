@@ -20,7 +20,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.moviedb.controllers.MainViewController">
+<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.moviedb.controllers.MainViewController">
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <menus>
@@ -108,7 +108,7 @@
                     <center>
                         <ScrollPane fitToWidth="true" pannable="true" BorderPane.alignment="CENTER">
                             <content>
-                                <GridPane hgap="10.0">
+                                <GridPane hgap="10.0" vgap="10.0">
                                     <columnConstraints>
                                         <ColumnConstraints fillWidth="false" halignment="RIGHT" hgrow="NEVER" minWidth="10.0" />
                                         <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
@@ -119,12 +119,12 @@
                                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <children>
-                                        <Label text="title" />
-                                        <Label text="release year" GridPane.rowIndex="1" />
-                                        <Label text="director" GridPane.rowIndex="2" />
-                                        <TextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
-                                        <TextField fx:id="releaseYearTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
-                                        <TextField fx:id="directorTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" />
+                                        <Label text="title" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                        <Label text="release year" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                        <Label text="director" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                        <TextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="0" />
+                                        <TextField fx:id="releaseYearTextField" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS" />
+                                        <TextField fx:id="directorTextField" GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS" />
                                     </children>
                                     <opaqueInsets>
                                         <Insets left="10.0" top="10.0" />

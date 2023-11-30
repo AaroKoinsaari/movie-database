@@ -15,8 +15,11 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -55,21 +58,25 @@ public class MainViewController implements Initializable {
     @FXML
     private Button saveButton;
     @FXML
-    public Button addButton;
+    private Button addButton;
     @FXML
-    public Button deleteButton;
+    private Button deleteButton;
     @FXML
     private ListView<Movie> moviesListView;
     @FXML
-    public ListView<Actor> actorsListView;
+    private ListView<Actor> actorsListView;
     @FXML
-    public ListView<Genre> genresListView;
+    private ListView<Genre> genresListView;
     @FXML
-    public TextField titleTextField;
+    private TextField titleTextField;
     @FXML
-    public TextField releaseYearTextField;
+    private TextField releaseYearTextField;
     @FXML
-    public TextField directorTextField;
+    private TextField directorTextField;
+    @FXML
+    private Label errorLabel;
+    @FXML
+    private VBox releaseYearBox;
 
 
     /**
@@ -132,6 +139,17 @@ public class MainViewController implements Initializable {
             isActorListFocused = false;
             isMovieListFocused = false;
         });
+
+        releaseYearTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.isEmpty() && !InputValidator.isValidReleaseYear(newValue)) {
+                // Virheellinen syöte, aseta punainen tausta
+                releaseYearTextField.setStyle("-fx-control-inner-background: #ffdddd;"); // haalean punainen
+            } else {
+                // Kelvollinen tai tyhjä syöte, aseta normaali tausta
+                releaseYearTextField.setStyle("-fx-control-inner-background: white;");
+            }
+        });
+
     }
 
 
@@ -222,19 +240,6 @@ public class MainViewController implements Initializable {
     }
 
 
-    private void deleteMovie(Movie selectedMovie) {
-        try {
-            movieDao.delete(selectedMovie.getId());
-            currentMovie = null;  // Reset the selected movie
-            clearFields();
-            loadMoviesFromDB();
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
-        }
-    }
-
     private void updateSelectedMovie(Movie movie) {
         try {
             Movie updatedMovie = movieDao.read(movie.getId());
@@ -248,6 +253,19 @@ public class MainViewController implements Initializable {
         }
     }
 
+
+    private void deleteMovie(Movie selectedMovie) {
+        try {
+            movieDao.delete(selectedMovie.getId());
+            currentMovie = null;  // Reset the selected movie
+            clearFields();
+            loadMoviesFromDB();
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
 
     private void deleteActor(Movie selectedMovie, Actor selectedActor) {
         try {
