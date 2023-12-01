@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
 
+import fi.jyu.mit.fxgui.Dialogs;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -148,7 +149,6 @@ public class MainViewController implements Initializable {
                 releaseYearTextField.setStyle("-fx-control-inner-background: white;");
             }
         });
-
     }
 
 
@@ -164,28 +164,39 @@ public class MainViewController implements Initializable {
 
         try {
             String updatedMovieTitle = titleTextField.getText();
-            int updatedReleaseYear = Integer.parseInt(releaseYearTextField.getText());
+            String releaseYearText = releaseYearTextField.getText();
             String updatedDirector = directorTextField.getText();
 
-            List<Integer> updatedActorIds = new ArrayList<>();
-            for (Actor actor : actorsListView.getItems()) {
-                updatedActorIds.add(actor.getId());
-            }
+            if (!updatedMovieTitle.isEmpty() &&
+                InputValidator.isValidReleaseYear(releaseYearText) &&
+                InputValidator.isValidDirectorName(updatedDirector) &&
+                !actorsListView.getItems().isEmpty() &&
+                !genresListView.getItems().isEmpty()) {
 
-            List<Integer> updatedGenreIds = new ArrayList<>();
-            for (Genre genre : genresListView.getItems()) {
-                updatedGenreIds.add(genre.getId());
-            }
+                // Change type to int so it can be added to the new Movie object
+                int updatedReleaseYear = Integer.parseInt(releaseYearText);
 
-            int originalMovieId = currentMovie.getId();
+                List<Integer> updatedActorIds = new ArrayList<>();
+                for (Actor actor : actorsListView.getItems()) {
+                    updatedActorIds.add(actor.getId());
+                }
 
-            Movie updatedMovie = new Movie(originalMovieId, updatedMovieTitle, updatedReleaseYear,
-                    updatedDirector, updatedActorIds, updatedGenreIds);
+                List<Integer> updatedGenreIds = new ArrayList<>();
+                for (Genre genre : genresListView.getItems()) {
+                    updatedGenreIds.add(genre.getId());
+                }
 
-            if (movieDao.update(updatedMovie)) {
-                currentMovie = updatedMovie;
-                clearFields();
-                loadMoviesFromDB();
+                int originalMovieId = currentMovie.getId();
+                Movie updatedMovie = new Movie(originalMovieId, updatedMovieTitle, updatedReleaseYear,
+                        updatedDirector, updatedActorIds, updatedGenreIds);
+
+                if (movieDao.update(updatedMovie)) {
+                    currentMovie = updatedMovie;
+                    clearFields();
+                    loadMoviesFromDB();
+                }
+            } else {
+                Dialogs.showMessageDialog("Invalid input data!");
             }
 
         } catch (SQLException e) {
