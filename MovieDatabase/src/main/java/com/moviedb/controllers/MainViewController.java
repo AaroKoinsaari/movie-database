@@ -10,18 +10,13 @@ import java.util.*;
 import fi.jyu.mit.fxgui.Dialogs;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import fi.jyu.mit.fxgui.ComboBoxChooser;
@@ -58,6 +53,8 @@ public class MainViewController implements Initializable {
     private ComboBoxChooser<?> searchComboBox;
     @FXML
     private Button saveButton;
+    @FXML
+    private Button cancelButton;
     @FXML
     private Button addButton;
     @FXML
@@ -163,40 +160,21 @@ public class MainViewController implements Initializable {
         System.out.println("Save button clicked!");
 
         try {
-            String updatedMovieTitle = titleTextField.getText();
-            String releaseYearText = releaseYearTextField.getText();
-            String updatedDirector = directorTextField.getText();
+            if (validateInputs()) {
+                Movie updatedMovie = createMovieFromInput();
 
-            if (!updatedMovieTitle.isEmpty() &&
-                InputValidator.isValidReleaseYear(releaseYearText) &&
-                InputValidator.isValidDirectorName(updatedDirector) &&
-                !actorsListView.getItems().isEmpty() &&
-                !genresListView.getItems().isEmpty()) {
-
-                // Change type to int so it can be added to the new Movie object
-                int updatedReleaseYear = Integer.parseInt(releaseYearText);
-
-                List<Integer> updatedActorIds = new ArrayList<>();
-                for (Actor actor : actorsListView.getItems()) {
-                    updatedActorIds.add(actor.getId());
-                }
-
-                List<Integer> updatedGenreIds = new ArrayList<>();
-                for (Genre genre : genresListView.getItems()) {
-                    updatedGenreIds.add(genre.getId());
-                }
-
-                int originalMovieId = currentMovie.getId();
-                Movie updatedMovie = new Movie(originalMovieId, updatedMovieTitle, updatedReleaseYear,
-                        updatedDirector, updatedActorIds, updatedGenreIds);
-
-                if (movieDao.update(updatedMovie)) {
-                    currentMovie = updatedMovie;
+                if (currentMovie != null) {
+                    updatedMovie.setId(currentMovie.getId());
+                    if (movieDao.update(updatedMovie)) {
+                        currentMovie = null;
+                        clearFields();
+                        loadMoviesFromDB();
+                    }
+                } else {
+                    movieDao.create(updatedMovie);
                     clearFields();
                     loadMoviesFromDB();
                 }
-            } else {
-                Dialogs.showMessageDialog("Invalid input data!");
             }
 
         } catch (SQLException e) {
@@ -204,6 +182,52 @@ public class MainViewController implements Initializable {
             System.out.println("Error Code: " + e.getErrorCode());
             System.out.println("Message: " + e.getMessage());
         }
+    }
+
+
+    private boolean validateInputs() {
+        String updatedMovieTitle = titleTextField.getText();
+        String releaseYearText = releaseYearTextField.getText();
+        String updatedDirector = directorTextField.getText();
+
+        boolean isValid = !updatedMovieTitle.isEmpty() &&
+                InputValidator.isValidReleaseYear(releaseYearText) &&
+                InputValidator.isValidDirectorName(updatedDirector) &&
+                !actorsListView.getItems().isEmpty() &&
+                !genresListView.getItems().isEmpty();
+
+        if (!isValid) {
+            Dialogs.showMessageDialog("Invalid input data!");
+        }
+
+        return isValid;
+    }
+
+
+    private Movie createMovieFromInput() {
+        String updatedMovieTitle = titleTextField.getText();
+        int updatedReleaseYear = Integer.parseInt(releaseYearTextField.getText());
+        String updatedDirector = directorTextField.getText();
+
+        List<Integer> updatedActorIds = new ArrayList<>();
+        for (Actor actor : actorsListView.getItems()) {
+            updatedActorIds.add(actor.getId());
+        }
+
+        List<Integer> updatedGenreIds = new ArrayList<>();
+        for (Genre genre : genresListView.getItems()) {
+            updatedGenreIds.add(genre.getId());
+        }
+
+        return new Movie(updatedMovieTitle, updatedReleaseYear, updatedDirector,
+                updatedActorIds, updatedGenreIds);
+    }
+
+
+    @FXML
+    public void handleCancel(ActionEvent event) {
+        currentMovie = null;
+        clearFields();
     }
 
 
@@ -219,12 +243,10 @@ public class MainViewController implements Initializable {
         System.out.println("Add button clicked. Movie focused: " + isMovieListFocused +
                 ", Actor focused: " + isActorListFocused + ", Genres focused: " + isGenresListFocused);
 
-        if (isMovieListFocused) {
-            openAddMovieDialog(event);
-        } else if (isActorListFocused) {
-            openAddActorDialog(event);
+        if (isActorListFocused) {
+            openActorDialog(event);
         } else if (isGenresListFocused) {
-            openAddGenreDialog(event);
+            openGenreDialog(event);
         }
     }
 
@@ -425,7 +447,7 @@ public class MainViewController implements Initializable {
      * Opens the 'Add Actor' dialog and after closing,
      * updates the movie details with any changes made.
      */
-    private void openAddActorDialog(ActionEvent event) {
+    private void openActorDialog(ActionEvent event) {
         try {
             // Get the stage object from ActionEvent
             Node source = (Node) event.getSource();
@@ -457,7 +479,7 @@ public class MainViewController implements Initializable {
      * Opens the 'Add Genre' dialog and updates the movie information
      * in the database after the dialog is closed.
      */
-    private void openAddGenreDialog(ActionEvent event) {
+    private void openGenreDialog(ActionEvent event) {
         try {
             // Get the stage object from ActionEvent
             Node source = (Node) event.getSource();

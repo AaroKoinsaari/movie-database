@@ -12,6 +12,6 @@ public class InputValidator {
 
 
     public static boolean isValidDirectorName(String name) {
-        return name != null && !name.isEmpty() && name.matches("[a-zA-ZäöåÄÖÅ '-]+");
+        return name != null && !name.isEmpty() && name.matches("[\\p{L} .'-]+");
     }
 }
