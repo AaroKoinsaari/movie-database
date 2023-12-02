@@ -1,12 +1,15 @@
 package com.moviedb.controllers;
 
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
@@ -32,6 +35,8 @@ public class GenreDialogViewController {
     private GenreDao genreDao;
 
     private List<Integer> temporarySelectedGenres = new ArrayList<>();
+
+    private MainViewController mainViewController;
 
     @FXML
     private Button okButton;
@@ -68,10 +73,19 @@ public class GenreDialogViewController {
     protected void setConnection(Connection connection) {
         this.movieDao = new MovieDao(connection);
         this.genreDao = new GenreDao(connection);
-        if (currentMovie != null) {
-            loadGenres();
-        }
     }
+
+
+    public void setMainViewController(MainViewController controller) {
+        this.mainViewController = controller;
+        loadGenres();
+    }
+
+
+//    @Override
+//    public void initialize(URL url, ResourceBundle rb) {
+//        loadGenres();
+//    }
 
 
     /**
@@ -133,16 +147,14 @@ public class GenreDialogViewController {
      */
     private void loadGenres() {
         List<Genre> genres = genreDao.readAll();
-        List<Integer> selectedGenreIds = (currentMovie != null) ? currentMovie.getGenreIds() : temporarySelectedGenres;
-
-        //listView.getItems().clear();
+        List<Genre> selectedGenres = mainViewController.getSelectedGenres();
 
         for (Genre genre : genres) {
             CheckBox cb = new CheckBox(genre.getName());
             cb.setUserData(genre);
 
             // Set the check box selected if the genre is added to the movie already
-            if (selectedGenreIds.contains(genre.getId())) {
+            if (selectedGenres.contains(genre)) {
                 cb.setSelected(true);
             }
 

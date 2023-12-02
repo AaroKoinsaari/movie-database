@@ -78,6 +78,10 @@ public class MainViewController implements Initializable {
     private VBox releaseYearBox;
 
 
+    protected ListView<Actor> getActorsListView() {
+        return actorsListView;
+    }
+
     /**
      * Sets the name of the database to be used by the controller.
      *
@@ -264,6 +268,8 @@ public class MainViewController implements Initializable {
 
         if (isActorListFocused) {
             openActorDialog(event);
+        } else if (isGenresListFocused) {
+            openGenreDialog(event);
         }
     }
 
@@ -479,23 +485,27 @@ public class MainViewController implements Initializable {
     }
 
 
-//    /**
-//     * Opens the 'Add Genre' dialog and updates the movie information
-//     * in the database after the dialog is closed.
-//     */
-//    private void openGenreDialog(ActionEvent event) {
-//        try {
-//            // Get the stage object from ActionEvent
-//            Node source = (Node) event.getSource();
-//            Stage ownerStage = (Stage) source.getScene().getWindow();
-//
-//            ViewManager.openGenreDialog(currentMovie, connection, ownerStage, null, null);
-//
-//            fillMovieDetails(currentMovie);
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            System.out.println("Message: " + e.getMessage());
-//        }
-//    }
+    /**
+     * Opens the 'Add Genre' dialog and updates the movie information
+     * in the database after the dialog is closed.
+     */
+    private void openGenreDialog(ActionEvent event) {
+        try {
+            // Get the stage object from ActionEvent
+            Node source = (Node) event.getSource();
+            Stage ownerStage = (Stage) source.getScene().getWindow();
+
+            ViewManager.openGenreDialog(currentMovie, connection, ownerStage, this);
+
+            fillMovieDetails(currentMovie);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+    public List<Genre> getSelectedGenres() {
+        return new ArrayList<>(genresListView.getItems());
+    }
 }

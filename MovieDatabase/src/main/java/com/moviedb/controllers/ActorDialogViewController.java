@@ -34,8 +34,6 @@ import com.moviedb.models.Movie;
  */
 public class ActorDialogViewController implements Initializable {
 
-    private Connection connection;
-
     private Movie currentMovie;  // The movie currently being edited in the dialog
 
     private ActorDao actorDao;
@@ -85,6 +83,7 @@ public class ActorDialogViewController implements Initializable {
         this.movieDao = new MovieDao(connection);
     }
 
+
     protected void setMainViewController(MainViewController controller) {
         this.mainViewController = controller;
     }
@@ -120,6 +119,8 @@ public class ActorDialogViewController implements Initializable {
             String selectedActorName = event.getCompletion();
             nameTextField.setText(selectedActorName);
         });
+
+        listView = mainViewController.getActorsListView();
     }
 
 
@@ -178,24 +179,6 @@ public class ActorDialogViewController implements Initializable {
     private void closeStage() {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
-    }
-
-
-    private void addActorsToMovie() {
-        try {
-            List<Integer> existingActorIds = movieDao.fetchAssociatedIds(currentMovie.getId(),
-                    "movie_actors", "actor_id");
-
-            for (Actor actor : listView.getItems()) {
-                if (!existingActorIds.contains(actor.getId())) {
-                    movieDao.addActorToMovie(actor.getId(), currentMovie.getId());
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
-        }
     }
 
 
