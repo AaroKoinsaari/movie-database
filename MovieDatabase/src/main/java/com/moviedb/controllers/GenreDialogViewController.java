@@ -31,8 +31,6 @@ public class GenreDialogViewController {
 
     private GenreDao genreDao;
 
-    private MovieDialogViewController movieDialogViewController;
-
     private List<Integer> temporarySelectedGenres = new ArrayList<>();
 
     @FXML
@@ -76,12 +74,6 @@ public class GenreDialogViewController {
     }
 
 
-    public void setMovieDialogViewController(MovieDialogViewController controller) {
-        this.movieDialogViewController = controller;
-    }
-
-
-
     /**
      * Handles the 'OK' button action by iterating through the list
      * of CheckBoxes representing genres, and collects the IDs of all selected
@@ -115,7 +107,6 @@ public class GenreDialogViewController {
             // If movie is null, add genres to temporary list which
             // is handled in MovieDialog controller
             temporarySelectedGenres = selectedGenreIds;
-            movieDialogViewController.addGenresToList(selectedGenreIds);
         }
 
         Stage stage = (Stage) okButton.getScene().getWindow();

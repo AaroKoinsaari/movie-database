@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import fi.jyu.mit.fxgui.Dialogs;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -84,6 +85,24 @@ public class MainViewController implements Initializable {
      */
     protected void setDatabaseName(String dbName) {
         this.databaseName = dbName;
+    }
+
+
+    public void setActorsList(List<Actor> actors) {
+        List<Actor> newActors = filterExistingActors(actors);
+        actorsListView.getItems().addAll(newActors);
+    }
+
+
+    private List<Actor> filterExistingActors(List<Actor> actors) {
+        List<Actor> filteredActors = new ArrayList<>();
+        for (Actor actor : actors) {
+            if (!actorsListView.getItems().contains(actor)) {
+                filteredActors.add(actor);
+            }
+        }
+
+        return filteredActors;
     }
 
 
@@ -245,8 +264,6 @@ public class MainViewController implements Initializable {
 
         if (isActorListFocused) {
             openActorDialog(event);
-        } else if (isGenresListFocused) {
-            openGenreDialog(event);
         }
     }
 
@@ -453,20 +470,7 @@ public class MainViewController implements Initializable {
             Node source = (Node) event.getSource();
             Stage ownerStage = (Stage) source.getScene().getWindow();
 
-            ViewManager.openActorDialog(currentMovie, connection, ownerStage, null);
-
-            // Update the selected movie by fetching the updated version from DB
-            try {
-                currentMovie = movieDao.read(currentMovie.getId());
-                if (currentMovie != null) {
-                    fillMovieDetails(currentMovie);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                System.out.println("SQLState: " + e.getSQLState());
-                System.out.println("Error Code: " + e.getErrorCode());
-                System.out.println("Message: " + e.getMessage());
-            }
+            ViewManager.openActorDialog(currentMovie, connection, ownerStage, this);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -475,45 +479,23 @@ public class MainViewController implements Initializable {
     }
 
 
-    /**
-     * Opens the 'Add Genre' dialog and updates the movie information
-     * in the database after the dialog is closed.
-     */
-    private void openGenreDialog(ActionEvent event) {
-        try {
-            // Get the stage object from ActionEvent
-            Node source = (Node) event.getSource();
-            Stage ownerStage = (Stage) source.getScene().getWindow();
-
-            ViewManager.openGenreDialog(currentMovie, connection, ownerStage, null, null);
-
-            fillMovieDetails(currentMovie);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Message: " + e.getMessage());
-        }
-    }
-
-
-    /**
-     * Opens the 'Add Movie' dialog.
-     * Loads the MovieDialogView FXML and displays the dialog in a modal window.
-     * Updates the movie details in the database after the dialog is closed.
-     */
-    private void openAddMovieDialog(ActionEvent event) {
-        try {
-            // Get the stage object from ActionEvent
-            Node source = (Node) event.getSource();
-            Stage ownerStage = (Stage) source.getScene().getWindow();
-
-            ViewManager.openMovieDialog(connection, ownerStage);
-
-            loadMoviesFromDB();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Message: " + e.getMessage());
-        }
-    }
+//    /**
+//     * Opens the 'Add Genre' dialog and updates the movie information
+//     * in the database after the dialog is closed.
+//     */
+//    private void openGenreDialog(ActionEvent event) {
+//        try {
+//            // Get the stage object from ActionEvent
+//            Node source = (Node) event.getSource();
+//            Stage ownerStage = (Stage) source.getScene().getWindow();
+//
+//            ViewManager.openGenreDialog(currentMovie, connection, ownerStage, null, null);
+//
+//            fillMovieDetails(currentMovie);
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            System.out.println("Message: " + e.getMessage());
+//        }
+//    }
 }

@@ -21,21 +21,14 @@ public class ViewManager {
      * After the dialog is closed, updates the movie details with any changes made.
      */
     public static void openActorDialog(Movie currentMovie, Connection connection, Stage ownerStage,
-                                       MovieDialogViewController movieDialogViewController)
-        throws IOException {
+                                       MainViewController mainViewController) throws IOException {
         // Load the FXML file
         FXMLLoader loader = new FXMLLoader(ViewManager.class.getResource("/views/ActorDialogView.fxml"));
         Parent root = loader.load();
 
         ActorDialogViewController controller = loader.getController();
         controller.setConnection(connection);  // Pass the current connection
-
-        if (currentMovie == null) {
-            controller.setMovieDialogViewController(movieDialogViewController);
-        } else {
-            controller.setCurrentMovie(currentMovie);
-        }
-
+        controller.setMainViewController(mainViewController);
 
         // Create new scene and stage
         Scene scene = new Scene(root);
@@ -50,61 +43,38 @@ public class ViewManager {
     }
 
 
-    /**
-     * Opens the 'Add Genre' dialog.
-     * Loads the GenreDialogView FXML, sets up the controller, and displays the dialog in a modal window.
-     * Provides the current movie and database connection to the dialog controller.
-     */
-    public static void openGenreDialog(Movie currentMovie, Connection connection, Stage ownerStage,
-                                       MovieDialogViewController movieDialogViewController, List<Integer> selectedGenres)
-        throws IOException {
-        // Load the FXML file
-        FXMLLoader loader = new FXMLLoader(ViewManager.class.getResource("/views/GenreDialogView.fxml"));
-        Parent root = loader.load();
-
-        GenreDialogViewController controller = loader.getController();
-
-        if (currentMovie == null) {
-            controller.setConnection(connection);
-            controller.setMovieDialogViewController(movieDialogViewController);
-            controller.setTemporarySelectedGenres(selectedGenres);
-        } else {
-            controller.setCurrentMovie(currentMovie);
-            controller.setConnection(connection);
-        }
-
-        // Create new scene and stage
-        Scene scene = new Scene(root);
-        Stage dialogStage = new Stage();
-        dialogStage.setTitle("Choose the Genres");
-        dialogStage.setScene(scene);
-
-        // Set the stage as modal
-        dialogStage.initModality(Modality.APPLICATION_MODAL);
-        dialogStage.initOwner(ownerStage);
-        dialogStage.showAndWait();  // Wait until the user closes the window
-    }
-
-
-    public static void openMovieDialog(Connection connection, Stage ownerStage)
-        throws IOException {
-        // Load the FXML file
-        FXMLLoader loader = new FXMLLoader(ViewManager.class.getResource("/views/MovieDialogView.fxml"));
-        Parent root = loader.load();
-
-        MovieDialogViewController controller = loader.getController();
-        // controller.setCurrentMovie(currentMovie);
-        controller.setConnection(connection);  // Pass the current connection
-
-        // Create new scene and stage
-        Scene scene = new Scene(root);
-        Stage dialogStage = new Stage();
-        dialogStage.setTitle("Add new movie details");
-        dialogStage.setScene(scene);
-
-        // Set the stage as modal
-        dialogStage.initModality(Modality.APPLICATION_MODAL);
-        dialogStage.initOwner(ownerStage);
-        dialogStage.showAndWait();  // Wait until the user closes the window
-    }
+//    /**
+//     * Opens the 'Add Genre' dialog.
+//     * Loads the GenreDialogView FXML, sets up the controller, and displays the dialog in a modal window.
+//     * Provides the current movie and database connection to the dialog controller.
+//     */
+//    public static void openGenreDialog(Movie currentMovie, Connection connection, Stage ownerStage,
+//                                       MovieDialogViewController movieDialogViewController, List<Integer> selectedGenres)
+//        throws IOException {
+//        // Load the FXML file
+//        FXMLLoader loader = new FXMLLoader(ViewManager.class.getResource("/views/GenreDialogView.fxml"));
+//        Parent root = loader.load();
+//
+//        GenreDialogViewController controller = loader.getController();
+//
+//        if (currentMovie == null) {
+//            controller.setConnection(connection);
+//            controller.setMovieDialogViewController(movieDialogViewController);
+//            controller.setTemporarySelectedGenres(selectedGenres);
+//        } else {
+//            controller.setCurrentMovie(currentMovie);
+//            controller.setConnection(connection);
+//        }
+//
+//        // Create new scene and stage
+//        Scene scene = new Scene(root);
+//        Stage dialogStage = new Stage();
+//        dialogStage.setTitle("Choose the Genres");
+//        dialogStage.setScene(scene);
+//
+//        // Set the stage as modal
+//        dialogStage.initModality(Modality.APPLICATION_MODAL);
+//        dialogStage.initOwner(ownerStage);
+//        dialogStage.showAndWait();  // Wait until the user closes the window
+//    }
 }

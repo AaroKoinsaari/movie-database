@@ -42,7 +42,7 @@ public class ActorDialogViewController implements Initializable {
 
     private MovieDao movieDao;
 
-    private MovieDialogViewController movieDialogViewController;
+    private MainViewController mainViewController;
 
     @FXML
     private TextField nameTextField;
@@ -85,8 +85,8 @@ public class ActorDialogViewController implements Initializable {
         this.movieDao = new MovieDao(connection);
     }
 
-    protected void setMovieDialogViewController(MovieDialogViewController controller) {
-        this.movieDialogViewController = controller;
+    protected void setMainViewController(MainViewController controller) {
+        this.mainViewController = controller;
     }
 
 
@@ -159,16 +159,8 @@ public class ActorDialogViewController implements Initializable {
      */
     @FXML
     void handleOK(ActionEvent event) {
-        if (currentMovie != null) {
-            addActorsToMovie();
-        } else if (movieDialogViewController != null) {
-            for (Actor actor : listView.getItems()) {
-                movieDialogViewController.addActorToList(actor);
-            }
-        }
-
-        Stage stage = (Stage) okButton.getScene().getWindow();
-        stage.close();
+        mainViewController.setActorsList(listView.getItems());
+        closeStage();
     }
 
 
@@ -179,6 +171,11 @@ public class ActorDialogViewController implements Initializable {
      */
     @FXML
     void handleCancel(ActionEvent event) {
+        closeStage();
+    }
+
+
+    private void closeStage() {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
     }
