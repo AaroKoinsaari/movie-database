@@ -58,7 +58,7 @@ public class MainViewController implements Initializable {
     @FXML
     private Button saveButton;
     @FXML
-    private Button cancelButton;
+    private Button resetButton;
     @FXML
     private Button addButton;
     @FXML
@@ -75,28 +75,36 @@ public class MainViewController implements Initializable {
     private TextField releaseYearTextField;
     @FXML
     private TextField directorTextField;
-    @FXML
-    private Label errorLabel;
-    @FXML
-    private VBox releaseYearBox;
 
 
+    /**
+     * Gets the current list of genres.
+     *
+     * @return New list of genres from the genres list view.
+     */
     public List<Genre> getGenreList() {
         return new ArrayList<>(genresListView.getItems());
     }
 
 
+    /**
+     * Gets the current list of actors.
+     *
+     * @return New list of actors from the actors list view.
+     */
     protected List<Actor> getActorList() {
         return new ArrayList<>(actorsListView.getItems());
     }
 
-    protected void setGenreList(List<Genre> selectedGenres) {
-        updateGenresListView(selectedGenres);
-    }
 
-    private void updateGenresListView(List<Genre> selectedGenreIds) {
+    /**
+     * Sets the new list of genres.
+     *
+     * @param selectedGenres List of selected genres to update the genre list with.
+     */
+    protected void setGenreList(List<Genre> selectedGenres) {
         genresListView.getItems().clear();
-        genresListView.getItems().addAll(selectedGenreIds);
+        genresListView.getItems().addAll(selectedGenres);
     }
 
 
@@ -110,10 +118,13 @@ public class MainViewController implements Initializable {
     }
 
 
+    /**
+     * Sets the new list of actors.
+     * @param actors List of actors to update the actors list with.
+     */
     public void setActorList(List<Actor> actors) {
         actorsListView.getItems().setAll(actors);
     }
-
 
 
     /**
@@ -214,6 +225,13 @@ public class MainViewController implements Initializable {
     }
 
 
+    /**
+     * Validates input fields for movie details and ensures that
+     * both actors and genres lists are not empty.
+     * Displays a message dialog if inputs are invalid.
+     *
+     * @return boolean indicating whether inputs are valid or not.
+     */
     private boolean validateInputs() {
         String updatedMovieTitle = titleTextField.getText();
         String releaseYearText = releaseYearTextField.getText();
@@ -233,6 +251,12 @@ public class MainViewController implements Initializable {
     }
 
 
+    /**
+     * Creates a new Movie object from user inputs, extracting the movie details
+     * and lists of actor and genre IDs.
+     *
+     * @return Movie object created from input fields.
+     */
     private Movie createMovieFromInput() {
         String updatedMovieTitle = titleTextField.getText();
         int updatedReleaseYear = Integer.parseInt(releaseYearTextField.getText());
@@ -253,8 +277,14 @@ public class MainViewController implements Initializable {
     }
 
 
+    /**
+     * Handles the 'Reset' button click event
+     * Resets the current movie object and clears all input fields.
+     *
+     * @param event The ActionEvent triggered by the 'Reset' button click.
+     */
     @FXML
-    public void handleCancel(ActionEvent event) {
+    public void handleReset(ActionEvent event) {
         currentMovie = null;
         clearFields();
     }
@@ -335,20 +365,6 @@ public class MainViewController implements Initializable {
             movieDao.delete(selectedMovie.getId());
             currentMovie = null;  // Reset the currently selected movie
             clearFields();
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
-        }
-    }
-
-
-    private void updateSelectedMovie(Movie movie) {
-        try {
-            Movie updatedMovie = movieDao.read(movie.getId());
-            if (updatedMovie != null) {
-                currentMovie = updatedMovie;
-            }
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());

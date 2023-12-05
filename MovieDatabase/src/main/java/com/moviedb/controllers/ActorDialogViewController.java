@@ -173,7 +173,7 @@ public class ActorDialogViewController implements Initializable {
         if (!isActorOnTheList(actor)) {
             listView.getItems().add(actor);
         } else {
-            alertLabel.setText("Actor '" + actor.getName() + "' is alredy in the list!");
+            alertLabel.setText("Actor '" + actor.getName() + "' is already in the list!");
             alertLabel.setVisible(true);
             // Dialogs.showMessageDialog("Actor '" + actor.getName() + "' is already in the list.");
         }
