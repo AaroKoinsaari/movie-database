@@ -1,39 +1,30 @@
 package com.moviedb.controllers;
 
-import java.net.URL;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.stage.Stage;
 
 import com.moviedb.dao.GenreDao;
-import com.moviedb.dao.MovieDao;
 import com.moviedb.models.Genre;
-import com.moviedb.models.Movie;
 
 
 /**
- * Controller class that is responsible for handling the UI logic related to adding and managing genres
- * associated with a movie. It includes functionality for displaying and selecting genres
- * for a movie by listing all available genres as CheckBoxes.
+ * Controller class for managing genre selection in a movie context.
+ * It displays available genres as CheckBoxes, allowing the user to select or deselect genres.
  */
 public class GenreDialogViewController {
 
-    private Connection connection;
-
-    private Movie currentMovie;  // The movie currently being edited in the dialog
-
+    /** Data Access Object for genre-related operations. */
     private GenreDao genreDao;
 
+    /** Reference to the MainViewController to update selected genres. */
     private MainViewController mainViewController;
 
     @FXML
@@ -42,23 +33,27 @@ public class GenreDialogViewController {
     @FXML
     private Button cancelButton;
 
+    /** ListView for displaying genres as CheckBoxes. */
     @FXML
     private ListView<CheckBox> listView;
 
 
-    protected void initializeController(MainViewController mainViewController, Movie currentMovie, Connection connection) {
+    /**
+     * Initializes the controller with necessary references and loads the genre list.
+     *
+     * @param mainViewController The main controller of the application.
+     * @param connection         The database connection for genre data retrieval.
+     */
+    protected void initializeController(MainViewController mainViewController, Connection connection) {
         this.mainViewController = mainViewController;
-        this.currentMovie = currentMovie;
-        this.connection = connection;
         this.genreDao = new GenreDao(connection);
         loadGenres();
     }
 
 
     /**
-     * Handles the 'OK' button action by iterating through the list
-     * of CheckBoxes representing genres, and collects the IDs of all selected
-     * genres into a list, which are then associated with the current movie.
+     * Handles the action of the 'OK' button. Iterates through CheckBoxes to collect selected genres,
+     * and updates the MainViewController with these selections.
      *
      * @param event The ActionEvent triggered by the 'OK' button click.
      */
@@ -74,28 +69,24 @@ public class GenreDialogViewController {
         }
 
         mainViewController.setSelectedGenres(selectedGenres);
-
-        Stage stage = (Stage) okButton.getScene().getWindow();
-        stage.close();
+        closeStage();
     }
 
 
     /**
-     * Closes the dialog window when the 'Cancel' button is clicked.
+     * Handles the action of the 'Cancel' button by closing the dialog window.
      *
      * @param event The ActionEvent triggered by the 'Cancel' button click.
      */
     @FXML
     void handleCancel(ActionEvent event) {
-        Stage stage = (Stage) cancelButton.getScene().getWindow();
-        stage.close();
+        closeStage();
     }
 
 
     /**
-     * Populates the ListView with CheckBoxes for each genre.
-     * Each CheckBox is labeled with a genre's name and marked as selected if it's already
-     * associated with the current movie. The Genre objects are attached as user data to the CheckBoxes.
+     * Populates the ListView with CheckBoxes, each representing a genre.
+     * CheckBoxes are marked as selected based on the current selection in MainViewController.
      */
     private void loadGenres() {
         List<Genre> genres = genreDao.readAll();
@@ -105,12 +96,20 @@ public class GenreDialogViewController {
             CheckBox cb = new CheckBox(genre.getName());
             cb.setUserData(genre);
 
-            // Set the check box selected if the genre is added to the movie already
             if (selectedGenres.contains(genre)) {
                 cb.setSelected(true);
             }
 
             listView.getItems().add(cb);
         }
+    }
+
+
+    /**
+     * Closes the current stage/window.
+     */
+    private void closeStage() {
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
     }
 }

@@ -533,7 +533,7 @@ public class MainViewController implements Initializable {
             Parent root = loader.load();
 
             GenreDialogViewController controller = loader.getController();
-
+            controller.initializeController(this, connection);
 
             // Create new scene and stage
             Scene scene = new Scene(root);
@@ -545,8 +545,6 @@ public class MainViewController implements Initializable {
             dialogStage.initModality(Modality.APPLICATION_MODAL);
             dialogStage.initOwner(ownerStage);
             dialogStage.showAndWait();  // Wait until the user closes the window
-
-            fillMovieDetails(currentMovie);
 
         } catch (IOException e) {
             e.printStackTrace();
