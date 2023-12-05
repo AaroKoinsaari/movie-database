@@ -292,23 +292,65 @@ public class MainViewController implements Initializable {
     }
 
 
+    /**
+     * Handles the deletion of movies, actors, or genres based on the focused list.
+     *
+     * @param event The ActionEvent triggered by the delete action.
+     */
     @FXML
     void handleDelete(ActionEvent event) {
         if (isMovieListFocused) {
             Movie selectedMovie = moviesListView.getSelectionModel().getSelectedItem();
             if (selectedMovie != null) {
+                removeObjectFromList(moviesListView, selectedMovie);
                 deleteMovie(selectedMovie);
             }
-        } else if (isActorListFocused && currentMovie != null) {
+        } else if (isActorListFocused) {
             Actor selectedActor = actorsListView.getSelectionModel().getSelectedItem();
             if (selectedActor != null) {
-                deleteActor(currentMovie, selectedActor);
+                removeObjectFromList(actorsListView, selectedActor);
             }
-        } else if (isGenresListFocused && currentMovie != null) {
+        } else if (isGenresListFocused) {
             Genre selectedGenre = genresListView.getSelectionModel().getSelectedItem();
             if (selectedGenre != null) {
-                deleteGenre(currentMovie, selectedGenre);
+                removeObjectFromList(genresListView, selectedGenre);
             }
+        }
+    }
+
+
+    /**
+     * Removes an object from the provided ListView.
+     * If the object is a Movie, it is also deleted from the database.
+     *
+     * @param listView The ListView from which the object is to be removed.
+     * @param object   The object to remove, which can be of any type.
+     * @param <T>      The type of objects contained in the ListView.
+     */
+    private <T> void removeObjectFromList(ListView<T> listView, T object) {
+        if (object instanceof Movie movie) {
+            deleteMovie(movie);
+            listView.getItems().remove(movie);
+        } else {
+            listView.getItems().remove(object);
+        }
+    }
+
+
+    /**
+     * Deletes a movie from the database and updates the UI accordingly.
+     *
+     * @param selectedMovie The movie to be deleted from the database.
+     */
+    private void deleteMovie(Movie selectedMovie) {
+        try {
+            movieDao.delete(selectedMovie.getId());
+            currentMovie = null;  // Reset the currently selected movie
+            clearFields();
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
         }
     }
 
@@ -319,47 +361,6 @@ public class MainViewController implements Initializable {
             if (updatedMovie != null) {
                 currentMovie = updatedMovie;
             }
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
-        }
-    }
-
-
-    private void deleteMovie(Movie selectedMovie) {
-        try {
-            movieDao.delete(selectedMovie.getId());
-            currentMovie = null;  // Reset the selected movie
-            clearFields();
-            loadMoviesFromDB();
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
-        }
-    }
-
-    private void deleteActor(Movie selectedMovie, Actor selectedActor) {
-        try {
-            movieDao.removeLinkFromMovie(selectedMovie.getId(), selectedActor.getId(),
-                    "movie_actors", "actor_id");
-            updateSelectedMovie(selectedMovie);
-            fillMovieDetails(currentMovie);
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
-        }
-    }
-
-
-    private void deleteGenre(Movie selectedMovie, Genre selectedGenre) {
-        try {
-            movieDao.removeLinkFromMovie(selectedMovie.getId(), selectedGenre.getId(),
-                    "movie_genres", "genre_id");
-            updateSelectedMovie(selectedMovie);
-            fillMovieDetails(currentMovie);
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
