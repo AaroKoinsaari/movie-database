@@ -92,7 +92,7 @@
                             <children>
                                 <Label alignment="CENTER" maxWidth="300.0" text="Search" />
                                 <TextField fx:id="searchTextField" />
-                                <ComboBoxChooser fx:id="searchComboBox" maxWidth="200.0" promptText="name" rivit="title&#10;release year&#10;director&#10;genre&#10;cast&#10;rating&#10;duration" />
+                                <ComboBoxChooser fx:id="searchComboBox" maxWidth="200.0" promptText="name" rivit="title&#10;release year&#10;director&#10;actor&#10;genre" />
                                 <Label alignment="CENTER" maxWidth="300.0" text="Movies" />
                             </children>
                         </VBox>

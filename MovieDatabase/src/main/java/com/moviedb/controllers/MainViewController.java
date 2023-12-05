@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -43,10 +44,11 @@ public class MainViewController implements Initializable {
 
     private String databaseName;
     private Connection connection;
-    private Movie currentMovie;  // The movie currently chosen from the list
     private MovieDao movieDao;
     private ActorDao actorDao;
     private GenreDao genreDao;
+    private Movie currentMovie;  // The movie currently chosen from the list
+    private List<Movie> allMovies;
 
     // Focus variables to determine which list is active
     private boolean isMovieListFocused;
@@ -136,7 +138,7 @@ public class MainViewController implements Initializable {
      * The listeners for the actors and genres lists simply update the respective focus variables.
      *
      * @param url The URL used for resolving relative paths, can be null.
-     * @param rb The resource bundle for localizing objects, can be null.
+     * @param rb  The resource bundle for localizing objects, can be null.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -214,6 +216,10 @@ public class MainViewController implements Initializable {
         try {
             movieDao.create(new Movie("test", 2023, "testi",
                     Arrays.asList(1, 2), Arrays.asList(2, 4)));
+            movieDao.create(new Movie("paska", 2023, "testi2",
+                    Arrays.asList(2, 3), Arrays.asList(1, 6)));
+
+            allMovies = movieDao.readAll();  // Fetch all the movies
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
@@ -221,6 +227,35 @@ public class MainViewController implements Initializable {
         }
 
         loadMoviesFromDB();
+        setupSearchTextFieldListener();
+    }
+
+
+    private void setupSearchTextFieldListener() {
+        searchTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.length() >= 2) {
+                List<Movie> filteredMovies = searchMoviesStartingWith(newValue);
+                updateMovieListView(filteredMovies);
+            } else if (newValue.isEmpty()) {
+                updateMovieListView(allMovies);
+            }
+        });
+    }
+
+
+    private List<Movie> searchMoviesStartingWith(String prefix) {
+        String lowerCasePrefix = prefix.toLowerCase();
+
+        // Filter the movies that start with the prefix from the allMovies list
+        return allMovies.stream()
+                .filter(movie -> movie.getTitle().toLowerCase().startsWith(lowerCasePrefix))
+                .collect(Collectors.toList());
+    }
+
+
+    private void updateMovieListView(List<Movie> movies) {
+        moviesListView.getItems().clear();
+        moviesListView.getItems().addAll(movies);
     }
 
 
@@ -245,20 +280,13 @@ public class MainViewController implements Initializable {
      * view component with their titles.
      */
     private void loadMoviesFromDB() {
-        try {
-            List<Movie> movies = movieDao.readAll();
-            if (movies.isEmpty()) {
-                moviesListView.getItems().clear();
-                return;
-            }
+        if (allMovies.isEmpty()) {
             moviesListView.getItems().clear();
-            for (Movie movie : movies) {
-                moviesListView.getItems().add(movie);
-            }
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
+            return;
+        }
+        moviesListView.getItems().clear();
+        for (Movie movie : allMovies) {
+            moviesListView.getItems().add(movie);
         }
     }
 
