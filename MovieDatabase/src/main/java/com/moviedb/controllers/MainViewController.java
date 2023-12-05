@@ -5,9 +5,12 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
 
-import fi.jyu.mit.fxgui.Dialogs;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -16,18 +19,17 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import fi.jyu.mit.fxgui.ComboBoxChooser;
+import fi.jyu.mit.fxgui.Dialogs;
 
-import com.moviedb.dao.MovieDao;
-import com.moviedb.dao.GenreDao;
 import com.moviedb.dao.ActorDao;
+import com.moviedb.dao.GenreDao;
+import com.moviedb.dao.MovieDao;
 import com.moviedb.models.Actor;
 import com.moviedb.models.Genre;
 import com.moviedb.models.Movie;
@@ -190,190 +192,6 @@ public class MainViewController implements Initializable {
 
 
     /**
-     * Handles the 'Save' button click event.
-     * Updates the selected movie details to the database by collecting the data from UI.
-     *
-     * @param event The ActionEvent triggered by the 'Save' button click.
-     */
-    @FXML
-    void handleSave(ActionEvent event) {
-        System.out.println("Save button clicked!");
-
-        try {
-            if (validateInputs()) {
-                Movie updatedMovie = createMovieFromInput();
-
-                if (currentMovie != null) {
-                    updatedMovie.setId(currentMovie.getId());
-                    if (movieDao.update(updatedMovie)) {
-                        currentMovie = null;
-                        clearFields();
-                        loadMoviesFromDB();
-                    }
-                } else {
-                    movieDao.create(updatedMovie);
-                    clearFields();
-                    loadMoviesFromDB();
-                }
-            }
-
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
-        }
-    }
-
-
-    /**
-     * Validates input fields for movie details and ensures that
-     * both actors and genres lists are not empty.
-     * Displays a message dialog if inputs are invalid.
-     *
-     * @return boolean indicating whether inputs are valid or not.
-     */
-    private boolean validateInputs() {
-        String updatedMovieTitle = titleTextField.getText();
-        String releaseYearText = releaseYearTextField.getText();
-        String updatedDirector = directorTextField.getText();
-
-        boolean isValid = !updatedMovieTitle.isEmpty() &&
-                InputValidator.isValidReleaseYear(releaseYearText) &&
-                InputValidator.isValidDirectorName(updatedDirector) &&
-                !actorsListView.getItems().isEmpty() &&
-                !genresListView.getItems().isEmpty();
-
-        if (!isValid) {
-            Dialogs.showMessageDialog("Invalid input data!");
-        }
-
-        return isValid;
-    }
-
-
-    /**
-     * Creates a new Movie object from user inputs, extracting the movie details
-     * and lists of actor and genre IDs.
-     *
-     * @return Movie object created from input fields.
-     */
-    private Movie createMovieFromInput() {
-        String updatedMovieTitle = titleTextField.getText();
-        int updatedReleaseYear = Integer.parseInt(releaseYearTextField.getText());
-        String updatedDirector = directorTextField.getText();
-
-        List<Integer> updatedActorIds = new ArrayList<>();
-        for (Actor actor : actorsListView.getItems()) {
-            updatedActorIds.add(actor.getId());
-        }
-
-        List<Integer> updatedGenreIds = new ArrayList<>();
-        for (Genre genre : genresListView.getItems()) {
-            updatedGenreIds.add(genre.getId());
-        }
-
-        return new Movie(updatedMovieTitle, updatedReleaseYear, updatedDirector,
-                updatedActorIds, updatedGenreIds);
-    }
-
-
-    /**
-     * Handles the 'Reset' button click event
-     * Resets the current movie object and clears all input fields.
-     *
-     * @param event The ActionEvent triggered by the 'Reset' button click.
-     */
-    @FXML
-    public void handleReset(ActionEvent event) {
-        currentMovie = null;
-        clearFields();
-    }
-
-
-    /**
-     * Handles the 'Add' button click event.
-     * Determines which entity (movie, actor, or genre) is currently focused based on the focus variables.
-     * Opens the corresponding dialog to add a new movie, actor, or genre.
-     *
-     * @param event The ActionEvent triggered by the 'Add' button click.
-     */
-    @FXML
-    void handleAdd(ActionEvent event) {
-        System.out.println("Add button clicked. Movie focused: " + isMovieListFocused +
-                ", Actor focused: " + isActorListFocused + ", Genres focused: " + isGenresListFocused);
-
-        if (isActorListFocused) {
-            openActorDialog(event);
-        } else if (isGenresListFocused) {
-            openGenreDialog(event);
-        }
-    }
-
-
-    /**
-     * Handles the deletion of movies, actors, or genres based on the focused list.
-     *
-     * @param event The ActionEvent triggered by the delete action.
-     */
-    @FXML
-    void handleDelete(ActionEvent event) {
-        if (isMovieListFocused) {
-            Movie selectedMovie = moviesListView.getSelectionModel().getSelectedItem();
-            if (selectedMovie != null) {
-                removeObjectFromList(moviesListView, selectedMovie);
-                deleteMovie(selectedMovie);
-            }
-        } else if (isActorListFocused) {
-            Actor selectedActor = actorsListView.getSelectionModel().getSelectedItem();
-            if (selectedActor != null) {
-                removeObjectFromList(actorsListView, selectedActor);
-            }
-        } else if (isGenresListFocused) {
-            Genre selectedGenre = genresListView.getSelectionModel().getSelectedItem();
-            if (selectedGenre != null) {
-                removeObjectFromList(genresListView, selectedGenre);
-            }
-        }
-    }
-
-
-    /**
-     * Removes an object from the provided ListView.
-     * If the object is a Movie, it is also deleted from the database.
-     *
-     * @param listView The ListView from which the object is to be removed.
-     * @param object   The object to remove, which can be of any type.
-     * @param <T>      The type of objects contained in the ListView.
-     */
-    private <T> void removeObjectFromList(ListView<T> listView, T object) {
-        if (object instanceof Movie movie) {
-            deleteMovie(movie);
-            listView.getItems().remove(movie);
-        } else {
-            listView.getItems().remove(object);
-        }
-    }
-
-
-    /**
-     * Deletes a movie from the database and updates the UI accordingly.
-     *
-     * @param selectedMovie The movie to be deleted from the database.
-     */
-    private void deleteMovie(Movie selectedMovie) {
-        try {
-            movieDao.delete(selectedMovie.getId());
-            currentMovie = null;  // Reset the currently selected movie
-            clearFields();
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
-        }
-    }
-
-
-    /**
      * Initializes the database connection and sets up the DAOs to allow
      * the application to interact with the database during runtime.
      */
@@ -423,9 +241,8 @@ public class MainViewController implements Initializable {
 
 
     /**
-     * Loads all movies from the database and populates the moviesListChooser component with their titles.
-     * Fetches a list of all Movie objects using the movieDao's readAll method,
-     * clears the existing list in moviesListChooser, and then adds the title of each movie to the list.
+     * Loads all movies from the database and populates the movie list
+     * view component with their titles.
      */
     private void loadMoviesFromDB() {
         try {
@@ -447,10 +264,196 @@ public class MainViewController implements Initializable {
 
 
     /**
-     * Fills in the movie details into the relevant fields and ListChooser components.
-     * Updates the title, release year, and director text fields with the selected movie's details.
-     * Also clears and repopulates the actorsListChooser and genresListChooser with the actors and genres
-     * associated with the selected movie.
+     * Handles the 'Save' button click event.
+     * Updates the selected movie details to the database by collecting the data from UI.
+     *
+     * @param event The ActionEvent triggered by the 'Save' button click.
+     */
+    @FXML
+    void handleSave(ActionEvent event) {
+        System.out.println("Save button clicked!");
+
+        try {
+            if (validateInputs()) {
+                Movie updatedMovie = createMovieFromInput();
+
+                if (currentMovie != null) {
+                    updatedMovie.setId(currentMovie.getId());
+                    if (movieDao.update(updatedMovie)) {
+                        currentMovie = null;
+                        clearFields();
+                        loadMoviesFromDB();
+                    }
+                } else {
+                    movieDao.create(updatedMovie);
+                    clearFields();
+                    loadMoviesFromDB();
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Handles the 'Reset' button click event
+     * Resets the current movie object and clears all input fields.
+     *
+     * @param event The ActionEvent triggered by the 'Reset' button click.
+     */
+    @FXML
+    public void handleReset(ActionEvent event) {
+        currentMovie = null;
+        clearFields();
+    }
+
+
+    /**
+     * Handles the 'Add' button click event.
+     * Determines which entity (movie, actor, or genre) is currently focused based on the
+     * focus variables and opens the corresponding dialog.
+     *
+     * @param event The ActionEvent triggered by the 'Add' button click.
+     */
+    @FXML
+    void handleAdd(ActionEvent event) {
+        System.out.println("Add button clicked. Movie focused: " + isMovieListFocused +
+                ", Actor focused: " + isActorListFocused + ", Genres focused: " + isGenresListFocused);
+
+        if (isActorListFocused) {
+            openActorDialog(event);
+        } else if (isGenresListFocused) {
+            openGenreDialog(event);
+        }
+    }
+
+
+    /**
+     * Handles the deletion of movies, actors, or genres based on the focused list.
+     *
+     * @param event The ActionEvent triggered by the delete action.
+     */
+    @FXML
+    void handleDelete(ActionEvent event) {
+        if (isMovieListFocused) {
+            Movie selectedMovie = moviesListView.getSelectionModel().getSelectedItem();
+            if (selectedMovie != null) {
+                removeObjectFromList(moviesListView, selectedMovie);
+                deleteMovie(selectedMovie);
+            }
+        } else if (isActorListFocused) {
+            Actor selectedActor = actorsListView.getSelectionModel().getSelectedItem();
+            if (selectedActor != null) {
+                removeObjectFromList(actorsListView, selectedActor);
+            }
+        } else if (isGenresListFocused) {
+            Genre selectedGenre = genresListView.getSelectionModel().getSelectedItem();
+            if (selectedGenre != null) {
+                removeObjectFromList(genresListView, selectedGenre);
+            }
+        }
+    }
+
+
+    /**
+     * Opens the actor dialog.
+     *
+     * @param event The ActionEvent that triggered the opening of the actor dialog.
+     */
+    private void openActorDialog(ActionEvent event) {
+        openDialog("/views/ActorDialogView.fxml", "New Actor Details", event);
+    }
+
+
+    /**
+     * Opens the genre dialog.
+     *
+     * @param event The ActionEvent that triggered the opening of the genre dialog.
+     */
+    private void openGenreDialog(ActionEvent event) {
+        openDialog("/views/GenreDialogView.fxml", "Choose the Genres", event);
+    }
+
+
+    /**
+     * Opens a dialog window based on the provided FXML file path and dialog title.
+     * Initializes the dialog with the necessary controller and sets up the stage and scene.
+     *
+     * @param fxmlPath    The path to the FXML file for the dialog view.
+     * @param dialogTitle The title of the dialog window.
+     * @param event       The ActionEvent that triggered the dialog opening.
+     */
+    private void openDialog(String fxmlPath, String dialogTitle, ActionEvent event) {
+        try {
+            Node source = (Node) event.getSource();
+            Stage ownerStage = (Stage) source.getScene().getWindow();
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+
+            Object controller = loader.getController();
+            if (controller instanceof ActorDialogViewController) {
+                ((ActorDialogViewController) controller).initializeController(this, connection);
+            } else if (controller instanceof GenreDialogViewController) {
+                ((GenreDialogViewController) controller).initializeController(this, connection);
+            }
+
+            Scene scene = new Scene(root);
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle(dialogTitle);
+            dialogStage.setScene(scene);
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.initOwner(ownerStage);
+            dialogStage.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Removes an object from the provided ListView.
+     * If the object is a Movie, it is also deleted from the database.
+     *
+     * @param listView The ListView from which the object is to be removed.
+     * @param object   The object to remove, which can be of any type.
+     * @param <T>      The type of objects contained in the ListView.
+     */
+    private <T> void removeObjectFromList(ListView<T> listView, T object) {
+        if (object instanceof Movie movie) {
+            deleteMovie(movie);
+            listView.getItems().remove(movie);
+        } else {
+            listView.getItems().remove(object);
+        }
+    }
+
+
+    /**
+     * Deletes a movie from the database and updates the UI accordingly.
+     *
+     * @param selectedMovie The movie to be deleted from the database.
+     */
+    private void deleteMovie(Movie selectedMovie) {
+        try {
+            movieDao.delete(selectedMovie.getId());
+            currentMovie = null;  // Reset the currently selected movie
+            clearFields();
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Fills in the movie details into the relevant fields and ListView components.
      *
      * @param selectedMovie The Movie object whose details are to be displayed.
      */
@@ -490,70 +493,52 @@ public class MainViewController implements Initializable {
 
 
     /**
-     * Opens the 'Add Actor' dialog and after closing,
-     * updates the movie details with any changes made.
+     * Validates input fields for movie details and ensures that
+     * both actors and genres lists are not empty.
+     *
+     * @return boolean indicating whether inputs are valid or not.
      */
-    private void openActorDialog(ActionEvent event) {
-        try {
-            // Get the stage object from ActionEvent
-            Node source = (Node) event.getSource();
-            Stage ownerStage = (Stage) source.getScene().getWindow();
+    private boolean validateInputs() {
+        String updatedMovieTitle = titleTextField.getText();
+        String releaseYearText = releaseYearTextField.getText();
+        String updatedDirector = directorTextField.getText();
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/ActorDialogView.fxml"));
-            Parent root = loader.load();
+        boolean isValid = !updatedMovieTitle.isEmpty() &&
+                InputValidator.isValidReleaseYear(releaseYearText) &&
+                InputValidator.isValidDirectorName(updatedDirector) &&
+                !actorsListView.getItems().isEmpty() &&
+                !genresListView.getItems().isEmpty();
 
-            ActorDialogViewController controller = loader.getController();
-            controller.initializeController(this, connection);
-
-            // Create new scene and stage
-            Scene scene = new Scene(root);
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("New Actor Details");
-            dialogStage.setScene(scene);
-
-            // Set the stage as modal
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(ownerStage);
-            dialogStage.showAndWait();  // Wait until the user closes the window
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Message: " + e.getMessage());
+        if (!isValid) {
+            Dialogs.showMessageDialog("Invalid input data!");
         }
+
+        return isValid;
     }
 
 
     /**
-     * Opens the 'Add Genre' dialog and updates the movie information
-     * in the database after the dialog is closed.
+     * Creates a new Movie object from user inputs, extracting the movie details
+     * and lists of actor and genre IDs.
+     *
+     * @return Movie object created from input fields.
      */
-    private void openGenreDialog(ActionEvent event) {
-        try {
-            // Get the stage object from ActionEvent
-            Node source = (Node) event.getSource();
-            Stage ownerStage = (Stage) source.getScene().getWindow();
+    private Movie createMovieFromInput() {
+        String updatedMovieTitle = titleTextField.getText();
+        int updatedReleaseYear = Integer.parseInt(releaseYearTextField.getText());
+        String updatedDirector = directorTextField.getText();
 
-            // Load the FXML file
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/GenreDialogView.fxml"));
-            Parent root = loader.load();
-
-            GenreDialogViewController controller = loader.getController();
-            controller.initializeController(this, connection);
-
-            // Create new scene and stage
-            Scene scene = new Scene(root);
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle("Choose the Genres");
-            dialogStage.setScene(scene);
-
-            // Set the stage as modal
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.initOwner(ownerStage);
-            dialogStage.showAndWait();  // Wait until the user closes the window
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Message: " + e.getMessage());
+        List<Integer> updatedActorIds = new ArrayList<>();
+        for (Actor actor : actorsListView.getItems()) {
+            updatedActorIds.add(actor.getId());
         }
+
+        List<Integer> updatedGenreIds = new ArrayList<>();
+        for (Genre genre : genresListView.getItems()) {
+            updatedGenreIds.add(genre.getId());
+        }
+
+        return new Movie(updatedMovieTitle, updatedReleaseYear, updatedDirector,
+                updatedActorIds, updatedGenreIds);
     }
 }
