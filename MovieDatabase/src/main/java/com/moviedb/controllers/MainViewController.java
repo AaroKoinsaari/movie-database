@@ -11,13 +11,17 @@ import fi.jyu.mit.fxgui.Dialogs;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import fi.jyu.mit.fxgui.ComboBoxChooser;
@@ -77,6 +81,20 @@ public class MainViewController implements Initializable {
     @FXML
     private VBox releaseYearBox;
 
+
+    public List<Genre> getSelectedGenres() {
+        return new ArrayList<>(genresListView.getItems());
+    }
+
+
+    protected void setSelectedGenres(List<Genre> selectedGenres) {
+        updateGenresListView(selectedGenres);
+    }
+
+    private void updateGenresListView(List<Genre> selectedGenreIds) {
+        genresListView.getItems().clear();
+        genresListView.getItems().addAll(selectedGenreIds);
+    }
 
     protected ListView<Actor> getActorsListView() {
         return actorsListView;
@@ -476,7 +494,22 @@ public class MainViewController implements Initializable {
             Node source = (Node) event.getSource();
             Stage ownerStage = (Stage) source.getScene().getWindow();
 
-            ViewManager.openActorDialog(currentMovie, connection, ownerStage, this);
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/ActorDialogView.fxml"));
+            Parent root = loader.load();
+
+            ActorDialogViewController controller = loader.getController();
+            controller.initializeController(this, currentMovie, connection);
+
+            // Create new scene and stage
+            Scene scene = new Scene(root);
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("New Actor Details");
+            dialogStage.setScene(scene);
+
+            // Set the stage as modal
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.initOwner(ownerStage);
+            dialogStage.showAndWait();  // Wait until the user closes the window
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -495,7 +528,23 @@ public class MainViewController implements Initializable {
             Node source = (Node) event.getSource();
             Stage ownerStage = (Stage) source.getScene().getWindow();
 
-            ViewManager.openGenreDialog(currentMovie, connection, ownerStage, this);
+            // Load the FXML file
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/GenreDialogView.fxml"));
+            Parent root = loader.load();
+
+            GenreDialogViewController controller = loader.getController();
+
+
+            // Create new scene and stage
+            Scene scene = new Scene(root);
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Choose the Genres");
+            dialogStage.setScene(scene);
+
+            // Set the stage as modal
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.initOwner(ownerStage);
+            dialogStage.showAndWait();  // Wait until the user closes the window
 
             fillMovieDetails(currentMovie);
 
@@ -503,9 +552,5 @@ public class MainViewController implements Initializable {
             e.printStackTrace();
             System.out.println("Message: " + e.getMessage());
         }
-    }
-
-    public List<Genre> getSelectedGenres() {
-        return new ArrayList<>(genresListView.getItems());
     }
 }

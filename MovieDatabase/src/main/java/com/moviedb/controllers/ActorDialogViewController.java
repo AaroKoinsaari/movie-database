@@ -34,6 +34,8 @@ import com.moviedb.models.Movie;
  */
 public class ActorDialogViewController implements Initializable {
 
+    private Connection connection;
+
     private Movie currentMovie;  // The movie currently being edited in the dialog
 
     private ActorDao actorDao;
@@ -61,31 +63,11 @@ public class ActorDialogViewController implements Initializable {
     private Label alertLabel;
 
 
-    /**
-     * Sets the current movie object allowing the dialog to
-     * reference and interact with the specific movie instance.
-     *
-     * @param currentMovie The Movie object the user has chosen.
-     */
-    protected void setCurrentMovie(Movie currentMovie) {
+    protected void initializeController(MainViewController mainViewController, Movie currentMovie, Connection connection) {
+        this.mainViewController = mainViewController;
         this.currentMovie = currentMovie;
-    }
-
-
-    /**
-     * Sets the database connection for the ActorDao and MovieDao instances
-     * to facilitate database operations related to actors and movies.
-     *
-     * @param connection The SQLite database connection to be used.
-     */
-    protected void setConnection(Connection connection) {
-        this.actorDao = new ActorDao(connection);
-        this.movieDao = new MovieDao(connection);
-    }
-
-
-    protected void setMainViewController(MainViewController controller) {
-        this.mainViewController = controller;
+        this.connection = connection;
+        this.listView = mainViewController.getActorsListView();
     }
 
 

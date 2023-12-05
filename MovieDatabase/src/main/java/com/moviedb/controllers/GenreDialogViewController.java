@@ -28,13 +28,11 @@ import com.moviedb.models.Movie;
  */
 public class GenreDialogViewController {
 
-    private MovieDao movieDao;
+    private Connection connection;
 
     private Movie currentMovie;  // The movie currently being edited in the dialog
 
     private GenreDao genreDao;
-
-    private List<Integer> temporarySelectedGenres = new ArrayList<>();
 
     private MainViewController mainViewController;
 
@@ -48,44 +46,13 @@ public class GenreDialogViewController {
     private ListView<CheckBox> listView;
 
 
-    protected void setTemporarySelectedGenres(List<Integer> selectedGenres) {
-        this.temporarySelectedGenres = selectedGenres;
-        loadGenres();
-    }
-
-    /**
-     * Sets the current movie object allowing the dialog to
-     * reference and interact with the specific movie instance.
-     *
-     * @param currentMovie The Movie object the user has chosen.
-     */
-    protected void setCurrentMovie(Movie currentMovie) {
+    protected void initializeController(MainViewController mainViewController, Movie currentMovie, Connection connection) {
+        this.mainViewController = mainViewController;
         this.currentMovie = currentMovie;
-    }
-
-
-    /**
-     * Sets the database connection for the GenreDao and MovieDao instances
-     * to facilitate database operations related to actors and movies.
-     *
-     * @param connection The SQLite database connection to be used.
-     */
-    protected void setConnection(Connection connection) {
-        this.movieDao = new MovieDao(connection);
+        this.connection = connection;
         this.genreDao = new GenreDao(connection);
-    }
-
-
-    public void setMainViewController(MainViewController controller) {
-        this.mainViewController = controller;
         loadGenres();
     }
-
-
-//    @Override
-//    public void initialize(URL url, ResourceBundle rb) {
-//        loadGenres();
-//    }
 
 
     /**
@@ -97,31 +64,16 @@ public class GenreDialogViewController {
      */
     @FXML
     void handleOK(ActionEvent event) {
-        List<Integer> selectedGenreIds = new ArrayList<>();
+        List<Genre> selectedGenres = new ArrayList<>();
 
-        // Collect all the results in an array and set it to the current movie
         for (CheckBox cb : listView.getItems()) {
             if (cb.isSelected()) {
                 Genre genre = (Genre) cb.getUserData();
-                selectedGenreIds.add(genre.getId());
+                selectedGenres.add(genre);
             }
         }
 
-        if (currentMovie != null) {
-            currentMovie.setGenreIds(selectedGenreIds);
-
-            try {
-                movieDao.update(currentMovie);
-            } catch (SQLException e) {
-                System.out.println("SQLState: " + e.getSQLState());
-                System.out.println("Error Code: " + e.getErrorCode());
-                System.out.println("Message: " + e.getMessage());
-            }
-        } else {
-            // If movie is null, add genres to temporary list which
-            // is handled in MovieDialog controller
-            temporarySelectedGenres = selectedGenreIds;
-        }
+        mainViewController.setSelectedGenres(selectedGenres);
 
         Stage stage = (Stage) okButton.getScene().getWindow();
         stage.close();
