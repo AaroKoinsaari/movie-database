@@ -4,8 +4,10 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -35,6 +37,7 @@ public class ActorDialogViewController implements Initializable {
 
     private ActorDao actorDao;
     private MainViewController mainViewController;
+    private List<Actor> allActors;  // List of all current actors in the database
 
     @FXML
     private TextField nameTextField;
@@ -56,7 +59,9 @@ public class ActorDialogViewController implements Initializable {
 
 
     /**
-     * Initializes the controller with necessary references and sets up the ListView with actors.
+     * Initializes the controller with necessary references, sets up the ListView with actors
+     * and fetches all the current actors to a list.
+     * TODO: Fetching all the actors might not be the best for big datasets. Could be improved in the future
      *
      * @param mainViewController The main controller of the application.
      * @param connection         The database connection for actor data retrieval.
@@ -68,6 +73,14 @@ public class ActorDialogViewController implements Initializable {
         // Update listView using observableList
         ObservableList<Actor> actors = FXCollections.observableArrayList(mainViewController.getActorList());
         listView.setItems(actors);
+
+        try {
+            this.allActors = actorDao.readAll();
+        } catch (SQLException e) {
+            System.out.println("SQLState: " + e.getSQLState());
+            System.out.println("Error Code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+        }
     }
 
 
@@ -83,22 +96,17 @@ public class ActorDialogViewController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         TextFields.bindAutoCompletion(nameTextField, input -> {
-            String userInput = input.getUserText();  // Get the text from ISuggestionRequest object
+            String userInput = input.getUserText();
             if (userInput.length() >= 3) {
-                try {
-                    return actorDao.findActorsByStartingName(userInput);
-                } catch (SQLException e) {
-                    System.out.println("SQLState: " + e.getSQLState());
-                    System.out.println("Error Code: " + e.getErrorCode());
-                    System.out.println("Message: " + e.getMessage());
-                    return Collections.emptyList();
-                }
+                return allActors.stream()
+                        .filter(actor -> actor.getName().toLowerCase().startsWith(userInput.toLowerCase()))
+                        .limit(10)  // Limit the result for first 10
+                        .collect(Collectors.toList());
             } else {
                 return Collections.emptyList();
             }
         }).setOnAutoCompleted(event -> {
-            // Set the suggestion into the TextField if user chooses it
-            String selectedActorName = event.getCompletion();
+            String selectedActorName = String.valueOf(event.getCompletion());
             nameTextField.setText(selectedActorName);
         });
     }
@@ -164,12 +172,12 @@ public class ActorDialogViewController implements Initializable {
     private void addActorToListIfNotExists(Actor actor) {
         if (!isActorOnTheList(actor)) {
             listView.getItems().add(actor);
-            nameTextField.clear();
         } else {
+            alertLabel.setText("Actor '" + actor.getName() + "' is alredy in the list!");
             alertLabel.setVisible(true);
             // Dialogs.showMessageDialog("Actor '" + actor.getName() + "' is already in the list.");
-            nameTextField.clear();
         }
+        nameTextField.clear();
     }
 
 

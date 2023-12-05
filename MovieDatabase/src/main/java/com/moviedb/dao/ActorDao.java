@@ -183,7 +183,7 @@ public class ActorDao {
      * @return A list of all actors.
      * @throws SQLException If there's an error during the database operation.
      */
-    public List<Actor> readAll() {
+    public List<Actor> readAll() throws SQLException {
         List<Actor> actors = new ArrayList<>();
         String sql = "SELECT id, name FROM actors";
 
@@ -193,8 +193,6 @@ public class ActorDao {
                 // Insert the values of name and id from every row to the ArrayList
                 actors.add(new Actor(rs.getInt("id"), rs.getString("name")));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return actors;
     }
@@ -249,22 +247,5 @@ public class ActorDao {
             System.out.println("Message: " + e.getMessage());
         }
         return Optional.empty();
-    }
-
-
-    public List<String> findActorsByStartingName(String nameStart) throws SQLException {
-        List<String> foundActors = new ArrayList<>();
-        String sql = "SELECT name FROM actors WHERE name LIKE ? ORDER BY name LIMIT 10";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, nameStart + "%");
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                String actorName = rs.getString("name");
-                foundActors.add(actorName);
-            }
-        }
-        return foundActors;
     }
 }
