@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.*;
 
 import fi.jyu.mit.fxgui.Dialogs;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -82,12 +81,16 @@ public class MainViewController implements Initializable {
     private VBox releaseYearBox;
 
 
-    public List<Genre> getSelectedGenres() {
+    public List<Genre> getGenreList() {
         return new ArrayList<>(genresListView.getItems());
     }
 
 
-    protected void setSelectedGenres(List<Genre> selectedGenres) {
+    protected List<Actor> getActorList() {
+        return new ArrayList<>(actorsListView.getItems());
+    }
+
+    protected void setGenreList(List<Genre> selectedGenres) {
         updateGenresListView(selectedGenres);
     }
 
@@ -96,9 +99,6 @@ public class MainViewController implements Initializable {
         genresListView.getItems().addAll(selectedGenreIds);
     }
 
-    protected ListView<Actor> getActorsListView() {
-        return actorsListView;
-    }
 
     /**
      * Sets the name of the database to be used by the controller.
@@ -110,22 +110,10 @@ public class MainViewController implements Initializable {
     }
 
 
-    public void setActorsList(List<Actor> actors) {
-        List<Actor> newActors = filterExistingActors(actors);
-        actorsListView.getItems().addAll(newActors);
+    public void setActorList(List<Actor> actors) {
+        actorsListView.getItems().setAll(actors);
     }
 
-
-    private List<Actor> filterExistingActors(List<Actor> actors) {
-        List<Actor> filteredActors = new ArrayList<>();
-        for (Actor actor : actors) {
-            if (!actorsListView.getItems().contains(actor)) {
-                filteredActors.add(actor);
-            }
-        }
-
-        return filteredActors;
-    }
 
 
     /**
@@ -499,7 +487,7 @@ public class MainViewController implements Initializable {
             Parent root = loader.load();
 
             ActorDialogViewController controller = loader.getController();
-            controller.initializeController(this, currentMovie, connection);
+            controller.initializeController(this, connection);
 
             // Create new scene and stage
             Scene scene = new Scene(root);

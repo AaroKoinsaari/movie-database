@@ -4,12 +4,11 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-import org.controlsfx.control.textfield.TextFields;
-
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -19,12 +18,12 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
+import org.controlsfx.control.textfield.TextFields;
+
 import fi.jyu.mit.fxgui.Dialogs;
 
 import com.moviedb.dao.ActorDao;
-import com.moviedb.dao.MovieDao;
 import com.moviedb.models.Actor;
-import com.moviedb.models.Movie;
 
 
 /**
@@ -34,14 +33,7 @@ import com.moviedb.models.Movie;
  */
 public class ActorDialogViewController implements Initializable {
 
-    private Connection connection;
-
-    private Movie currentMovie;  // The movie currently being edited in the dialog
-
     private ActorDao actorDao;
-
-    private MovieDao movieDao;
-
     private MainViewController mainViewController;
 
     @FXML
@@ -60,14 +52,22 @@ public class ActorDialogViewController implements Initializable {
     private ListView<Actor> listView;
 
     @FXML
-    private Label alertLabel;
+    private Label alertLabel;  // Displays alerts and notifications to the user
 
 
-    protected void initializeController(MainViewController mainViewController, Movie currentMovie, Connection connection) {
+    /**
+     * Initializes the controller with necessary references and sets up the ListView with actors.
+     *
+     * @param mainViewController The main controller of the application.
+     * @param connection         The database connection for actor data retrieval.
+     */
+    protected void initializeController(MainViewController mainViewController, Connection connection) {
         this.mainViewController = mainViewController;
-        this.currentMovie = currentMovie;
-        this.connection = connection;
-        this.listView = mainViewController.getActorsListView();
+        this.actorDao = new ActorDao(connection);
+
+        // Update listView using observableList
+        ObservableList<Actor> actors = FXCollections.observableArrayList(mainViewController.getActorList());
+        listView.setItems(actors);
     }
 
 
@@ -78,7 +78,7 @@ public class ActorDialogViewController implements Initializable {
      * Selected suggestions are automatically filled into the TextField.
      *
      * @param url The URL used for resolving relative paths, can be null.
-     * @param rb The resource bundle for localizing objects, can be null.
+     * @param rb  The resource bundle for localizing objects, can be null.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -101,8 +101,6 @@ public class ActorDialogViewController implements Initializable {
             String selectedActorName = event.getCompletion();
             nameTextField.setText(selectedActorName);
         });
-
-        listView = mainViewController.getActorsListView();
     }
 
 
@@ -128,7 +126,7 @@ public class ActorDialogViewController implements Initializable {
         // Check if the actor already exists and if it's already on the list
         if (actorOpt.isPresent()) {
             addActorToListIfNotExists(actorOpt.get());
-        } else {  // If the actor does not exist yet, create it in database and add it to the list
+        } else {
             createAndAddNewActor(actorName);
         }
     }
@@ -142,7 +140,7 @@ public class ActorDialogViewController implements Initializable {
      */
     @FXML
     void handleOK(ActionEvent event) {
-        mainViewController.setActorsList(listView.getItems());
+        mainViewController.setActorList(listView.getItems());
         closeStage();
     }
 
@@ -158,12 +156,6 @@ public class ActorDialogViewController implements Initializable {
     }
 
 
-    private void closeStage() {
-        Stage stage = (Stage) cancelButton.getScene().getWindow();
-        stage.close();
-    }
-
-
     /**
      * Adds the specified actor to the list if they are not already present.
      *
@@ -172,7 +164,7 @@ public class ActorDialogViewController implements Initializable {
     private void addActorToListIfNotExists(Actor actor) {
         if (!isActorOnTheList(actor)) {
             listView.getItems().add(actor);
-            nameTextField.clear();  // Empty the text field after successful add
+            nameTextField.clear();
         } else {
             alertLabel.setVisible(true);
             // Dialogs.showMessageDialog("Actor '" + actor.getName() + "' is already in the list.");
@@ -194,7 +186,9 @@ public class ActorDialogViewController implements Initializable {
             Optional<Actor> createdActorOpt = actorDao.read(newActorId);
             createdActorOpt.ifPresent(listView.getItems()::add);
 
-            nameTextField.clear();  // Empty the text field after successful add
+            nameTextField.clear();
+            alertLabel.setText("New actor created!");
+            alertLabel.setVisible(true);
         } catch (Exception e) {
             Dialogs.showMessageDialog("Error creating actor: " + e.getMessage());
             nameTextField.clear();
@@ -212,5 +206,14 @@ public class ActorDialogViewController implements Initializable {
     private boolean isActorOnTheList(Actor actor) {
         return listView.getItems().stream()
                 .anyMatch(existingActor -> existingActor.getId() == actor.getId());
+    }
+
+
+    /**
+     * Closes the current stage/window.
+     */
+    private void closeStage() {
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
     }
 }

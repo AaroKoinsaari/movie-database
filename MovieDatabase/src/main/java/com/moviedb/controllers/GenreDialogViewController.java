@@ -68,7 +68,7 @@ public class GenreDialogViewController {
             }
         }
 
-        mainViewController.setSelectedGenres(selectedGenres);
+        mainViewController.setGenreList(selectedGenres);
         closeStage();
     }
 
@@ -90,7 +90,7 @@ public class GenreDialogViewController {
      */
     private void loadGenres() {
         List<Genre> genres = genreDao.readAll();
-        List<Genre> selectedGenres = mainViewController.getSelectedGenres();
+        List<Genre> selectedGenres = mainViewController.getGenreList();
 
         for (Genre genre : genres) {
             CheckBox cb = new CheckBox(genre.getName());
