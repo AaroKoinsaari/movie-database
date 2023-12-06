@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -50,6 +51,7 @@ public class MainViewController implements Initializable {
     private ActorDao actorDao;
     private GenreDao genreDao;
     private Movie currentMovie;  // The movie currently chosen from the list
+    private String currentSortCriterion = "title";  // Default sorting criterion
 
     // Focus variables to determine which list is active
     private boolean isMovieListFocused;
@@ -228,6 +230,7 @@ public class MainViewController implements Initializable {
 
         setupSearchTextFieldListener();
         setupComboBoxListener();
+        sortMoviesBy("title");  // At the start movies are sorted by title
     }
 
 
@@ -241,6 +244,8 @@ public class MainViewController implements Initializable {
         searchTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.length() >= 2) {
                 List<Movie> filteredMovies = searchMoviesStartingWith(newValue);
+                // Sort the filtered movies alphabetically by title
+                filteredMovies.sort(Comparator.comparing(Movie::getTitle));
                 updateMovieListView(filteredMovies);
             } else if (newValue.isEmpty()) {
                 // Fetch the original list of movies from db once the search field is empty
@@ -263,7 +268,8 @@ public class MainViewController implements Initializable {
      */
     private void setupComboBoxListener() {
         searchComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-            sortMoviesBy(String.valueOf(newValue));
+            currentSortCriterion = String.valueOf(newValue);
+            sortMoviesBy(currentSortCriterion);
         });
     }
 
@@ -274,22 +280,26 @@ public class MainViewController implements Initializable {
      * @param criterion The criterion to sort by.
      */
     private void sortMoviesBy(String criterion) {
-        ObservableList<Movie> sortedList;
+        Comparator<Movie> comparator;
         switch (criterion.toLowerCase()) {
             case "title":
-                sortedList = moviesListView.getItems().sorted(Comparator.comparing(Movie::getTitle));
+                comparator = Comparator.comparing(Movie::getTitle);
                 break;
             case "release year":
-                sortedList = moviesListView.getItems().sorted(Comparator.comparing(Movie::getReleaseYear));
+                comparator = Comparator.comparing(Movie::getReleaseYear);
                 break;
             case "director":
-                sortedList = moviesListView.getItems().sorted(Comparator.comparing(Movie::getDirector));
+                comparator = Comparator.comparing(Movie::getDirector);
                 break;
             default:
                 return;
         }
-        moviesListView.setItems(sortedList);
+
+        List<Movie> sortedList = new ArrayList<>(moviesListView.getItems());
+        sortedList.sort(comparator);
+        moviesListView.setItems(FXCollections.observableArrayList(sortedList));
     }
+
 
 
     /**
@@ -317,6 +327,7 @@ public class MainViewController implements Initializable {
     private void updateMovieListView(List<Movie> movies) {
         moviesListView.getItems().clear();
         moviesListView.getItems().addAll(movies);
+        sortMoviesBy(currentSortCriterion);
     }
 
 
@@ -366,6 +377,8 @@ public class MainViewController implements Initializable {
                     moviesListView.getItems().add(updatedMovie);
                     clearFields();
                 }
+                // Sort the list again when new movie was added
+                sortMoviesBy(currentSortCriterion);
             }
 
         } catch (SQLException e) {
