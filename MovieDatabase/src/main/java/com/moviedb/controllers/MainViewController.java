@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -273,18 +274,21 @@ public class MainViewController implements Initializable {
      * @param criterion The criterion to sort by.
      */
     private void sortMoviesBy(String criterion) {
+        ObservableList<Movie> sortedList;
         switch (criterion.toLowerCase()) {
             case "title":
-                moviesListView.getItems().sort(Comparator.comparing(Movie::getTitle));
+                sortedList = moviesListView.getItems().sorted(Comparator.comparing(Movie::getTitle));
                 break;
             case "release year":
-                moviesListView.getItems().sort(Comparator.comparing(Movie::getReleaseYear));
+                sortedList = moviesListView.getItems().sorted(Comparator.comparing(Movie::getReleaseYear));
                 break;
             case "director":
-                moviesListView.getItems().sort(Comparator.comparing(Movie::getDirector));
-            default:
+                sortedList = moviesListView.getItems().sorted(Comparator.comparing(Movie::getDirector));
                 break;
+            default:
+                return;
         }
+        moviesListView.setItems(sortedList);
     }
 
 
@@ -380,19 +384,16 @@ public class MainViewController implements Initializable {
      * @param movie The movie to be added or updated in the ListView.
      */
     private void addOrUpdateMovieInListView(Movie movie) {
-        // Find the movie from the list view
-        boolean found = false;
         for (int i = 0; i < moviesListView.getItems().size(); i++) {
             if (moviesListView.getItems().get(i).getId() == movie.getId()) {
-                moviesListView.getItems().set(i, movie); // Update existing movie
-                found = true;
-                break;
+                moviesListView.getItems().remove(i);
+                moviesListView.getItems().add(i, movie); // Remove and re-add to update
+                return;
             }
         }
-        if (!found) {
-            moviesListView.getItems().add(movie); // Add new if not found
-        }
+        moviesListView.getItems().add(movie); // Add new if not found
     }
+
 
 
     /**
@@ -438,8 +439,7 @@ public class MainViewController implements Initializable {
         if (isMovieListFocused) {
             Movie selectedMovie = moviesListView.getSelectionModel().getSelectedItem();
             if (selectedMovie != null) {
-                removeObjectFromList(moviesListView, selectedMovie);
-                deleteMovie(selectedMovie);
+                removeObjectFromList(moviesListView, selectedMovie);  // Removes also from db
             }
         } else if (isActorListFocused) {
             Actor selectedActor = actorsListView.getSelectionModel().getSelectedItem();
