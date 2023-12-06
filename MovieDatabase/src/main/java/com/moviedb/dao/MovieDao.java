@@ -1,22 +1,29 @@
 package com.moviedb.dao;
 
-import java.util.Set;
-import java.util.List;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Connection;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import com.moviedb.models.Movie;
 
 
 /**
  * Data Access Object for the Movie class.
+ * This class provides an abstraction layer between the application and the underlying database.
+ * It handles all database operations related to movies, including creating, reading, updating, and deleting movie records.
+ *
+ * The MovieDao class ensures that movie data is accessed and manipulated in a consistent and database-agnostic manner.
+ * It encapsulates all SQL queries and shields the rest of the application from direct database interactions,
+ * promoting cleaner separation of concerns and making the codebase more maintainable.
  */
 public class MovieDao {
 
@@ -58,7 +65,8 @@ public class MovieDao {
      */
     public int create(Movie movie) throws SQLException {
         // Define the SQL queries
-        String sqlInsertMovie = "INSERT INTO movies(title, release_year, director) VALUES(?, ?, ?)";
+        String sqlInsertMovie = "INSERT INTO movies(title, release_year, director, writer, producer, " +
+                                "cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
         String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
         String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
 
@@ -66,59 +74,62 @@ public class MovieDao {
 
         int generatedMovieId = -1;  // -1 for default error state
 
-        try {
-            // Insert the main details
-            try (PreparedStatement pstmtMovie = connection.prepareStatement(sqlInsertMovie,
-                    Statement.RETURN_GENERATED_KEYS);  // ID for the added movie in the generated key
-                 PreparedStatement pstmtActor = connection.prepareStatement(sqlInsertActor);
-                 PreparedStatement pstmtGenre = connection.prepareStatement(sqlInsertGenre)) {
-                pstmtMovie.setString(1, movie.getTitle());
-                pstmtMovie.setInt(2, movie.getReleaseYear());
-                pstmtMovie.setString(3, movie.getDirector());
-                pstmtMovie.executeUpdate();
+        // Insert the main details
+        try (PreparedStatement pstmtMovie = connection.prepareStatement(sqlInsertMovie,
+                Statement.RETURN_GENERATED_KEYS);  // ID for the added movie in the generated key
+             PreparedStatement pstmtActor = connection.prepareStatement(sqlInsertActor);
+             PreparedStatement pstmtGenre = connection.prepareStatement(sqlInsertGenre)) {
+            pstmtMovie.setString(1, movie.getTitle());
+            pstmtMovie.setInt(2, movie.getReleaseYear());
+            pstmtMovie.setString(3, movie.getDirector());
+            pstmtMovie.setString(4, movie.getWriter());
+            pstmtMovie.setString(5, movie.getProducer());
+            pstmtMovie.setString(6, movie.getCinematographer());
+            pstmtMovie.setInt(7, movie.getBudget());
+            pstmtMovie.setString(8, movie.getCountry());
+            pstmtMovie.executeUpdate();
 
-                // Retrieve the id generated for the added movie
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sqlLastInsertId)) {
-                    if (rs.next()) {
-                        generatedMovieId = rs.getInt(1);
-                    }
-                }
-
-                // Ensure to have a valid movie ID before proceeding
-                if (generatedMovieId <= 0) {
-                    throw new SQLException();
-                }
-
-                // Add the actors to their join table
-                for (int actorId : movie.getActorIds()) {
-                    pstmtActor.setInt(1, generatedMovieId);
-                    pstmtActor.setInt(2, actorId);
-                    pstmtActor.executeUpdate();
-                }
-                // Add the genres to their join table
-                for (int genreId : movie.getGenreIds()) {
-                    pstmtGenre.setInt(1, generatedMovieId);
-                    pstmtGenre.setInt(2, genreId);
-                    pstmtGenre.executeUpdate();
+            // Retrieve the id generated for the added movie
+            try (Statement stmt = connection.createStatement();
+                 ResultSet rs = stmt.executeQuery(sqlLastInsertId)) {
+                if (rs.next()) {
+                    generatedMovieId = rs.getInt(1);
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+            // Ensure to have a valid movie ID before proceeding
+            if (generatedMovieId <= 0) {
+                throw new SQLException();
+            }
+
+            // Add the actors to their join table
+            for (int actorId : movie.getActorIds()) {
+                pstmtActor.setInt(1, generatedMovieId);
+                pstmtActor.setInt(2, actorId);
+                pstmtActor.executeUpdate();
+            }
+
+            // Add the genres to their join table
+            for (int genreId : movie.getGenreIds()) {
+                pstmtGenre.setInt(1, generatedMovieId);
+                pstmtGenre.setInt(2, genreId);
+                pstmtGenre.executeUpdate();
+            }
         }
         return generatedMovieId;
     }
 
 
     /**
-     * Retrieves a movie based on its ID.
+     * Retrieves a movie based on its ID, including its additional details.
      *
      * @param id The unique identifier of the movie to be fetched.
      * @return The Movie object if found, null otherwise.
      * @throws SQLException If there's an error during the database operation.
      */
     public Movie read(int id) throws SQLException {
-        String sql = "SELECT title, release_year, director FROM movies WHERE id = ?";
+        String sql = "SELECT title, release_year, director, writer, producer, " +
+                "cinematographer, budget, country FROM movies WHERE id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, id);
@@ -129,35 +140,53 @@ public class MovieDao {
                 String title = rs.getString("title");
                 int releaseYear = rs.getInt("release_year");
                 String director = rs.getString("director");
+                String writer = rs.getString("writer");
+                String producer = rs.getString("producer");
+                String cinematographer = rs.getString("cinematographer");
+                int budget = rs.getInt("budget");
+                String country = rs.getString("country");
 
                 // Fetch the list of actors and genres
                 List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
                 List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
 
-                return new Movie(id, title, releaseYear, director, actorIds, genreIds);
+                return new Movie(id, title, releaseYear, director, writer, producer,
+                        cinematographer, budget, country, actorIds, genreIds);
             }
         }
         return null;
     }
 
 
+    /**
+     * Retrieves all movies from the database with their detailed information including
+     * and associated actor and genre IDs.
+     *
+     * @return A list of all movies in the database, with full details.
+     * @throws SQLException If there's an error during the database operation.
+     */
     public List<Movie> readAll() throws SQLException {
         List<Movie> movies = new ArrayList<>();
-        String sql = "SELECT * FROM movies";
+        String sql = "SELECT id, title, release_year, director, writer, producer, cinematographer, budget, country FROM movies";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql);
-            ResultSet rs = pstmt.executeQuery()) {
+             ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String title = rs.getString("title");
                 int releaseYear = rs.getInt("release_year");
                 String director = rs.getString("director");
-                List<Integer> actors = fetchAssociatedIds(id, "movie_actors", "actor_id");
-                List<Integer> genres = fetchAssociatedIds(id, "movie_genres", "genre_id");
+                String writer = rs.getString("writer");
+                String producer = rs.getString("producer");
+                String cinematographer = rs.getString("cinematographer");
+                int budget = rs.getInt("budget");
+                String country = rs.getString("country");
+                List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
+                List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
 
-                Movie movie = new Movie(id, title, releaseYear, director, actors, genres);
-                movies.add(movie);
+                movies.add(new Movie(id, title, releaseYear, director, writer, producer,
+                                     cinematographer, budget, country, actorIds, genreIds));
             }
         }
         return movies;
@@ -199,7 +228,8 @@ public class MovieDao {
 
     /**
      * Updates the details of a specified movie in the SQL database.
-     * If associated actors or genres are modified, the relevant links in the database are updated accordingly.
+     * This includes updating the main movie details as well as associated actors and genres.
+     * The method handles database transactions and rolls back in case of an error.
      *
      * @param updatedMovie The movie object containing updated details with the correct ID of the movie to be updated.
      * @return boolean true if the update was successful, otherwise false.
@@ -212,19 +242,17 @@ public class MovieDao {
         try {
             connection.setAutoCommit(false);  // Start transaction
 
-            // Update movie details if they are updated
-            if (!existingMovie.getTitle().equals(updatedMovie.getTitle()) ||
-                    existingMovie.getReleaseYear() != updatedMovie.getReleaseYear() ||
-                    !existingMovie.getDirector().equals(updatedMovie.getDirector())) {
+            // Check if main details have changed before updating
+            if (hasMainDetailsChanged(existingMovie, updatedMovie)) {
                 updateMovieMainDetails(updatedMovie);
             }
 
-            // Update the actor links if they have changed
+            // Update genre links if changed
             if (!existingMovie.getActorIds().equals(updatedMovie.getActorIds())) {
                 updateMovieLinks(updatedMovie.getId(), new HashSet<>(updatedMovie.getActorIds()), "movie_actors", "actor_id");
             }
 
-            // Update the genre links if they have changed
+            // Update genre links if changed
             if (!existingMovie.getGenreIds().equals(updatedMovie.getGenreIds())) {
                 updateMovieLinks(updatedMovie.getId(), new HashSet<>(updatedMovie.getGenreIds()), "movie_genres", "genre_id");
             }
@@ -233,9 +261,7 @@ public class MovieDao {
             updateSuccessful = true;
         } catch (SQLException e) {
             connection.rollback();  // Rollback transactions on error
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             connection.setAutoCommit(true);  // Restore default behavior
         }
@@ -245,19 +271,45 @@ public class MovieDao {
 
 
     /**
-     * Updates the main details of a specified movie in the database (title, release year and director).
+     * Checks if the main details of the movie have changed.
+     *
+     * @param existingMovie The current movie in the database.
+     * @param updatedMovie The movie with updated details.
+     * @return boolean true if there are changes in the main details, otherwise false.
+     */
+    private boolean hasMainDetailsChanged(Movie existingMovie, Movie updatedMovie) {
+        return !Objects.equals(existingMovie.getTitle(), updatedMovie.getTitle()) ||
+                existingMovie.getReleaseYear() != updatedMovie.getReleaseYear() ||
+                !Objects.equals(existingMovie.getDirector(), updatedMovie.getDirector()) ||
+                !Objects.equals(existingMovie.getWriter(), updatedMovie.getWriter()) ||
+                !Objects.equals(existingMovie.getProducer(), updatedMovie.getProducer()) ||
+                !Objects.equals(existingMovie.getCinematographer(), updatedMovie.getCinematographer()) ||
+                existingMovie.getBudget() != updatedMovie.getBudget() ||
+                !Objects.equals(existingMovie.getCountry(), updatedMovie.getCountry());
+    }
+
+
+    /**
+     * Updates the main details of a specified movie in the database.
+     * This includes updating the title, release year, director, writer, producer, cinematographer, budget, and country.
      *
      * @param updatedMovie The Movie object containing the new details.
      * @throws SQLException If there's an error during the database operation.
      */
     private void updateMovieMainDetails(Movie updatedMovie) throws SQLException {
-        String sql = "UPDATE movies SET title = ?, release_year = ?, director = ? WHERE id = ?";
+        String sql = "UPDATE movies SET title = ?, release_year = ?, director = ?, " +
+                     "writer = ?, producer = ?, cinematographer = ?, budget = ?, country = ? WHERE id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, updatedMovie.getTitle());
             pstmt.setInt(2, updatedMovie.getReleaseYear());
             pstmt.setString(3, updatedMovie.getDirector());
-            pstmt.setInt(4, updatedMovie.getId());
+            pstmt.setString(4, updatedMovie.getWriter());
+            pstmt.setString(5, updatedMovie.getProducer());
+            pstmt.setString(6, updatedMovie.getCinematographer());
+            pstmt.setInt(7, updatedMovie.getBudget());
+            pstmt.setString(8, updatedMovie.getCountry());
+            pstmt.setInt(9, updatedMovie.getId());
             pstmt.executeUpdate();
         }
     }
@@ -361,7 +413,7 @@ public class MovieDao {
     /**
      * Deletes a movie and its associations from the SQL database based on its ID.
      * This includes deleting entries from movie_actors and movie_genres tables.
-     *
+     * The method handles database transactions and rolls back in case of an error.
      * @param movieId The ID of the movie to be deleted.
      * @return true if the movie and its associations were successfully deleted, false otherwise.
      * @throws SQLException If there's an error during the database operation.
@@ -402,76 +454,4 @@ public class MovieDao {
         }
         return rowsAffected > 0;
     }
-
-
-
-    /**
-     * Gets all the movie titles from movies table in the database.
-     *
-     * @return List of all the movies in the database.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    public List<String> getAllMovieTitles() throws SQLException {
-        List<String> movieTitles = new ArrayList<>();
-        String query = "SELECT title FROM movies";
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(query)) {
-
-            while (rs.next()) {
-                movieTitles.add(rs.getString("title"));
-            }
-        }
-        return movieTitles;
-    }
-
-
-    /**
-     * Retrieves a movie based on its ID.
-     *
-     * @param movieTitle The unique identifier of the movie to be fetched.
-     * @return The Movie object if found, null otherwise.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    public Movie getMovieByTitle(String movieTitle) throws SQLException {
-        String sql = "SELECT id, release_year, director FROM movies WHERE title = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, movieTitle);
-            ResultSet rs = pstmt.executeQuery();
-
-            // If result is found, convert it to a Movie object
-            if (rs.next()) {
-                int id = rs.getInt("id");
-                int releaseYear = rs.getInt("release_year");
-                String director = rs.getString("director");
-
-                // Fetch the list of actors and genres
-                List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
-                List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
-
-                return new Movie(id, movieTitle, releaseYear, director, actorIds, genreIds);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public void addActorToMovie(int actorId, int movieId) throws SQLException {
-        String sql = "INSERT INTO movie_actors (movie_id, actor_id) VALUES (?, ?)";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, movieId);
-            pstmt.setInt(2, actorId);
-            pstmt.executeUpdate();
-        }
-    }
-
-
-    /**
-     * TODO:
-     *  - search methods
-     *  - sorting methods
-     *  - find methods
-     */
 }

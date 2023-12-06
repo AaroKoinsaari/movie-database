@@ -9,17 +9,16 @@ import java.util.List;
  */
 public class Movie {
 
-    /** The unique identifier of the movie. */
+    /** Main details of the movie */
     private int id;
-
-    /** The title of the movie. */
     private String title;
-
-    /** The year when the movie was released. */
     private int releaseYear;
-
-    /** The director of the movie. */
     private String director;
+    private String writer;
+    private String producer;
+    private String cinematographer;
+    private int budget;
+    private String country;
 
     /**
      * A list of IDs representing actors associated with the movie.
@@ -35,40 +34,66 @@ public class Movie {
 
 
     /**
-     * Constructs a new {@code Movie} object with the given details.
+     * Constructs a new {@code Movie} object with specified details.
      *
      * @param id The unique identifier of the movie.
      * @param title The title of the movie.
      * @param releaseYear The release year of the movie.
      * @param director The director of the movie.
-     * @param actorIds A list of actor IDs associated with the movie.
-     * @param genreIds A list of genre IDs associated with the movie.
+     * @param writer The writer of the movie script.
+     * @param producer The producer of the movie.
+     * @param cinematographer The cinematographer of the movie.
+     * @param budget The budget of the movie production.
+     * @param country The country where the movie was produced.
+     * @param actorIds A list of IDs representing actors associated with the movie.
+     * @param genreIds A list of IDs representing genres associated with the movie.
      */
     public Movie(int id, String title, int releaseYear, String director,
+                 String writer, String producer, String cinematographer,
+                 int budget, String country,
                  List<Integer> actorIds, List<Integer> genreIds) {
         this.id = id;
         this.title = title;
         this.releaseYear = releaseYear;
         this.director = director;
+        this.writer = writer;
+        this.producer = producer;
+        this.cinematographer = cinematographer;
+        this.budget = budget;
+        this.country = country;
         this.actorIds = actorIds;
         this.genreIds = genreIds;
     }
 
 
     /**
-     * Constructs a new {@code Movie} object with given details (without id).
+     * Constructs a new {@code Movie} object with the given details, excluding the unique ID.
+     * This constructor is typically used for creating new movie entries where the ID is assigned
+     * by the database auto-increment feature.
      *
      * @param title The title of the movie.
-     * @param releaseYear The release year of the movie.
+     * @param releaseYear The year when the movie was released.
      * @param director The director of the movie.
-     * @param actorIds A list of actor IDs associated with the movie.
-     * @param genreIds A list of genre IDs associated with the movie.
+     * @param writer The writer of the movie script.
+     * @param producer The producer of the movie.
+     * @param cinematographer The cinematographer of the movie.
+     * @param budget The budget of the movie production.
+     * @param country The country where the movie was produced.
+     * @param actorIds A list of IDs representing actors associated with the movie.
+     * @param genreIds A list of IDs representing genres associated with the movie.
      */
     public Movie(String title, int releaseYear, String director,
+                 String writer, String producer, String cinematographer,
+                 int budget, String country,
                  List<Integer> actorIds, List<Integer> genreIds) {
         this.title = title;
         this.releaseYear = releaseYear;
         this.director = director;
+        this.writer = writer;
+        this.producer = producer;
+        this.cinematographer = cinematographer;
+        this.budget = budget;
+        this.country = country;
         this.actorIds = actorIds;
         this.genreIds = genreIds;
     }
@@ -81,6 +106,16 @@ public class Movie {
      */
     public int getId() {
         return id;
+    }
+
+
+    /**
+     * Sets the ID of the movie.
+     *
+     * @param id The ID to be set.
+     */
+    public void setId(int id) {
+        this.id = id;
     }
 
 
@@ -115,12 +150,52 @@ public class Movie {
 
 
     /**
-     * Sets the ID of the movie.
+     * Returns the writer of the movie's script.
      *
-     * @param id The ID to be set.
+     * @return The movie's writer.
      */
-    public void setId(int id) {
-        this.id = id;
+    public String getWriter() {
+        return writer;
+    }
+
+
+    /**
+     * Returns the producer of the movie.
+     *
+     * @return The movie's producer.
+     */
+    public String getProducer() {
+        return producer;
+    }
+
+
+    /**
+     * Returns the cinematographer of the movie.
+     *
+     * @return The movie's cinematographer.
+     */
+    public String getCinematographer() {
+        return cinematographer;
+    }
+
+
+    /**
+     * Returns the budget of the movie production.
+     *
+     * @return The movie's budget.
+     */
+    public int getBudget() {
+        return budget;
+    }
+
+
+    /**
+     * Returns the country where the movie was produced.
+     *
+     * @return The movie's country of production.
+     */
+    public String getCountry() {
+        return country;
     }
 
 
@@ -145,14 +220,11 @@ public class Movie {
 
 
     /**
-     * Sets the genres for the movie.
+     * Provides a string representation of the movie object.
+     * Currently, it returns the movie's title.
      *
-     * @param genreIds The list of genres to set.
+     * @return A string representing the movie, specifically its title.
      */
-    public void setGenreIds(List<Integer> genreIds) {
-        this.genreIds = genreIds;
-    }
-
     @Override
     public String toString() {
         return this.getTitle();

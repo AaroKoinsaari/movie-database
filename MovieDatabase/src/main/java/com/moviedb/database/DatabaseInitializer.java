@@ -80,7 +80,6 @@ public class DatabaseInitializer {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(checkTableSql)) {
             if (rs.next() && rs.getInt(1) == 0) {
-                // Lisää genret tauluun
                 String[] genres = {"Action", "Adventure", "Animation", "Biography", "Comedy", "Crime", "Documentary",
                         "Drama", "Family", "Fantasy", "Film Noir", "History", "Horror", "Musical", "Mystery", "Romance",
                         "Sci-Fi", "Sport", "Thriller", "War", "Western"};
@@ -95,8 +94,7 @@ public class DatabaseInitializer {
 
     /**
      * Creates the 'movies' table in the database if it doesn't exist.
-     * This table stores movie information including title, release year, and director,
-     * along with a unique ID for each movie.
+     * This table stores movie information along with a unique ID for each movie.
      *
      * @param connection The connection to the database.
      * @throws SQLException if there is an error creating the table.
@@ -106,7 +104,12 @@ public class DatabaseInitializer {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "title TEXT NOT NULL, " +
                 "release_year INTEGER, " +
-                "director TEXT)";
+                "director TEXT," +
+                "writer TEXT," +
+                "producer TEXT," +
+                "cinematographer TEXT," +
+                "budget INTEGER," +
+                "country TEXT)";
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sql);
         }

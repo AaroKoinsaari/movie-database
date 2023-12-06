@@ -6,7 +6,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +13,6 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -61,7 +59,7 @@ public class MainViewController implements Initializable {
     @FXML
     private TextField searchTextField;
     @FXML
-    private ComboBoxChooser<?> searchComboBox;
+    private ComboBoxChooser<String> searchComboBox;
     @FXML
     private Button saveButton;
     @FXML
@@ -82,6 +80,16 @@ public class MainViewController implements Initializable {
     private TextField releaseYearTextField;
     @FXML
     private TextField directorTextField;
+    @FXML
+    public TextField writerTextField;
+    @FXML
+    public TextField producerTextField;
+    @FXML
+    public TextField cinematographyTextField;
+    @FXML
+    public TextField budgetTextField;
+    @FXML
+    public TextField countryTextField;
 
 
     /**
@@ -207,32 +215,39 @@ public class MainViewController implements Initializable {
 
         // Establish connections and load Movies
         openDatabaseConnection();
+
         this.movieDao = new MovieDao(connection);
         this.actorDao = new ActorDao(connection);
         this.genreDao = new GenreDao(connection);
 
-        actorDao.create(new Actor("leo di caprio"));
-        actorDao.create(new Actor("robert de niro"));
-        actorDao.create(new Actor("robert downey jr."));
+        // Initiate listeners
+        setupSearchTextFieldListener();
+        setupComboBoxListener();
 
         try {
-            movieDao.create(new Movie("test", 2023, "testi",
-                    Arrays.asList(1, 2), Arrays.asList(2, 4)));
-            movieDao.create(new Movie("paska", 2023, "testi2",
-                    Arrays.asList(2, 3), Arrays.asList(1, 6)));
+            updateMovieListView(movieDao.readAll());
+        } catch (SQLException e) {
+            Dialogs.showMessageDialog("Opening database failed!");
+            e.printStackTrace();
+        }
+        sortMoviesBy("title");  // At the start movies are sorted by title
+    }
 
-            moviesListView.getItems().addAll(movieDao.readAll());  // Add all movies to the list view
+
+    /**
+     * Opens a connection to the correct SQLite database based on the database name.
+     */
+    private void openDatabaseConnection() {
+        String dbPath = "src/main/java/com/moviedb/database/" + databaseName + ".db";
+
+        try {
+            this.connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
             System.out.println("Message: " + e.getMessage());
         }
-
-        setupSearchTextFieldListener();
-        setupComboBoxListener();
-        sortMoviesBy("title");  // At the start movies are sorted by title
     }
-
 
 
     /**
@@ -244,10 +259,12 @@ public class MainViewController implements Initializable {
         searchTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.length() >= 2) {
                 List<Movie> filteredMovies = searchMoviesStartingWith(newValue);
+
                 // Sort the filtered movies alphabetically by title
                 filteredMovies.sort(Comparator.comparing(Movie::getTitle));
                 updateMovieListView(filteredMovies);
             } else if (newValue.isEmpty()) {
+
                 // Fetch the original list of movies from db once the search field is empty
                 try {
                     List<Movie> allMovies = movieDao.readAll();
@@ -330,21 +347,6 @@ public class MainViewController implements Initializable {
         sortMoviesBy(currentSortCriterion);
     }
 
-
-    /**
-     * Opens a connection to the correct SQLite database based on the database name.
-     */
-    private void openDatabaseConnection() {
-        String dbPath = "src/main/java/com/moviedb/database/" + databaseName + ".db";
-
-        try {
-            this.connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
-        }
-    }
 
 
     /**
@@ -570,6 +572,11 @@ public class MainViewController implements Initializable {
         titleTextField.setText(selectedMovie.getTitle());
         releaseYearTextField.setText(String.valueOf(selectedMovie.getReleaseYear()));  // Format to String
         directorTextField.setText(selectedMovie.getDirector());
+        writerTextField.setText(selectedMovie.getWriter());
+        producerTextField.setText(selectedMovie.getProducer());
+        cinematographyTextField.setText(selectedMovie.getCinematographer());
+        budgetTextField.setText(String.valueOf(selectedMovie.getBudget()));
+        countryTextField.setText(selectedMovie.getCountry());
 
         // Clear the current lists
         actorsListView.getItems().clear();
@@ -597,6 +604,11 @@ public class MainViewController implements Initializable {
         titleTextField.clear();
         releaseYearTextField.clear();
         directorTextField.clear();
+        writerTextField.clear();
+        producerTextField.clear();
+        cinematographyTextField.clear();
+        budgetTextField.clear();
+        countryTextField.clear();
         actorsListView.getItems().clear();
         genresListView.getItems().clear();
     }
@@ -604,27 +616,41 @@ public class MainViewController implements Initializable {
 
     /**
      * Validates input fields for movie details and ensures that
-     * both actors and genres lists are not empty.
+     * both actors and genres lists are not empty. Provides specific feedback on invalid inputs.
      *
      * @return boolean indicating whether inputs are valid or not.
      */
     private boolean validateInputs() {
+        StringBuilder errorMsg = new StringBuilder();
         String updatedMovieTitle = titleTextField.getText();
         String releaseYearText = releaseYearTextField.getText();
         String updatedDirector = directorTextField.getText();
+        String writer = writerTextField.getText();
+        String producer = producerTextField.getText();
+        String cinematographer = cinematographyTextField.getText();
+        String budget = budgetTextField.getText();
+        String country = countryTextField.getText();
 
-        boolean isValid = !updatedMovieTitle.isEmpty() &&
-                InputValidator.isValidReleaseYear(releaseYearText) &&
-                InputValidator.isValidDirectorName(updatedDirector) &&
-                !actorsListView.getItems().isEmpty() &&
-                !genresListView.getItems().isEmpty();
+        if (updatedMovieTitle.isEmpty()) errorMsg.append("Title is required.\n");
+        if (!InputValidator.isValidReleaseYear(releaseYearText)) errorMsg.append("Give release year between 1900-2099.\n");
+        if (!InputValidator.isValidText(updatedDirector)) errorMsg.append("Director's name is invalid.\n");
+        if (!InputValidator.isValidText(writer)) errorMsg.append("Writer's name is invalid.\n");
+        if (!InputValidator.isValidText(producer)) errorMsg.append("Producer's name is invalid.\n");
+        if (!InputValidator.isValidText(cinematographer)) errorMsg.append("Cinematographer's name is invalid.\n");
+        if (!InputValidator.isInteger(budget)) errorMsg.append("Give budget as integer.\n");
+        if (!InputValidator.isValidText(country)) errorMsg.append("Invalid country name.\n");
+        if (actorsListView.getItems().isEmpty()) errorMsg.append("At least one actor is required.\n");
+        if (genresListView.getItems().isEmpty()) errorMsg.append("At least one genre is required.\n");
+
+        boolean isValid = errorMsg.isEmpty();
 
         if (!isValid) {
-            Dialogs.showMessageDialog("Invalid input data!");
+            Dialogs.showMessageDialog(errorMsg.toString());
         }
 
         return isValid;
     }
+
 
 
     /**
@@ -637,6 +663,11 @@ public class MainViewController implements Initializable {
         String updatedMovieTitle = titleTextField.getText();
         int updatedReleaseYear = Integer.parseInt(releaseYearTextField.getText());
         String updatedDirector = directorTextField.getText();
+        String updatedWriter = writerTextField.getText();
+        String updatedProducer = producerTextField.getText();
+        String updatedCinematographer = cinematographyTextField.getText();
+        int updatedBudget = Integer.parseInt(budgetTextField.getText());
+        String updatedCountry = countryTextField.getText();
 
         List<Integer> updatedActorIds = new ArrayList<>();
         for (Actor actor : actorsListView.getItems()) {
@@ -649,6 +680,7 @@ public class MainViewController implements Initializable {
         }
 
         return new Movie(updatedMovieTitle, updatedReleaseYear, updatedDirector,
-                updatedActorIds, updatedGenreIds);
+                        updatedWriter, updatedProducer, updatedCinematographer,
+                        updatedBudget, updatedCountry, updatedActorIds, updatedGenreIds);
     }
 }

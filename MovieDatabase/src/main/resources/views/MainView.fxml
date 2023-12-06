@@ -92,7 +92,7 @@
                             <children>
                                 <Label alignment="CENTER" maxWidth="300.0" text="Search" />
                                 <TextField fx:id="searchTextField" />
-                                <ComboBoxChooser fx:id="searchComboBox" maxWidth="200.0" promptText="name" rivit="title&#10;release year&#10;director&#10;actor&#10;genre" />
+                                <ComboBoxChooser fx:id="searchComboBox" maxWidth="200.0" promptText="name" rivit="title&#10;release year&#10;director&#10;writer&#10;producer&#10;cinematography&#10;budget&#10;country" />
                                 <Label alignment="CENTER" maxWidth="300.0" text="Movies" />
                             </children>
                         </VBox>
@@ -117,14 +117,29 @@
                                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
                                         <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <children>
                                         <Label text="title" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                                         <Label text="release year" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                                         <Label text="director" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                        <Label text="writer(s)" GridPane.rowIndex="3" />
+                                        <Label text="producer(s)" GridPane.rowIndex="4" />
+                                        <Label text="cinematography" GridPane.rowIndex="5" />
+                                        <Label text="budget" GridPane.rowIndex="6" />
+                                        <Label text="country" GridPane.rowIndex="7" />
                                         <TextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="0" />
                                         <TextField fx:id="releaseYearTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
                                         <TextField fx:id="directorTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" />
+                                        <TextField fx:id="writerTextField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <TextField fx:id="producerTextField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                        <TextField fx:id="cinematographyTextField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                        <TextField fx:id="budgetTextField" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                        <TextField fx:id="countryTextField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
                                     </children>
                                     <opaqueInsets>
                                         <Insets left="10.0" top="10.0" />
