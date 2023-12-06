@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -48,7 +49,6 @@ public class MainViewController implements Initializable {
     private ActorDao actorDao;
     private GenreDao genreDao;
     private Movie currentMovie;  // The movie currently chosen from the list
-    private List<Movie> allMovies;
 
     // Focus variables to determine which list is active
     private boolean isMovieListFocused;
@@ -212,47 +212,104 @@ public class MainViewController implements Initializable {
         actorDao.create(new Actor("robert de niro"));
         actorDao.create(new Actor("robert downey jr."));
 
-
         try {
             movieDao.create(new Movie("test", 2023, "testi",
                     Arrays.asList(1, 2), Arrays.asList(2, 4)));
             movieDao.create(new Movie("paska", 2023, "testi2",
                     Arrays.asList(2, 3), Arrays.asList(1, 6)));
 
-            allMovies = movieDao.readAll();  // Fetch all the movies
+            moviesListView.getItems().addAll(movieDao.readAll());  // Add all movies to the list view
         } catch (SQLException e) {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
             System.out.println("Message: " + e.getMessage());
         }
 
-        loadMoviesFromDB();
         setupSearchTextFieldListener();
+        setupComboBoxListener();
     }
 
 
+
+    /**
+     * Sets up a listener for the search text field. When the user types in the search field,
+     * the movies list view is updated to show only the movies that match the search criteria.
+     * If the search field is cleared, the original list of movies is reloaded from the database.
+     */
     private void setupSearchTextFieldListener() {
         searchTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.length() >= 2) {
                 List<Movie> filteredMovies = searchMoviesStartingWith(newValue);
                 updateMovieListView(filteredMovies);
             } else if (newValue.isEmpty()) {
-                updateMovieListView(allMovies);
+                // Fetch the original list of movies from db once the search field is empty
+                try {
+                    List<Movie> allMovies = movieDao.readAll();
+                    updateMovieListView(allMovies);
+                } catch (SQLException e) {
+                    System.out.println("SQLState: " + e.getSQLState());
+                    System.out.println("Error Code: " + e.getErrorCode());
+                    System.out.println("Message: " + e.getMessage());
+                }
             }
         });
     }
 
 
+    /**
+     * Sets up a listener for the search combo box. When a new criterion is selected,
+     * the movies list view is sorted according to the selected criterion.
+     */
+    private void setupComboBoxListener() {
+        searchComboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
+            sortMoviesBy(String.valueOf(newValue));
+        });
+    }
+
+
+    /**
+     * Sorts the movies in the movies list view based on the specified criterion.
+     *
+     * @param criterion The criterion to sort by.
+     */
+    private void sortMoviesBy(String criterion) {
+        switch (criterion.toLowerCase()) {
+            case "title":
+                moviesListView.getItems().sort(Comparator.comparing(Movie::getTitle));
+                break;
+            case "release year":
+                moviesListView.getItems().sort(Comparator.comparing(Movie::getReleaseYear));
+                break;
+            case "director":
+                moviesListView.getItems().sort(Comparator.comparing(Movie::getDirector));
+            default:
+                break;
+        }
+    }
+
+
+    /**
+     * Filters the movies in the movies list view to only show movies that start with the specified prefix.
+     * The search is case-insensitive.
+     *
+     * @param prefix The prefix to filter the movies by.
+     * @return       A list of movies that start with the specified prefix.
+     */
     private List<Movie> searchMoviesStartingWith(String prefix) {
         String lowerCasePrefix = prefix.toLowerCase();
 
-        // Filter the movies that start with the prefix from the allMovies list
-        return allMovies.stream()
+        return moviesListView.getItems().stream()
                 .filter(movie -> movie.getTitle().toLowerCase().startsWith(lowerCasePrefix))
                 .collect(Collectors.toList());
     }
 
 
+    /**
+     * Updates the movies list view with the provided list of movies.
+     * Clears the current list and adds all the movies from the provided list.
+     *
+     * @param movies The list of movies to display in the movies list view.
+     */
     private void updateMovieListView(List<Movie> movies) {
         moviesListView.getItems().clear();
         moviesListView.getItems().addAll(movies);
@@ -276,24 +333,10 @@ public class MainViewController implements Initializable {
 
 
     /**
-     * Loads all movies from the database and populates the movie list
-     * view component with their titles.
-     */
-    private void loadMoviesFromDB() {
-        if (allMovies.isEmpty()) {
-            moviesListView.getItems().clear();
-            return;
-        }
-        moviesListView.getItems().clear();
-        for (Movie movie : allMovies) {
-            moviesListView.getItems().add(movie);
-        }
-    }
-
-
-    /**
-     * Handles the 'Save' button click event.
-     * Updates the selected movie details to the database by collecting the data from UI.
+     * Handles the 'Save' button click event. Updates the movie details in the database,
+     * based on the data collected from the user interface. It either updates an existing movie or
+     * creates a new one, depending on whether 'currentMovie' is null or not. After updating or creating
+     * the movie, it updates the corresponding entry in the ListView to reflect the changes.
      *
      * @param event The ActionEvent triggered by the 'Save' button click.
      */
@@ -305,17 +348,19 @@ public class MainViewController implements Initializable {
             if (validateInputs()) {
                 Movie updatedMovie = createMovieFromInput();
 
+                // Movie exists
                 if (currentMovie != null) {
                     updatedMovie.setId(currentMovie.getId());
                     if (movieDao.update(updatedMovie)) {
-                        currentMovie = null;
+                        addOrUpdateMovieInListView(updatedMovie);
+                        currentMovie = null;  // Reset the current movie in memory
                         clearFields();
-                        loadMoviesFromDB();
                     }
-                } else {
-                    movieDao.create(updatedMovie);
+                } else {  // Movie doesn't exist, create new one
+                    int newMovieId = movieDao.create(updatedMovie);
+                    updatedMovie.setId(newMovieId);
+                    moviesListView.getItems().add(updatedMovie);
                     clearFields();
-                    loadMoviesFromDB();
                 }
             }
 
@@ -323,6 +368,29 @@ public class MainViewController implements Initializable {
             System.out.println("SQLState: " + e.getSQLState());
             System.out.println("Error Code: " + e.getErrorCode());
             System.out.println("Message: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Adds a new movie to the ListView or updates an existing one. Searches for the movie
+     * in the ListView based on its ID. If the movie is found, it updates the existing movie entry. If not,
+     * it adds the new movie to the ListView.
+     *
+     * @param movie The movie to be added or updated in the ListView.
+     */
+    private void addOrUpdateMovieInListView(Movie movie) {
+        // Find the movie from the list view
+        boolean found = false;
+        for (int i = 0; i < moviesListView.getItems().size(); i++) {
+            if (moviesListView.getItems().get(i).getId() == movie.getId()) {
+                moviesListView.getItems().set(i, movie); // Update existing movie
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            moviesListView.getItems().add(movie); // Add new if not found
         }
     }
 
@@ -512,6 +580,7 @@ public class MainViewController implements Initializable {
      * Clears all input fields and selections in the UI.
      */
     private void clearFields() {
+        searchTextField.clear();
         titleTextField.clear();
         releaseYearTextField.clear();
         directorTextField.clear();
