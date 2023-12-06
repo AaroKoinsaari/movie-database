@@ -63,7 +63,7 @@ public class MovieDao {
      * @return The generated ID of the added movie, or -1 if an error occurs.
      * @throws SQLException If there's an error during the database operation.
      */
-    public int create(Movie movie) throws SQLException {
+    public int create(Movie movie) {
         // Define the SQL queries
         String sqlInsertMovie = "INSERT INTO movies(title, release_year, director, writer, producer, " +
                                 "cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
@@ -115,6 +115,8 @@ public class MovieDao {
                 pstmtGenre.setInt(2, genreId);
                 pstmtGenre.executeUpdate();
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return generatedMovieId;
     }

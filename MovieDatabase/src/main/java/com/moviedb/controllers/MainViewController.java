@@ -5,12 +5,14 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -220,6 +222,8 @@ public class MainViewController implements Initializable {
         this.actorDao = new ActorDao(connection);
         this.genreDao = new GenreDao(connection);
 
+        fillDatabase();
+
         // Initiate listeners
         setupSearchTextFieldListener();
         setupComboBoxListener();
@@ -231,6 +235,63 @@ public class MainViewController implements Initializable {
             e.printStackTrace();
         }
         sortMoviesBy("title");  // At the start movies are sorted by title
+    }
+
+    private void fillDatabase() {
+        Stream.of(
+                new Actor("Robert De Niro"),    // ID 1
+                new Actor("Leonardo DiCaprio"), // ID 2
+                new Actor("Morgan Freeman"),    // ID 3
+                new Actor("Uma Thurman"),       // ID 4
+                new Actor("Tom Hanks"),         // ID 5
+                new Actor("Keanu Reeves"),      // ID 6
+                new Actor("Marlon Brando"),     // ID 7
+                new Actor("Brad Pitt"),         // ID 8
+                new Actor("Edward Norton"),     // ID 9
+                new Actor("Christian Bale"),    // ID 10
+                new Actor("Liam Neeson"),       // ID 11
+                new Actor("Elijah Wood"),       // ID 12
+                new Actor("Mark Hamill"),       // ID 13
+                new Actor("Harrison Ford")      // ID 14
+        ).forEach(actorDao::create);
+
+        Stream.of(
+                new Movie("Inception", 2010, "Christopher Nolan", "Christopher Nolan", "Emma Thomas",
+                        "Wally Pfister", 160000000, "USA",
+                        Arrays.asList(2), Arrays.asList(1, 17, 20)), // Leonardo DiCaprio, Action, Sci-Fi, Thriller
+                new Movie("The Shawshank Redemption", 1994, "Frank Darabont", "Stephen King", "Niki Marvin",
+                        "Roger Deakins", 25000000, "USA",
+                        Arrays.asList(3), Arrays.asList(6, 21)), // Morgan Freeman, Drama, Crime
+                new Movie("Pulp Fiction", 1994, "Quentin Tarantino", "Quentin Tarantino", "Lawrence Bender",
+                        "Andrzej Sekula", 8000000, "USA",
+                        Arrays.asList(4, 8), Arrays.asList(6, 15, 21)), // Uma Thurman, Brad Pitt, Crime, Mystery, Drama
+                new Movie("Forrest Gump", 1994, "Robert Zemeckis", "Winston Groom", "Wendy Finerman",
+                        "Don Burgess", 55000000, "USA",
+                        Arrays.asList(5), Arrays.asList(6, 21, 16)), // Tom Hanks, Drama, Comedy, Romance
+                new Movie("The Matrix", 1999, "Lana Wachowski", "Lilly Wachowski", "Joel Silver",
+                        "Bill Pope", 63000000, "USA",
+                        Arrays.asList(6), Arrays.asList(1, 17, 20)), // Keanu Reeves, Action, Sci-Fi, Thriller
+                new Movie("The Godfather", 1972, "Francis Ford Coppola", "Mario Puzo", "Albert S. Ruddy",
+                        "Gordon Willis", 6000000, "USA",
+                        Arrays.asList(7), Arrays.asList(6, 21)), // Marlon Brando, Crime, Drama
+                new Movie("Fight Club", 1999, "David Fincher", "Chuck Palahniuk", "Art Linson",
+                        "Jeff Cronenweth", 63000000, "Germany/USA",
+                        Arrays.asList(8, 9), Arrays.asList(6, 21)), // Brad Pitt, Edward Norton, Drama, Crime
+                new Movie("The Dark Knight", 2008, "Christopher Nolan", "Jonathan Nolan", "Christopher Nolan",
+                        "Wally Pfister", 185000000, "USA/UK",
+                        Arrays.asList(10), Arrays.asList(1, 20)), // Christian Bale, Action, Thriller
+                new Movie("Schindler's List", 1993, "Steven Spielberg", "Thomas Keneally", "Steven Spielberg",
+                        "Janusz Kamiński", 22000000, "USA",
+                        Arrays.asList(11), Arrays.asList(4, 21)), // Liam Neeson, Biography, Drama
+                new Movie("The Lord of the Rings: The Return of the King", 2003, "Peter Jackson", "J.R.R. Tolkien", "Peter Jackson",
+                        "Andrew Lesnie", 94000000, "New Zealand/USA",
+                        Arrays.asList(12), Arrays.asList(2, 10, 21)), // Elijah Wood, Adventure, Fantasy, Drama
+                new Movie("Star Wars: Episode V - The Empire Strikes Back", 1980, "Irvin Kershner", "Leigh Brackett", "Gary Kurtz",
+                        "Peter Suschitzky", 18000000, "USA",
+                        Arrays.asList(13, 14), Arrays.asList(1, 2, 20)) // Mark Hamill, Harrison Ford, Action, Adventure, Sci-Fi
+
+        ).forEach(movieDao::create);
+
     }
 
 
