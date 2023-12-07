@@ -1,9 +1,11 @@
 package com.moviedb.controllers;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import fi.jyu.mit.fxgui.Dialogs;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -89,7 +91,12 @@ public class GenreDialogViewController {
      * CheckBoxes are marked as selected based on the current selection in MainViewController.
      */
     private void loadGenres() {
-        List<Genre> genres = genreDao.readAll();
+        List<Genre> genres = null;
+        try {
+            genres = genreDao.readAll();
+        } catch (SQLException e) {
+            Dialogs.showMessageDialog("Loading genres failed");
+        }
         List<Genre> selectedGenres = mainViewController.getGenreList();
 
         for (Genre genre : genres) {

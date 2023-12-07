@@ -87,9 +87,8 @@ public class GenreDao {
      *
      * @param id The ID of the genre to retrieve.
      * @return The genre if found, otherwise an empty optional.
-     * @throws SQLException If there's an error during the database operation.
      */
-    public Optional<Genre> getGenreById(int id) throws SQLException {
+    public Optional<Genre> getGenreById(int id) {
         try (PreparedStatement pstmt = connection.prepareStatement(SQL_GET_GENRE_BY_ID)) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
@@ -99,7 +98,6 @@ public class GenreDao {
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error fetching genre by ID: " + id, e);
-            throw e;
         }
         return Optional.empty();
     }
@@ -110,9 +108,8 @@ public class GenreDao {
      *
      * @param name The name of the genre to retrieve.
      * @return The genre if found, otherwise an empty optional.
-     * @throws SQLException If there's an error during the database operation.
      */
-    public Optional<Genre> getGenreByName(String name) throws SQLException {
+    public Optional<Genre> getGenreByName(String name) {
         try (PreparedStatement pstmt = connection.prepareStatement(SQL_GET_GENRE_BY_NAME)) {
             pstmt.setString(1, name);
             ResultSet rs = pstmt.executeQuery();
@@ -122,7 +119,6 @@ public class GenreDao {
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error fetching genre by name: " + name, e);
-            throw e;
         }
         return Optional.empty();
     }

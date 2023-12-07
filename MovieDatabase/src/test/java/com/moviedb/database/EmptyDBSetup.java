@@ -46,11 +46,15 @@ public abstract class EmptyDBSetup {
 
                 // Create movies table
                 stmt.execute("CREATE TABLE movies ("
-                        + "id INTEGER AUTO_INCREMENT,"
+                        + "id INTEGER AUTO_INCREMENT PRIMARY KEY,"
                         + "title VARCHAR(255) NOT NULL,"
                         + "release_year INTEGER,"
                         + "director VARCHAR(255),"
-                        + "PRIMARY KEY(id))");
+                        + "writer VARCHAR(255),"
+                        + "producer VARCHAR(255),"
+                        + "cinematographer VARCHAR(255),"
+                        + "budget INTEGER,"
+                        + "country VARCHAR(255))");
 
                 // Create movie_actors table
                 stmt.execute("CREATE TABLE movie_actors ("

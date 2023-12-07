@@ -37,7 +37,6 @@ public class ActorDao {
 
 
     // Define SQL queries
-    private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";
     private static final String SQL_INSERT_ACTOR = "INSERT INTO actors(name) VALUES(?)";
     private static final String SQL_READ_ACTOR = "SELECT name, id FROM actors WHERE id = ?";
     private static final String SQL_READ_ALL_ACTORS = "SELECT id, name FROM actors";
@@ -77,7 +76,7 @@ public class ActorDao {
      * @param actor The actor to be added.
      * @return The generated ID of the added actor, or -1 if an error occurs.
      */
-    public int create(Actor actor) throws SQLException {
+    public int create(Actor actor) {
         int generatedActorId = -1;
         try {
             connection.setAutoCommit(false); // Start transaction
@@ -87,10 +86,9 @@ public class ActorDao {
                 pstmt.executeUpdate();
 
                 // Retrieve the generated key (actor ID)
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(SQL_LAST_INSERT_ID)) {
-                    if (rs.next()) {
-                        generatedActorId = rs.getInt(1);
+                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        generatedActorId = generatedKeys.getInt(1);
                     }
                 }
             }
@@ -109,7 +107,6 @@ public class ActorDao {
             } catch (SQLException rollbackEx) {
                 logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
             }
-            throw e;  // Re-throw the exception to be handled by the caller
         } finally {
             try {
                 connection.setAutoCommit(true);  // Reset auto-commit behavior
@@ -171,9 +168,8 @@ public class ActorDao {
      *
      * @param id The ID of the actor to retrieve.
      * @return The actor if found, otherwise an empty optional.
-     * @throws SQLException If there's an error during the database operation.
      */
-    public Optional<Actor> getActorById(int id) throws SQLException {
+    public Optional<Actor> getActorById(int id) {
         try (PreparedStatement pstmt = connection.prepareStatement(SQL_GET_ACTOR_BY_ID)) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
@@ -183,7 +179,6 @@ public class ActorDao {
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error fetching actor by ID: " + id, e);
-            throw e;
         }
         return Optional.empty();
     }
@@ -194,9 +189,8 @@ public class ActorDao {
      *
      * @param name The name of the actor to retrieve.
      * @return The actor if found, otherwise an empty optional.
-     * @throws SQLException If there's an error during the database operation.
      */
-    public Optional<Actor> getActorByName(String name) throws SQLException {
+    public Optional<Actor> getActorByName(String name) {
         try (PreparedStatement pstmt = connection.prepareStatement(SQL_GET_ACTOR_BY_NAME)) {
             pstmt.setString(1, name);
             ResultSet rs = pstmt.executeQuery();
@@ -206,7 +200,6 @@ public class ActorDao {
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error fetching actor by name: " + name, e);
-            throw e;
         }
         return Optional.empty();
     }
@@ -217,7 +210,6 @@ public class ActorDao {
      *
      * @param updatedActor The movie object containing updated information.
      * @return boolean true if the update was successful, otherwise false.
-     * @throws SQLException If there's an error during the database operation.
      */
     public boolean update(Actor updatedActor) {
         boolean isUpdated = false;
@@ -225,6 +217,19 @@ public class ActorDao {
         try {
             connection.setAutoCommit(false);  // Start transaction
 
+            // First check if the updatable actor exists
+            try (PreparedStatement pstmtCheck = connection.prepareStatement(SQL_READ_ACTOR)) {
+                pstmtCheck.setInt(1, updatedActor.getId());
+                try (ResultSet rs = pstmtCheck.executeQuery()) {
+                    if (!rs.next()) {
+                        // Actor doesn't exist, cannot update
+                        connection.setAutoCommit(true);
+                        return false;
+                    }
+                }
+            }
+
+            // Execute the udpate
             try (PreparedStatement pstmt = connection.prepareStatement(SQL_UPDATE_ACTOR)) {
                 pstmt.setString(1, updatedActor.getName());
                 pstmt.setInt(2, updatedActor.getId());

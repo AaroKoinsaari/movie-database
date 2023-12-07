@@ -62,7 +62,12 @@ public class GenreDaoTest extends FilledDBSetup {
     /** Tests the reading of all genres from the database. */
     @Test
     void readAllTest() {
-        List<Genre> fetchedGenres = dao.readAll();
+        List<Genre> fetchedGenres = null;
+        try {
+            fetchedGenres = dao.readAll();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         assertEquals(expectedGenres, fetchedGenres);
     }
 

@@ -1,16 +1,16 @@
 package com.moviedb.dao;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import com.moviedb.database.EmptyDBSetup;
 import com.moviedb.models.Actor;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 /**
@@ -40,6 +40,9 @@ public class ActorDaoEmptyDBTest extends EmptyDBSetup {
         // Create actors in the database and return the generated ID
         int actorId1 = dao.create(new Actor(actorName1));
         int actorId2 = dao.create(new Actor(actorName2));
+
+        assertTrue(actorId1 > 0, "Actor 1 should be created with a valid ID");
+        assertTrue(actorId2 > 0, "Actor 2 should be created with a valid ID");
 
         // Read the created actors from the database
         Optional<Actor> foundActor1 = dao.read(actorId1);
@@ -89,7 +92,7 @@ public class ActorDaoEmptyDBTest extends EmptyDBSetup {
 
     /** Tests reading all non-existent Actors in the database. */
     @Test
-    void readAllTest() {
+    void readAllTest() throws SQLException {
         // Read all actors from empty database and assert that the list is empty
         List<Actor> actors = dao.readAll();
         assertTrue(actors.isEmpty());

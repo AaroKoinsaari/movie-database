@@ -129,9 +129,7 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
         int actorId = 5;  //  Margot Robbie
 
         // Assert that SQLException is thrown when trying to delete actor that is linked to a movie
-        assertThrows(SQLException.class, () -> {
-            dao.delete(actorId);
-        }, "Should throw an exception, but didn't");
+        assertThrows(SQLException.class, () -> dao.delete(actorId), "Should throw an exception, but didn't");
     }
 
 

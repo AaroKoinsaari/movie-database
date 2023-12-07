@@ -43,7 +43,6 @@ public class MovieDao {
             "cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SQL_INSERT_ACTOR = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
     private static final String SQL_INSERT_GENRE = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
-    private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";  // Fixes the issue when getting a generated movie key
     private static final String SQL_READ_MOVIE = "SELECT title, release_year, director, writer, producer, " +
             "cinematographer, budget, country FROM movies WHERE id = ?";
     private static final String SQL_READ_ALL_MOVIES = "SELECT id, title, release_year, director, writer, producer, " +
@@ -96,20 +95,16 @@ public class MovieDao {
             connection.setAutoCommit(false);  // Start transaction
 
             try (PreparedStatement pstmt = connection.prepareStatement(SQL_INSERT_MOVIE, Statement.RETURN_GENERATED_KEYS)) {
-                // Set the values of the PreparedStatement from the movie object
                 setPreparedStatementForMovie(pstmt, movie);
                 pstmt.executeUpdate();
 
-                // Retrieve the generated key (movie ID)
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(SQL_LAST_INSERT_ID)) {
-                    if (rs.next()) {
-                        generatedMovieId = rs.getInt(1);
+                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        generatedMovieId = generatedKeys.getInt(1);  // Retrieve the generated key
                     }
                 }
             }
 
-            // Check if a valid movie ID was generated
             if (generatedMovieId <= 0) {
                 throw new SQLException("Failed to create a movie");
             }
@@ -202,10 +197,16 @@ public class MovieDao {
      */
     public boolean update(Movie updatedMovie) throws SQLException {
         boolean updateSuccessful = false;
-        Movie existingMovie = read(updatedMovie.getId());
 
         try {
             connection.setAutoCommit(false);  // Start transaction
+
+            // First check that the movie exists
+            Movie existingMovie = read(updatedMovie.getId());
+            if (existingMovie == null) {  // Can't update if doesn't exist
+                connection.setAutoCommit(true);
+                return false;
+            }
 
             // Update main movie details if they have changed
             if (hasMainDetailsChanged(existingMovie, updatedMovie)) {
