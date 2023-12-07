@@ -37,7 +37,7 @@ public class MovieDao {
             "cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SQL_INSERT_ACTOR = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
     private static final String SQL_INSERT_GENRE = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
-    private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";  // Fixes the issue getting generated movie key
+    private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";  // Fixes the issue when getting a generated movie key
     private static final String SQL_READ_MOVIE = "SELECT title, release_year, director, writer, producer, " +
             "cinematographer, budget, country FROM movies WHERE id = ?";
     private static final String SQL_READ_ALL_MOVIES = "SELECT id, title, release_year, director, writer, producer, " +
@@ -45,10 +45,13 @@ public class MovieDao {
 
     private static final String SQL_UPDATE_MOVIE_MAIN_DETAILS = "UPDATE movies SET title = ?, release_year = ?, director = ?, " +
             "writer = ?, producer = ?, cinematographer = ?, budget = ?, country = ? WHERE id = ?";
+    private static final String SQL_DELETE_ACTORS = "DELETE FROM movie_actors WHERE movie_id = ?";
+    private static final String SQL_DELETE_GENRES = "DELETE FROM movie_genres WHERE movie_id = ?";
+    private static final String SQL_DELETE_MOVIE = "DELETE FROM movies WHERE id = ?";
 
 
     /** Connection used to execute SQL queries and interact with the database. */
-    private Connection connection;
+    private final Connection connection;
 
     /** The URL pointing to the SQL database location. */
     private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
@@ -61,7 +64,8 @@ public class MovieDao {
         try {
             this.connection = DriverManager.getConnection(DB_URL);
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to connect to the database", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -116,20 +120,16 @@ public class MovieDao {
             insertGenresToMovie(connection, generatedMovieId, movie.getGenreIds());
 
             connection.commit();
-
         } catch (SQLException e) {
             // Log and handle any SQL exceptions
             logger.log(Level.SEVERE, "SQLException during movie creation", e);
-
             try {
-                connection.rollback();  // Try to rollback the transaction on failure
+                connection.rollback();  // Try to rollback on failure
                 logger.log(Level.INFO, "Transaction rolled back due to SQLException");
             } catch (SQLException rollbackEx) {
                 logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
             }
-
             throw e;  // Re-throw the exception to be handled by the caller
-
         } finally {
             try {
                 connection.setAutoCommit(true);  // Reset auto-commit behavior
@@ -293,14 +293,8 @@ public class MovieDao {
     public List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
         List<Integer> ids = new ArrayList<>();
 
-        // Whitelist allowed table and column names to prevent SQL injection
-        List<String> allowedTables = Arrays.asList("movie_actors", "movie_genres");
-        List<String> allowedColumns = Arrays.asList("actor_id", "genre_id");
-
-        // Check if provided table name and column name are allowed
-        if (!allowedTables.contains(tableName) || !allowedColumns.contains(columnName)) {
-            throw new IllegalArgumentException("Invalid table name or column name");
-        }
+        // Validate table and column names to prevent SQL injection
+        validateTableNameAndColumnName(tableName, columnName);
 
         // Construct SQL query dynamically using safe table and column names
         String sql = "SELECT " + columnName + " FROM " + tableName + " WHERE movie_id = ?";
@@ -318,7 +312,24 @@ public class MovieDao {
 
 
     /**
-     * Updates the details of a specified movie in the SQL database which
+     * Validates that the given table name and column name are allowed.
+     * Throws IllegalArgumentException if they are not valid.
+     *
+     * @param table The table name to validate.
+     * @param column The column name to validate.
+     */
+    private void validateTableNameAndColumnName(String table, String column) {
+        List<String> allowedTables = Arrays.asList("movie_actors", "movie_genres");
+        List<String> allowedColumns = Arrays.asList("actor_id", "genre_id");
+
+        if (!allowedTables.contains(table) || !allowedColumns.contains(column)) {
+            throw new IllegalArgumentException("Invalid table or column name");
+        }
+    }
+
+
+    /**
+     * Updates the details of a specified movie in the SQL database, which
      * includes updating the main movie details as well as associated actors and genres.
      * It handles database transactions and rolls back in case of an error.
      *
@@ -352,7 +363,7 @@ public class MovieDao {
             updateSuccessful = true;
         } catch (SQLException e) {
             try {
-                connection.rollback();  // Rollback transactions on error
+                connection.rollback();  // Try to rollback on error
                 logger.log(Level.SEVERE, "Error updating movie with ID: " + updatedMovie.getId(), e);
             } catch (SQLException rollbackEx) {
                 logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
@@ -419,20 +430,34 @@ public class MovieDao {
      * @throws SQLException If there's an error during the database operation.
      */
     private void updateMovieLinks(int movieId, Set<Integer> updatedIds, String table, String idColumn) throws SQLException {
+        // Check for valid table and column names to prevent SQL injection
+        validateTableNameAndColumnName(table, idColumn);
+
         Set<Integer> currentIds = getCurrentIds(movieId, table, idColumn);
 
-        // Delete links that are not on the updated list
-        for (Integer id : currentIds) {
-            if (!updatedIds.contains(id)) {
-                removeLinkFromMovie(movieId, id, table, idColumn);
-            }
-        }
+        try {
+            connection.setAutoCommit(false); // Start a transaction
 
-        // Add new links
-        for (Integer id : updatedIds) {
-            if (!currentIds.contains(id)) {
-                addLinkToMovie(movieId, id, table, idColumn);
+            // Delete links that are not in the updated list
+            for (Integer id : currentIds) {
+                if (!updatedIds.contains(id)) {
+                    removeLinkFromMovie(movieId, id, table, idColumn);
+                }
             }
+
+            // Add new links
+            for (Integer id : updatedIds) {
+                if (!currentIds.contains(id)) {
+                    addLinkToMovie(movieId, id, table, idColumn);
+                }
+            }
+
+            connection.commit();
+        } catch (SQLException e) {
+            connection.rollback(); // Try to tollback on error
+            throw e;
+        } finally {
+            connection.setAutoCommit(true); // Reset auto-commit behavior
         }
     }
 
@@ -447,6 +472,9 @@ public class MovieDao {
      * @throws SQLException If there's an error during the database operation.
      */
     private Set<Integer> getCurrentIds(int movieId, String table, String idColumn) throws SQLException {
+        // Check for valid table and column names to prevent SQL injection
+        validateTableNameAndColumnName(table, idColumn);
+
         Set<Integer> ids = new HashSet<>();
 
         String sql = "SELECT " + idColumn + " FROM " + table + " WHERE movie_id = ?";
@@ -473,8 +501,10 @@ public class MovieDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public void removeLinkFromMovie(int movieId, int id, String table, String idColumn) throws SQLException {
-        String sql = "DELETE FROM " + table + " WHERE movie_id = ? AND " + idColumn + " = ?";
+        // Check for valid table and column names to prevent SQL injection
+        validateTableNameAndColumnName(table, idColumn);
 
+        String sql = "DELETE FROM " + table + " WHERE movie_id = ? AND " + idColumn + " = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, movieId);
             pstmt.setInt(2, id);
@@ -494,6 +524,9 @@ public class MovieDao {
      * @throws SQLException If there's an error during the database operation.
      */
     private void addLinkToMovie(int movieId, int id, String table, String idColumn) throws SQLException {
+        // Check for valid table and column names to prevent SQL injection
+        validateTableNameAndColumnName(table, idColumn);
+
         String sql = "INSERT INTO " + table + " (movie_id, " + idColumn + ") VALUES (?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, movieId);
@@ -504,46 +537,53 @@ public class MovieDao {
 
 
     /**
-     * Deletes a movie and its associations from the SQL database based on its ID.
-     * This includes deleting entries from movie_actors and movie_genres tables.
-     * The method handles database transactions and rolls back in case of an error.
+     * Deletes a movie and its associations from the SQL database based on its ID, which
+     * Includes deleting entries from movie_actors and movie_genres tables.
+     * It handles database transactions and rolls back in case of an error.
+     *
      * @param movieId The ID of the movie to be deleted.
      * @return true if the movie and its associations were successfully deleted, false otherwise.
      * @throws SQLException If there's an error during the database operation.
      */
     public boolean delete(int movieId) throws SQLException {
-        String deleteActorsSql = "DELETE FROM movie_actors WHERE movie_id = ?";
-        String deleteGenresSql = "DELETE FROM movie_genres WHERE movie_id = ?";
-        String deleteMovieSql = "DELETE FROM movies WHERE id = ?";
         int rowsAffected = 0;
 
         try {
             connection.setAutoCommit(false); // Start transaction
 
             // Delete associations from movie_actors
-            try (PreparedStatement pstmt = connection.prepareStatement(deleteActorsSql)) {
+            try (PreparedStatement pstmt = connection.prepareStatement(SQL_DELETE_ACTORS)) {
                 pstmt.setInt(1, movieId);
                 pstmt.executeUpdate();
             }
 
             // Delete associations from movie_genres
-            try (PreparedStatement pstmt = connection.prepareStatement(deleteGenresSql)) {
+            try (PreparedStatement pstmt = connection.prepareStatement(SQL_DELETE_GENRES)) {
                 pstmt.setInt(1, movieId);
                 pstmt.executeUpdate();
             }
 
             // Delete the movie
-            try (PreparedStatement pstmt = connection.prepareStatement(deleteMovieSql)) {
+            try (PreparedStatement pstmt = connection.prepareStatement(SQL_DELETE_MOVIE)) {
                 pstmt.setInt(1, movieId);
                 rowsAffected = pstmt.executeUpdate();
             }
 
             connection.commit();
         } catch (SQLException e) {
-            connection.rollback(); // Rollback transaction on error
-            e.printStackTrace();
+            try {
+                connection.rollback(); // Try to rollback on error
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
+            }
+            logger.log(Level.SEVERE, "Error deleting movie with ID: " + movieId, e);
+            return false;
         } finally {
-            connection.setAutoCommit(true); // Restore default behavior
+            try {
+                connection.setAutoCommit(true); // Reset auto-commit behavior
+            } catch (SQLException autoCommitEx) {
+                logger.log(Level.SEVERE, "Error resetting auto-commit", autoCommitEx);
+            }
         }
         return rowsAffected > 0;
     }
