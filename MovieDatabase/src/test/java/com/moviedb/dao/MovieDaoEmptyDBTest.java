@@ -1,18 +1,18 @@
 package com.moviedb.dao;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.moviedb.database.EmptyDBSetup;
 import com.moviedb.models.Movie;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 /**
@@ -33,71 +33,121 @@ class MovieDaoEmptyDBTest extends EmptyDBSetup {
     }
 
 
-    /** Tests the creation of a new movie in the database. */
     @Test
-    void createTest() {
+    @DisplayName("Test creating a new movie in the database")
+    void testCreate() {
         addActorsToDB(10);  // Add 10 test actors to database
 
         // Create a new test movie
         String title = "Test Movie";
         int releaseYear = 2023;
         String director = "Test Director";
+        String writer = "Test Writer";
+        String producer = "Test Producer";
+        String cinematographer = "Test Cinematographer";
+        int budget = 100;
+        String country = "Finland";
         List<Integer> actorIds = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
         List<Integer> genreIds = new ArrayList<>(Arrays.asList(1, 2, 3, 4));
-        Movie testMovie = new Movie(title, releaseYear, director, actorIds, genreIds);
+        Movie testMovie = new Movie(title, releaseYear, director, writer, producer,
+                cinematographer, budget, country, actorIds, genreIds);
 
         MovieDao dao = new MovieDao(connection);
-        int generatedId = dao.create(testMovie);
+        int generatedId = 0;
 
-        assertTrue(generatedId > 0);  // Confirm that the movie has been added to the database
+        // Test the creation of the movie
+        try {
+            generatedId = dao.create(testMovie);
+        } catch (SQLException e) {
+            fail("SQLException thrown during movie creation: " + e.getMessage());
+        }
 
-        // Fetch the created movie and test that the values are correct
-        Movie fetchedMovie = dao.read(generatedId);
+        assertTrue(generatedId > 0, "Movie should be created with a valid ID");
+
+        // Test fetching the created movie
+        Movie fetchedMovie = null;
+        try {
+            fetchedMovie = dao.read(generatedId);
+        } catch (SQLException e) {
+            fail("SQLException thrown during movie fetching: " + e.getMessage());
+        }
+
+        assertNotNull(fetchedMovie, "Fetched movie should not be null");
         assertEquals(title, fetchedMovie.getTitle());
         assertEquals(releaseYear, fetchedMovie.getReleaseYear());
         assertEquals(director, fetchedMovie.getDirector());
+        assertEquals(writer, fetchedMovie.getWriter());
+        assertEquals(producer, fetchedMovie.getProducer());
+        assertEquals(cinematographer, fetchedMovie.getCinematographer());
+        assertEquals(budget, fetchedMovie.getBudget());
+        assertEquals(country, fetchedMovie.getCountry());
         assertEquals(actorIds, fetchedMovie.getActorIds());
         assertEquals(genreIds, fetchedMovie.getGenreIds());
         assertEquals(generatedId, fetchedMovie.getId());
     }
 
 
-    /** Tests the reading of a non-existent movie. */
     @Test
-    void readTest() {
+    @DisplayName("Test reading a non-existent movie from the database returns null")
+    void testRead() {
         int nonExistentMovieId = 99;
-        Movie fetchedMovie = dao.read(nonExistentMovieId);
+        Movie fetchedMovie = null;
+
+        try {
+            fetchedMovie = dao.read(nonExistentMovieId);
+        } catch (SQLException e) {
+            fail("SQLException thrown while reading a non-existent movie: " + e.getMessage());
+        }
+
         assertNull(fetchedMovie, "Should return null for trying to read a non-existent movie");
     }
 
 
-    /** Tests updating of a non-existent movie.  */
     @Test
-    void updateTest() {
+    @DisplayName("Test updating non-existent movie returns false")
+    void testUpdate() {
         int nonExistentMovieId = 99;
 
-        // Create non-existent movie
+        // Create a movie object representing a non-existent movie
         String updatedTitle = "Updated Movie";
         int updatedReleaseYear = 2023;
         String updatedDirector = "Updated Director";
+        String updatedWriter = "Updated Writer";
+        String updatedProducer = "Updated Producer";
+        String updatedCinematographer = "Updated Cinematographer";
+        int updatedBudget = 150;
+        String updatedCountry = "Test Country";
         List<Integer> updatedActorIds = Arrays.asList(3, 4, 5);
         List<Integer> updatedGenreIds = Arrays.asList(2, 3);
-        Movie updatedMovie = new Movie(updatedTitle, updatedReleaseYear, updatedDirector, updatedActorIds, updatedGenreIds);
+        Movie updatedMovie = new Movie(updatedTitle, updatedReleaseYear, updatedDirector, updatedWriter,
+                updatedProducer, updatedCinematographer, updatedBudget,
+                updatedCountry, updatedActorIds, updatedGenreIds);
         updatedMovie.setId(nonExistentMovieId);
 
-        // Try update and assert that the update fails
-        boolean updateResult = dao.update(updatedMovie);
+        // Try to update and assert that the update fails
+        boolean updateResult = false;
+        try {
+            updateResult = dao.update(updatedMovie);
+        } catch (SQLException e) {
+            fail("SQLException thrown during update operation: " + e.getMessage());
+        }
         assertFalse(updateResult, "Should return false for trying to update a non-existent movie");
     }
 
 
-    /** Tests deletion of a non-existent movie. */
     @Test
-    void deleteTest() {
+    @DisplayName("Test deleting a non-existent movie returns false")
+    void testDelete() {
         int nonExistentMovieId = 99;
 
-        // Try deleting non-existent movie and assert that the deletion fails
-        boolean isDeleted = dao.delete(nonExistentMovieId);
+        // Try to delete a non-existent movie and assert that the deletion returns false
+        boolean isDeleted = false;
+        try {
+            isDeleted = dao.delete(nonExistentMovieId);
+        } catch (SQLException e) {
+            fail("SQLException thrown during delete operation: " + e.getMessage());
+        }
+
         assertFalse(isDeleted, "Should return false for trying to delete a non-existent movie");
     }
 }
