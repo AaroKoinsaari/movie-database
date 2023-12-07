@@ -9,7 +9,7 @@ import javafx.fxml.FXMLLoader;
 
 /**
  * @author Aaro Koinsaari
- * @version 29.10.2023
+ * @version 07.12.2023
  */
 public class MovieMain extends Application {
     @Override
