@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.moviedb.models.Movie;
 
@@ -28,6 +28,12 @@ import com.moviedb.models.Movie;
  * promoting cleaner separation of concerns and making the codebase more maintainable.
  */
 public class MovieDao {
+
+    // Connection used to execute SQL queries and interact with the database.
+    private final Connection connection;
+
+    // The URL pointing to the SQL database location.
+    private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
 
     // Logger for exceptions
     private static final Logger logger = Logger.getLogger(MovieDao.class.getName());
@@ -48,13 +54,6 @@ public class MovieDao {
     private static final String SQL_DELETE_ACTORS = "DELETE FROM movie_actors WHERE movie_id = ?";
     private static final String SQL_DELETE_GENRES = "DELETE FROM movie_genres WHERE movie_id = ?";
     private static final String SQL_DELETE_MOVIE = "DELETE FROM movies WHERE id = ?";
-
-
-    /** Connection used to execute SQL queries and interact with the database. */
-    private final Connection connection;
-
-    /** The URL pointing to the SQL database location. */
-    private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
 
 
     /**

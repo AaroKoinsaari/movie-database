@@ -1,14 +1,14 @@
 package com.moviedb.dao;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Optional;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Connection;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,9 +17,26 @@ import com.moviedb.models.Actor;
 
 /**
  * Data Access Object for the Actor class.
+ * This class provides an abstraction layer between the application and the underlying database.
+ * It handles all database operations related to actors, including creating, reading, updating, and deleting actor records.
+ *
+ * The ActorDao class ensures that actor data is accessed and manipulated in a consistent and database-agnostic manner.
+ * It encapsulates all SQL queries and shields the rest of the application from direct database interactions,
+ * promoting cleaner separation of concerns and making the codebase more maintainable.
  */
 public class ActorDao {
 
+    // Connection used to execute SQL queries and interact with the database.
+    private final Connection connection;
+
+    // The URL pointing to the SQL database location.
+    private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
+
+    // Logger for exceptions
+    private static final Logger logger = Logger.getLogger(ActorDao.class.getName());
+
+
+    // Define SQL queries
     private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";
     private static final String SQL_INSERT_ACTOR = "INSERT INTO actors(name) VALUES(?)";
     private static final String SQL_READ_ACTOR = "SELECT name, id FROM actors WHERE id = ?";
@@ -29,18 +46,6 @@ public class ActorDao {
     private static final String SQL_CHECK_ACTOR_LINK = "SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?";
     private static final String SQL_GET_ACTOR_BY_ID = "SELECT id, name FROM actors WHERE id = ?";
     private static final String SQL_GET_ACTOR_BY_NAME = "SELECT id, name FROM actors WHERE name = ?";
-
-
-
-    // Logger for exceptions
-    private static final Logger logger = Logger.getLogger(ActorDao.class.getName());
-
-
-    /** Connection used to execute SQL queries and interact with the database. */
-    private final Connection connection;
-
-    /** The URL pointing to the SQL database location. */
-    private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
 
 
     /**
