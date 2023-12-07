@@ -369,6 +369,21 @@ public class MainViewController implements Initializable {
             case "director":
                 comparator = Comparator.comparing(Movie::getDirector);
                 break;
+            case "writer":
+                comparator = Comparator.comparing(Movie::getWriter);
+                break;
+            case "producer":
+                comparator = Comparator.comparing(Movie::getProducer);
+                break;
+            case "cinematography":
+                comparator = Comparator.comparing(Movie::getCinematographer);
+                break;
+            case "budget":
+                comparator = Comparator.comparingInt(Movie::getBudget);
+                break;
+            case "country":
+                comparator = Comparator.comparing(Movie::getCountry);
+                break;
             default:
                 return;
         }
