@@ -143,6 +143,161 @@ public class MovieDao {
 
 
     /**
+     * Retrieves a movie based on its ID, including its additional details.
+     *
+     * @param id The unique identifier of the movie to be fetched.
+     * @return The Movie object if found, null otherwise.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    public Movie read(int id) throws SQLException {
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_READ_MOVIE)) {
+            pstmt.setInt(1, id);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return convertResultSetToMovie(rs, id);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching movie with ID: " + id, e);
+            throw e;
+        }
+        return null;
+    }
+
+
+    /**
+     * Retrieves all movies from the database with their detailed information including
+     * associated actor and genre IDs.
+     *
+     * @return A list of all movies in the database, with full details.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    public List<Movie> readAll() throws SQLException {
+        List<Movie> movies = new ArrayList<>();
+
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_READ_ALL_MOVIES);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                // Convert each row to a Movie object
+                Movie movie = convertResultSetToMovie(rs, rs.getInt("id"));
+                movies.add(movie);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching all movies", e);
+            throw e;
+        }
+        return movies;
+    }
+
+
+    /**
+     * Updates the details of a specified movie in the SQL database, which
+     * includes updating the main movie details as well as associated actors and genres.
+     * It handles database transactions and rolls back in case of an error.
+     *
+     * @param updatedMovie The movie object containing updated details with the correct ID of the movie to be updated.
+     * @return boolean true if the update was successful, otherwise false.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    public boolean update(Movie updatedMovie) throws SQLException {
+        boolean updateSuccessful = false;
+        Movie existingMovie = read(updatedMovie.getId());
+
+        try {
+            connection.setAutoCommit(false);  // Start transaction
+
+            // Update main movie details if they have changed
+            if (hasMainDetailsChanged(existingMovie, updatedMovie)) {
+                updateMovieMainDetails(updatedMovie);
+            }
+
+            // Update actor links if they have changed
+            if (!existingMovie.getActorIds().equals(updatedMovie.getActorIds())) {
+                updateMovieLinks(updatedMovie.getId(), new HashSet<>(updatedMovie.getActorIds()), "movie_actors", "actor_id");
+            }
+
+            // Update genre links if they have changed
+            if (!existingMovie.getGenreIds().equals(updatedMovie.getGenreIds())) {
+                updateMovieLinks(updatedMovie.getId(), new HashSet<>(updatedMovie.getGenreIds()), "movie_genres", "genre_id");
+            }
+
+            connection.commit();  // Commit the transaction if all updates were successful
+            updateSuccessful = true;
+        } catch (SQLException e) {
+            try {
+                connection.rollback();  // Try to rollback on error
+                logger.log(Level.SEVERE, "Error updating movie with ID: " + updatedMovie.getId(), e);
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
+            }
+        } finally {
+            try {
+                connection.setAutoCommit(true);  // Reset auto-commit behavior
+            } catch (SQLException autoCommitEx) {
+                logger.log(Level.SEVERE, "Error resetting auto-commit", autoCommitEx);
+            }
+        }
+
+        return updateSuccessful;
+    }
+
+
+    /**
+     * Deletes a movie and its associations from the SQL database based on its ID, which
+     * Includes deleting entries from movie_actors and movie_genres tables.
+     * It handles database transactions and rolls back in case of an error.
+     *
+     * @param movieId The ID of the movie to be deleted.
+     * @return true if the movie and its associations were successfully deleted, false otherwise.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    public boolean delete(int movieId) throws SQLException {
+        int rowsAffected = 0;
+
+        try {
+            connection.setAutoCommit(false); // Start transaction
+
+            // Delete associations from movie_actors
+            try (PreparedStatement pstmt = connection.prepareStatement(SQL_DELETE_ACTORS)) {
+                pstmt.setInt(1, movieId);
+                pstmt.executeUpdate();
+            }
+
+            // Delete associations from movie_genres
+            try (PreparedStatement pstmt = connection.prepareStatement(SQL_DELETE_GENRES)) {
+                pstmt.setInt(1, movieId);
+                pstmt.executeUpdate();
+            }
+
+            // Delete the movie
+            try (PreparedStatement pstmt = connection.prepareStatement(SQL_DELETE_MOVIE)) {
+                pstmt.setInt(1, movieId);
+                rowsAffected = pstmt.executeUpdate();
+            }
+
+            connection.commit();
+        } catch (SQLException e) {
+            try {
+                connection.rollback(); // Try to rollback on error
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
+            }
+            logger.log(Level.SEVERE, "Error deleting movie with ID: " + movieId, e);
+            return false;
+        } finally {
+            try {
+                connection.setAutoCommit(true); // Reset auto-commit behavior
+            } catch (SQLException autoCommitEx) {
+                logger.log(Level.SEVERE, "Error resetting auto-commit", autoCommitEx);
+            }
+        }
+        return rowsAffected > 0;
+    }
+
+
+    /**
      * Sets the parameters of a PreparedStatement for movie insertion.
      * Takes a PreparedStatement and a Movie object and sets the
      * parameters based on the properties of the Movie object.
@@ -206,56 +361,6 @@ public class MovieDao {
 
 
     /**
-     * Retrieves a movie based on its ID, including its additional details.
-     *
-     * @param id The unique identifier of the movie to be fetched.
-     * @return The Movie object if found, null otherwise.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    public Movie read(int id) throws SQLException {
-        try (PreparedStatement pstmt = connection.prepareStatement(SQL_READ_MOVIE)) {
-            pstmt.setInt(1, id);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return convertResultSetToMovie(rs, id);
-                }
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error fetching movie with ID: " + id, e);
-            throw e;
-        }
-        return null;
-    }
-
-
-    /**
-     * Retrieves all movies from the database with their detailed information including
-     * associated actor and genre IDs.
-     *
-     * @return A list of all movies in the database, with full details.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    public List<Movie> readAll() throws SQLException {
-        List<Movie> movies = new ArrayList<>();
-
-        try (PreparedStatement pstmt = connection.prepareStatement(SQL_READ_ALL_MOVIES);
-             ResultSet rs = pstmt.executeQuery()) {
-
-            while (rs.next()) {
-                // Convert each row to a Movie object
-                Movie movie = convertResultSetToMovie(rs, rs.getInt("id"));
-                movies.add(movie);
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error fetching all movies", e);
-            throw e;
-        }
-        return movies;
-    }
-
-
-    /**
      * Converts a ResultSet into a Movie object.
      *
      * @param rs The ResultSet to convert.
@@ -290,7 +395,7 @@ public class MovieDao {
      * @return A List of Integers representing actor or genre IDs associated with the given movie ID.
      * @throws SQLException If there's an error during the database operation.
      */
-    public List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
+    private List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
         List<Integer> ids = new ArrayList<>();
 
         // Validate table and column names to prevent SQL injection
@@ -326,59 +431,6 @@ public class MovieDao {
             throw new IllegalArgumentException("Invalid table or column name");
         }
     }
-
-
-    /**
-     * Updates the details of a specified movie in the SQL database, which
-     * includes updating the main movie details as well as associated actors and genres.
-     * It handles database transactions and rolls back in case of an error.
-     *
-     * @param updatedMovie The movie object containing updated details with the correct ID of the movie to be updated.
-     * @return boolean true if the update was successful, otherwise false.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    public boolean update(Movie updatedMovie) throws SQLException {
-        boolean updateSuccessful = false;
-        Movie existingMovie = read(updatedMovie.getId());
-
-        try {
-            connection.setAutoCommit(false);  // Start transaction
-
-            // Update main movie details if they have changed
-            if (hasMainDetailsChanged(existingMovie, updatedMovie)) {
-                updateMovieMainDetails(updatedMovie);
-            }
-
-            // Update actor links if they have changed
-            if (!existingMovie.getActorIds().equals(updatedMovie.getActorIds())) {
-                updateMovieLinks(updatedMovie.getId(), new HashSet<>(updatedMovie.getActorIds()), "movie_actors", "actor_id");
-            }
-
-            // Update genre links if they have changed
-            if (!existingMovie.getGenreIds().equals(updatedMovie.getGenreIds())) {
-                updateMovieLinks(updatedMovie.getId(), new HashSet<>(updatedMovie.getGenreIds()), "movie_genres", "genre_id");
-            }
-
-            connection.commit();  // Commit the transaction if all updates were successful
-            updateSuccessful = true;
-        } catch (SQLException e) {
-            try {
-                connection.rollback();  // Try to rollback on error
-                logger.log(Level.SEVERE, "Error updating movie with ID: " + updatedMovie.getId(), e);
-            } catch (SQLException rollbackEx) {
-                logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
-            }
-        } finally {
-            try {
-                connection.setAutoCommit(true);  // Reset auto-commit behavior
-            } catch (SQLException autoCommitEx) {
-                logger.log(Level.SEVERE, "Error resetting auto-commit", autoCommitEx);
-            }
-        }
-
-        return updateSuccessful;
-    }
-
 
 
     /**
@@ -500,7 +552,7 @@ public class MovieDao {
      *                 or genre's IDs (either 'actor_id' or 'genre_id').
      * @throws SQLException If there's an error during the database operation.
      */
-    public void removeLinkFromMovie(int movieId, int id, String table, String idColumn) throws SQLException {
+    private void removeLinkFromMovie(int movieId, int id, String table, String idColumn) throws SQLException {
         // Check for valid table and column names to prevent SQL injection
         validateTableNameAndColumnName(table, idColumn);
 
@@ -533,58 +585,5 @@ public class MovieDao {
             pstmt.setInt(2, id);
             pstmt.executeUpdate();
         }
-    }
-
-
-    /**
-     * Deletes a movie and its associations from the SQL database based on its ID, which
-     * Includes deleting entries from movie_actors and movie_genres tables.
-     * It handles database transactions and rolls back in case of an error.
-     *
-     * @param movieId The ID of the movie to be deleted.
-     * @return true if the movie and its associations were successfully deleted, false otherwise.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    public boolean delete(int movieId) throws SQLException {
-        int rowsAffected = 0;
-
-        try {
-            connection.setAutoCommit(false); // Start transaction
-
-            // Delete associations from movie_actors
-            try (PreparedStatement pstmt = connection.prepareStatement(SQL_DELETE_ACTORS)) {
-                pstmt.setInt(1, movieId);
-                pstmt.executeUpdate();
-            }
-
-            // Delete associations from movie_genres
-            try (PreparedStatement pstmt = connection.prepareStatement(SQL_DELETE_GENRES)) {
-                pstmt.setInt(1, movieId);
-                pstmt.executeUpdate();
-            }
-
-            // Delete the movie
-            try (PreparedStatement pstmt = connection.prepareStatement(SQL_DELETE_MOVIE)) {
-                pstmt.setInt(1, movieId);
-                rowsAffected = pstmt.executeUpdate();
-            }
-
-            connection.commit();
-        } catch (SQLException e) {
-            try {
-                connection.rollback(); // Try to rollback on error
-            } catch (SQLException rollbackEx) {
-                logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
-            }
-            logger.log(Level.SEVERE, "Error deleting movie with ID: " + movieId, e);
-            return false;
-        } finally {
-            try {
-                connection.setAutoCommit(true); // Reset auto-commit behavior
-            } catch (SQLException autoCommitEx) {
-                logger.log(Level.SEVERE, "Error resetting auto-commit", autoCommitEx);
-            }
-        }
-        return rowsAffected > 0;
     }
 }
