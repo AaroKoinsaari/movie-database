@@ -33,10 +33,19 @@ public class MovieDao {
     private static final Logger logger = Logger.getLogger(MovieDao.class.getName());
 
     // Define the SQL queries
-    private static final String SQL_INSERT_MOVIE = "INSERT INTO movies(title, release_year, director, writer, producer, cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SQL_INSERT_MOVIE = "INSERT INTO movies(title, release_year, director, writer, producer, " +
+            "cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SQL_INSERT_ACTOR = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
     private static final String SQL_INSERT_GENRE = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
-    private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";
+    private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";  // Fixes the issue getting generated movie key
+    private static final String SQL_READ_MOVIE = "SELECT title, release_year, director, writer, producer, " +
+            "cinematographer, budget, country FROM movies WHERE id = ?";
+    private static final String SQL_READ_ALL_MOVIES = "SELECT id, title, release_year, director, writer, producer, " +
+            "cinematographer, budget, country FROM movies";
+
+    private static final String SQL_UPDATE_MOVIE_MAIN_DETAILS = "UPDATE movies SET title = ?, release_year = ?, director = ?, " +
+            "writer = ?, producer = ?, cinematographer = ?, budget = ?, country = ? WHERE id = ?";
+
 
     /** Connection used to execute SQL queries and interact with the database. */
     private Connection connection;
@@ -81,7 +90,7 @@ public class MovieDao {
         int generatedMovieId = -1;  // Default error state
 
         try {
-            connection.setAutoCommit(false);
+            connection.setAutoCommit(false);  // Start transaction
 
             try (PreparedStatement pstmt = connection.prepareStatement(SQL_INSERT_MOVIE, Statement.RETURN_GENERATED_KEYS)) {
                 // Set the values of the PreparedStatement from the movie object
@@ -89,7 +98,8 @@ public class MovieDao {
                 pstmt.executeUpdate();
 
                 // Retrieve the generated key (movie ID)
-                try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                try (Statement stmt = connection.createStatement();
+                     ResultSet rs = stmt.executeQuery(SQL_LAST_INSERT_ID)) {
                     if (rs.next()) {
                         generatedMovieId = rs.getInt(1);
                     }
@@ -203,31 +213,17 @@ public class MovieDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public Movie read(int id) throws SQLException {
-        String sql = "SELECT title, release_year, director, writer, producer, " +
-                "cinematographer, budget, country FROM movies WHERE id = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_READ_MOVIE)) {
             pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
 
-            // If result is found, convert it to a Movie object
-            if (rs.next()) {
-                String title = rs.getString("title");
-                int releaseYear = rs.getInt("release_year");
-                String director = rs.getString("director");
-                String writer = rs.getString("writer");
-                String producer = rs.getString("producer");
-                String cinematographer = rs.getString("cinematographer");
-                int budget = rs.getInt("budget");
-                String country = rs.getString("country");
-
-                // Fetch the list of actors and genres
-                List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
-                List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
-
-                return new Movie(id, title, releaseYear, director, writer, producer,
-                        cinematographer, budget, country, actorIds, genreIds);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return convertResultSetToMovie(rs, id);
+                }
             }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching movie with ID: " + id, e);
+            throw e;
         }
         return null;
     }
@@ -235,36 +231,53 @@ public class MovieDao {
 
     /**
      * Retrieves all movies from the database with their detailed information including
-     * and associated actor and genre IDs.
+     * associated actor and genre IDs.
      *
      * @return A list of all movies in the database, with full details.
      * @throws SQLException If there's an error during the database operation.
      */
     public List<Movie> readAll() throws SQLException {
         List<Movie> movies = new ArrayList<>();
-        String sql = "SELECT id, title, release_year, director, writer, producer, cinematographer, budget, country FROM movies";
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_READ_ALL_MOVIES);
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
-                int id = rs.getInt("id");
-                String title = rs.getString("title");
-                int releaseYear = rs.getInt("release_year");
-                String director = rs.getString("director");
-                String writer = rs.getString("writer");
-                String producer = rs.getString("producer");
-                String cinematographer = rs.getString("cinematographer");
-                int budget = rs.getInt("budget");
-                String country = rs.getString("country");
-                List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
-                List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
-
-                movies.add(new Movie(id, title, releaseYear, director, writer, producer,
-                                     cinematographer, budget, country, actorIds, genreIds));
+                // Convert each row to a Movie object
+                Movie movie = convertResultSetToMovie(rs, rs.getInt("id"));
+                movies.add(movie);
             }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching all movies", e);
+            throw e;
         }
         return movies;
+    }
+
+
+    /**
+     * Converts a ResultSet into a Movie object.
+     *
+     * @param rs The ResultSet to convert.
+     * @param movieId The ID of the movie.
+     * @return The Movie object.
+     * @throws SQLException If there's an error accessing the ResultSet.
+     */
+    private Movie convertResultSetToMovie(ResultSet rs, int movieId) throws SQLException {
+        String title = rs.getString("title");
+        int releaseYear = rs.getInt("release_year");
+        String director = rs.getString("director");
+        String writer = rs.getString("writer");
+        String producer = rs.getString("producer");
+        String cinematographer = rs.getString("cinematographer");
+        int budget = rs.getInt("budget");
+        String country = rs.getString("country");
+
+        List<Integer> actorIds = fetchAssociatedIds(movieId, "movie_actors", "actor_id");
+        List<Integer> genreIds = fetchAssociatedIds(movieId, "movie_genres", "genre_id");
+
+        return new Movie(movieId, title, releaseYear, director, writer, producer,
+                cinematographer, budget, country, actorIds, genreIds);
     }
 
 
@@ -272,39 +285,42 @@ public class MovieDao {
      * Fetches a list of either actor or genre IDs based on a specified movie ID and table name.
      *
      * @param movieId The ID of the movie for which the actor or genre IDs are to be fetched.
-     * @param tableName The name of the table (either "actors" or "genres") to fetch IDs from.
+     * @param tableName The name of the table (either "movie_actors" or "movie_genres") to fetch IDs from.
+     * @param columnName The name of the column (either "actor_id" or "genre_id") to fetch IDs from.
      * @return A List of Integers representing actor or genre IDs associated with the given movie ID.
      * @throws SQLException If there's an error during the database operation.
      */
     public List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
         List<Integer> ids = new ArrayList<>();
 
-        // Whitelist allowed table and column names
+        // Whitelist allowed table and column names to prevent SQL injection
         List<String> allowedTables = Arrays.asList("movie_actors", "movie_genres");
         List<String> allowedColumns = Arrays.asList("actor_id", "genre_id");
 
-        if (!allowedTables.contains(tableName) || (!allowedColumns.contains(columnName))) {
-            throw new IllegalArgumentException();
+        // Check if provided table name and column name are allowed
+        if (!allowedTables.contains(tableName) || !allowedColumns.contains(columnName)) {
+            throw new IllegalArgumentException("Invalid table name or column name");
         }
 
+        // Construct SQL query dynamically using safe table and column names
         String sql = "SELECT " + columnName + " FROM " + tableName + " WHERE movie_id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, movieId);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                ids.add(rs.getInt(columnName));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt(columnName)); // Fetch and add each ID to the list
+                }
             }
         }
-        return ids;
+        return ids; // Return the list of associated IDs
     }
 
 
     /**
-     * Updates the details of a specified movie in the SQL database.
-     * This includes updating the main movie details as well as associated actors and genres.
-     * The method handles database transactions and rolls back in case of an error.
+     * Updates the details of a specified movie in the SQL database which
+     * includes updating the main movie details as well as associated actors and genres.
+     * It handles database transactions and rolls back in case of an error.
      *
      * @param updatedMovie The movie object containing updated details with the correct ID of the movie to be updated.
      * @return boolean true if the update was successful, otherwise false.
@@ -317,32 +333,41 @@ public class MovieDao {
         try {
             connection.setAutoCommit(false);  // Start transaction
 
-            // Check if main details have changed before updating
+            // Update main movie details if they have changed
             if (hasMainDetailsChanged(existingMovie, updatedMovie)) {
                 updateMovieMainDetails(updatedMovie);
             }
 
-            // Update genre links if changed
+            // Update actor links if they have changed
             if (!existingMovie.getActorIds().equals(updatedMovie.getActorIds())) {
                 updateMovieLinks(updatedMovie.getId(), new HashSet<>(updatedMovie.getActorIds()), "movie_actors", "actor_id");
             }
 
-            // Update genre links if changed
+            // Update genre links if they have changed
             if (!existingMovie.getGenreIds().equals(updatedMovie.getGenreIds())) {
                 updateMovieLinks(updatedMovie.getId(), new HashSet<>(updatedMovie.getGenreIds()), "movie_genres", "genre_id");
             }
 
-            connection.commit();
+            connection.commit();  // Commit the transaction if all updates were successful
             updateSuccessful = true;
         } catch (SQLException e) {
-            connection.rollback();  // Rollback transactions on error
-            e.printStackTrace();
+            try {
+                connection.rollback();  // Rollback transactions on error
+                logger.log(Level.SEVERE, "Error updating movie with ID: " + updatedMovie.getId(), e);
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
+            }
         } finally {
-            connection.setAutoCommit(true);  // Restore default behavior
+            try {
+                connection.setAutoCommit(true);  // Reset auto-commit behavior
+            } catch (SQLException autoCommitEx) {
+                logger.log(Level.SEVERE, "Error resetting auto-commit", autoCommitEx);
+            }
         }
 
         return updateSuccessful;
     }
+
 
 
     /**
@@ -366,25 +391,18 @@ public class MovieDao {
 
     /**
      * Updates the main details of a specified movie in the database.
-     * This includes updating the title, release year, director, writer, producer, cinematographer, budget, and country.
      *
      * @param updatedMovie The Movie object containing the new details.
      * @throws SQLException If there's an error during the database operation.
      */
     private void updateMovieMainDetails(Movie updatedMovie) throws SQLException {
-        String sql = "UPDATE movies SET title = ?, release_year = ?, director = ?, " +
-                     "writer = ?, producer = ?, cinematographer = ?, budget = ?, country = ? WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_UPDATE_MOVIE_MAIN_DETAILS)) {
+            // Use existing method to set common fields
+            setPreparedStatementForMovie(pstmt, updatedMovie);
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, updatedMovie.getTitle());
-            pstmt.setInt(2, updatedMovie.getReleaseYear());
-            pstmt.setString(3, updatedMovie.getDirector());
-            pstmt.setString(4, updatedMovie.getWriter());
-            pstmt.setString(5, updatedMovie.getProducer());
-            pstmt.setString(6, updatedMovie.getCinematographer());
-            pstmt.setInt(7, updatedMovie.getBudget());
-            pstmt.setString(8, updatedMovie.getCountry());
+            // Set the movie ID as the last parameter for the WHERE clause
             pstmt.setInt(9, updatedMovie.getId());
+
             pstmt.executeUpdate();
         }
     }
