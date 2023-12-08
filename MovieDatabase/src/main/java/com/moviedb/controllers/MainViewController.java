@@ -14,6 +14,7 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -22,10 +23,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -179,6 +177,70 @@ public class MainViewController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // Set action events for the menu items
+        menuSave.setOnAction(this::handleSave);
+        menuDelete.setOnAction(this::handleDelete);
+        menuDelete.setOnAction(this::handleDelete);
+        menuNewMovie.setOnAction(this::handleReset);
+        menuHelp.setOnAction(e -> {
+            Alert helpAlert = new Alert(Alert.AlertType.INFORMATION);
+            helpAlert.setTitle("Help");
+            helpAlert.setHeaderText("Movie Database Application User Guide");
+            helpAlert.setContentText(
+                    """
+                    1. Managing Movies
+                       - Create New Movie: Enter details and click 'Save' to start new entry, or clear old entry by clicking 'Reset'.
+                       - Edit Movie: Select a movie, modify details, and click 'Save'.
+                       - Delete Movie: Select a movie and click 'Delete'.
+                
+                    2. Managing Actors
+                       - Add Actors: Select 'Actors' list, click 'Add', and add actors.
+                       - Delete Actor: Select an actor and click 'Delete'.
+                
+                    3. Managing Genres
+                       - Add/Modify Genres: Select 'Genres' list, click 'Add', choose genres, and press 'OK'.
+                
+                    4. Searching and Filtering
+                       - Use the search bar for quick search.
+                
+                    5. Sorting Movies
+                       - Sort movies using the box under the search bar."""
+            );
+
+
+            helpAlert.showAndWait();
+        });
+
+        menuAbout.setOnAction(e -> {
+            Dialogs.showMessageDialog(
+                """
+                        Movie Database
+                        Version: 1.0
+    
+                        Author:
+                        Aaro Koinsaari
+    
+                        © 2023
+                        Aaro Koinsaari"""
+            );
+        });
+
+        menuAddActor.setOnAction(e -> {
+            isMovieListFocused = false;
+            isActorListFocused = true;
+            isGenresListFocused = false;
+            handleAdd(e);
+        });
+        menuAddGenre.setOnAction(e -> {
+            isMovieListFocused = false;
+            isActorListFocused = false;
+            isGenresListFocused = true;
+            handleAdd(e);
+        });
+        menuQuit.setOnAction(e -> {
+            Platform.exit();
+        });
+
         // Listener for movies list to fill the information of selected movie when clicked
         moviesListView.setOnMouseClicked(event -> {
             System.out.println("Movies lista aktivoitu");
