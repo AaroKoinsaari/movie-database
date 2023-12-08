@@ -24,60 +24,50 @@
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <menus>
-                <Menu text="_Tiedosto">
+                <Menu text="File">
                     <items>
-                        <MenuItem text="_Tallenna">
+                        <MenuItem fx:id="menuSave" text="_Save">
                             <accelerator>
                                 <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                             </accelerator>
                         </MenuItem>
-                        <MenuItem text="Avaa...">
-                        </MenuItem>
-                        <MenuItem mnemonicParsing="false" text="Tulosta...">
-                            <accelerator>
-                                <KeyCodeCombination alt="UP" code="T" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                            </accelerator>
-                        </MenuItem>
-                        <MenuItem mnemonicParsing="true" text="L_opeta">
+                        <MenuItem fx:id="menuQuit" mnemonicParsing="true" text="_Quit">
                             <accelerator>
                                 <KeyCodeCombination alt="UP" code="Q" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                             </accelerator>
                         </MenuItem>
                     </items>
                 </Menu>
-                <Menu mnemonicParsing="true" text="_Muokkaa">
+                <Menu mnemonicParsing="true" text="Edit">
                     <items>
-                        <MenuItem mnemonicParsing="true" text="New movie">
+                        <MenuItem fx:id="menuNewMovie" mnemonicParsing="true" text="_New Movie">
                             <accelerator>
                                 <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                             </accelerator>
                         </MenuItem>
-                        <MenuItem mnemonicParsing="true" text="Edit movie details...">
+                        <MenuItem fx:id="menuAddActor" mnemonicParsing="true" text="Add _Actor">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator>
+                        </MenuItem>
+                        <MenuItem fx:id="menuAddGenre" mnemonicParsing="true" text="Add _Genre">
                             <accelerator>
-                                <KeyCodeCombination alt="UP" code="E" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                                <KeyCodeCombination alt="UP" code="G" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                             </accelerator>
                         </MenuItem>
-                        <MenuItem mnemonicParsing="true" text="Add genre">
-                            <accelerator>
-                                <KeyCodeCombination alt="UP" code="H" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                            </accelerator>
-                        </MenuItem>
-                        <MenuItem mnemonicParsing="true" text="Edit genre...">
-                            <accelerator>
-                                <KeyCodeCombination alt="UP" code="U" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                            </accelerator>
-                        </MenuItem>
-                        <MenuItem mnemonicParsing="false" text="Delete movie...">
-                        </MenuItem>
-                        <MenuItem mnemonicParsing="false" text="Delete movie">
-                        </MenuItem>
+                        <MenuItem fx:id="menuDelete" mnemonicParsing="false" text="_Delete">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="D" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
                     </items>
                 </Menu>
-                <Menu mnemonicParsing="true" text="_Apua">
+                <Menu mnemonicParsing="true" text="Help">
                     <items>
-                        <MenuItem mnemonicParsing="false" text="Apua">
-                        </MenuItem>
-                        <MenuItem mnemonicParsing="false" text="Tietoja..." />
+                        <MenuItem fx:id="menuHelp" mnemonicParsing="false" text="_Help">
+                     <accelerator>
+                        <KeyCodeCombination alt="UP" code="H" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                     </accelerator></MenuItem>
+                        <MenuItem fx:id="menuAbout" mnemonicParsing="false" text="About..." />
                     </items>
                 </Menu>
             </menus>
@@ -92,6 +82,7 @@
                             <children>
                                 <Label alignment="CENTER" maxWidth="300.0" text="Search" />
                                 <TextField fx:id="searchTextField" />
+                        <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" text="Sort by:" />
                                 <ComboBoxChooser fx:id="searchComboBox" maxWidth="200.0" promptText="name" rivit="title&#10;release year&#10;director&#10;writer&#10;producer&#10;cinematography&#10;budget&#10;country" />
                                 <Label alignment="CENTER" maxWidth="300.0" text="Movies" />
                             </children>

@@ -24,6 +24,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -92,6 +93,29 @@ public class MainViewController implements Initializable {
     public TextField budgetTextField;
     @FXML
     public TextField countryTextField;
+    @FXML
+    private MenuItem menuAbout;
+
+    @FXML
+    private MenuItem menuAddActor;
+
+    @FXML
+    private MenuItem menuAddGenre;
+
+    @FXML
+    private MenuItem menuDelete;
+
+    @FXML
+    private MenuItem menuHelp;
+
+    @FXML
+    private MenuItem menuNewMovie;
+
+    @FXML
+    private MenuItem menuQuit;
+
+    @FXML
+    private MenuItem menuSave;
 
 
     /**
