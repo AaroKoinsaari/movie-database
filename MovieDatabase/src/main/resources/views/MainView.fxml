@@ -20,189 +20,179 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.moviedb.controllers.MainViewController">
+<BorderPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.moviedb.controllers.MainViewController">
     <top>
         <MenuBar BorderPane.alignment="CENTER">
-            <menus>
-                <Menu text="File">
-                    <items>
-                        <MenuItem fx:id="menuSave" text="_Save">
-                            <accelerator>
-                                <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                            </accelerator>
-                        </MenuItem>
-                        <MenuItem fx:id="menuQuit" mnemonicParsing="true" text="_Quit">
-                            <accelerator>
-                                <KeyCodeCombination alt="UP" code="Q" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                            </accelerator>
-                        </MenuItem>
-                    </items>
-                </Menu>
-                <Menu mnemonicParsing="true" text="Edit">
-                    <items>
-                        <MenuItem fx:id="menuNewMovie" mnemonicParsing="true" text="_Reset">
-                            <accelerator>
-                                <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                            </accelerator>
-                        </MenuItem>
-                        <MenuItem fx:id="menuAddActor" mnemonicParsing="true" text="Add _Actor">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator>
-                        </MenuItem>
-                        <MenuItem fx:id="menuAddGenre" mnemonicParsing="true" text="Add _Genre">
-                            <accelerator>
-                                <KeyCodeCombination alt="UP" code="G" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                            </accelerator>
-                        </MenuItem>
-                        <MenuItem fx:id="menuDelete" mnemonicParsing="false" text="_Delete">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="D" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator></MenuItem>
-                    </items>
-                </Menu>
-                <Menu mnemonicParsing="true" text="Help">
-                    <items>
-                        <MenuItem fx:id="menuHelp" mnemonicParsing="false" text="_Help">
-                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="H" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
-                     </accelerator></MenuItem>
-                        <MenuItem fx:id="menuAbout" mnemonicParsing="false" text="About..." />
-                    </items>
-                </Menu>
-            </menus>
+            <Menu text="File">
+                <MenuItem fx:id="menuSave" text="_Save">
+                    <accelerator>
+                        <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+                    </accelerator>
+                </MenuItem>
+                <MenuItem fx:id="menuQuit" text="_Quit">
+                    <accelerator>
+                        <KeyCodeCombination alt="UP" code="Q" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+                    </accelerator>
+                </MenuItem>
+            </Menu>
+            <Menu text="Edit">
+                <MenuItem fx:id="menuNewMovie" text="_Reset">
+                    <accelerator>
+                        <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+                    </accelerator>
+                </MenuItem>
+                <MenuItem fx:id="menuAddActor" text="Add _Actor">
+                    <accelerator>
+                        <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+                    </accelerator>
+                </MenuItem>
+                <MenuItem fx:id="menuAddGenre" text="Add _Genre">
+                    <accelerator>
+                        <KeyCodeCombination alt="UP" code="G" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+                    </accelerator>
+                </MenuItem>
+                <MenuItem fx:id="menuDelete" mnemonicParsing="false" text="_Delete">
+                    <accelerator>
+                        <KeyCodeCombination alt="UP" code="D" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+                    </accelerator>
+                </MenuItem>
+            </Menu>
+            <Menu text="Help">
+                <MenuItem fx:id="menuHelp" mnemonicParsing="false" text="_Help">
+                    <accelerator>
+                        <KeyCodeCombination alt="UP" code="H" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+                    </accelerator>
+                </MenuItem>
+                <MenuItem fx:id="menuAbout" mnemonicParsing="false" text="About..."/>
+            </Menu>
         </MenuBar>
     </top>
     <center>
         <SplitPane dividerPositions="0.27" BorderPane.alignment="CENTER">
-            <items>
-                <BorderPane maxWidth="150.0" minWidth="100.0" prefWidth="138.0">
-                    <top>
-                        <VBox BorderPane.alignment="CENTER">
-                            <children>
-                                <Label alignment="CENTER" maxWidth="300.0" text="Search" />
-                                <TextField fx:id="searchTextField" />
-                        <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" text="Sort by:" />
-                                <ComboBoxChooser fx:id="searchComboBox" maxWidth="200.0" promptText="name" rivit="title&#10;release year&#10;director&#10;writer&#10;producer&#10;cinematography&#10;budget&#10;country" />
-                                <Label alignment="CENTER" maxWidth="300.0" text="Movies" />
-                            </children>
-                        </VBox>
-                    </top>
-               <center>
-                  <ListView fx:id="moviesListView" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
-               </center>
-                </BorderPane>
-                <BorderPane prefWidth="200.0">
-                    <top>
-                        <Label text="Movie details" BorderPane.alignment="CENTER" />
-                    </top>
-                    <center>
-                        <ScrollPane fitToWidth="true" pannable="true" BorderPane.alignment="CENTER">
-                            <content>
-                                <GridPane hgap="10.0" vgap="10.0">
-                                    <columnConstraints>
-                                        <ColumnConstraints fillWidth="false" halignment="RIGHT" hgrow="NEVER" minWidth="10.0" />
-                                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
-                                    </columnConstraints>
-                                    <rowConstraints>
-                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                    </rowConstraints>
-                                    <children>
-                                        <Label text="title" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                                        <Label text="release year" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                                        <Label text="director" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                                        <Label text="writer(s)" GridPane.rowIndex="3" />
-                                        <Label text="producer(s)" GridPane.rowIndex="4" />
-                                        <Label text="cinematography" GridPane.rowIndex="5" />
-                                        <Label text="budget" GridPane.rowIndex="6" />
-                                        <Label text="country" GridPane.rowIndex="7" />
-                                        <TextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="0" />
-                                        <TextField fx:id="releaseYearTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" />
-                                        <TextField fx:id="directorTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="2" />
-                                        <TextField fx:id="writerTextField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                        <TextField fx:id="producerTextField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                        <TextField fx:id="cinematographyTextField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                                        <TextField fx:id="budgetTextField" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                                        <TextField fx:id="countryTextField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                              <Label fx:id="alertLabel" text="Movie saved successfully!" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="8" />
-                                    </children>
-                                    <opaqueInsets>
-                                        <Insets left="10.0" top="10.0" />
-                                    </opaqueInsets>
-                                    <padding>
-                                        <Insets left="10.0" right="10.0" top="10.0" />
-                                    </padding>
-                                </GridPane>
-                            </content>
-                        </ScrollPane>
-                    </center>
-                </BorderPane>
-            </items>
             <padding>
-                <Insets left="5.0" right="5.0" />
+                <Insets left="5.0" right="5.0"/>
             </padding>
+            <BorderPane maxWidth="150.0" minWidth="100.0" prefWidth="138.0">
+                <top>
+                    <VBox BorderPane.alignment="CENTER">
+                        <Label alignment="CENTER" maxWidth="300.0" text="Search"/>
+                        <TextField fx:id="searchTextField"/>
+                        <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308"
+                               text="Sort by:"/>
+                        <ComboBoxChooser fx:id="searchComboBox" maxWidth="200.0" promptText="name"
+                                         rivit="title&#10;release year&#10;director&#10;writer&#10;producer&#10;cinematography&#10;budget&#10;country"/>
+                        <Label alignment="CENTER" maxWidth="300.0" text="Movies"/>
+                    </VBox>
+                </top>
+                <center>
+                    <ListView fx:id="moviesListView" prefHeight="200.0" prefWidth="200.0"
+                              BorderPane.alignment="CENTER"/>
+                </center>
+            </BorderPane>
+            <BorderPane prefWidth="200.0">
+                <top>
+                    <Label text="Movie details" BorderPane.alignment="CENTER"/>
+                </top>
+                <center>
+                    <ScrollPane fitToWidth="true" pannable="true" BorderPane.alignment="CENTER">
+                        <GridPane hgap="10.0" vgap="10.0">
+                            <columnConstraints>
+                                <ColumnConstraints fillWidth="false" halignment="RIGHT" hgrow="NEVER"
+                                                   minWidth="10.0"/>
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="10.0"/>
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                            </rowConstraints>
+                            <opaqueInsets>
+                                <Insets left="10.0" top="10.0"/>
+                            </opaqueInsets>
+                            <padding>
+                                <Insets left="10.0" right="10.0" top="10.0"/>
+                            </padding>
+                            <Label text="title" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                            <Label text="release year" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                            <Label text="director" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                            <Label text="writer(s)" GridPane.rowIndex="3"/>
+                            <Label text="producer(s)" GridPane.rowIndex="4"/>
+                            <Label text="cinematography" GridPane.rowIndex="5"/>
+                            <Label text="budget" GridPane.rowIndex="6"/>
+                            <Label text="country" GridPane.rowIndex="7"/>
+                            <TextField fx:id="titleTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+                                       GridPane.rowIndex="0"/>
+                            <TextField fx:id="releaseYearTextField" GridPane.columnIndex="1"
+                                       GridPane.hgrow="ALWAYS" GridPane.rowIndex="1"/>
+                            <TextField fx:id="directorTextField" GridPane.columnIndex="1"
+                                       GridPane.hgrow="ALWAYS" GridPane.rowIndex="2"/>
+                            <TextField fx:id="writerTextField" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                            <TextField fx:id="producerTextField" GridPane.columnIndex="1"
+                                       GridPane.rowIndex="4"/>
+                            <TextField fx:id="cinematographyTextField" GridPane.columnIndex="1"
+                                       GridPane.rowIndex="5"/>
+                            <TextField fx:id="budgetTextField" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+                            <TextField fx:id="countryTextField" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+                            <Label fx:id="alertLabel" text="Movie saved successfully!" visible="false"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="8"/>
+                        </GridPane>
+                    </ScrollPane>
+                </center>
+            </BorderPane>
         </SplitPane>
     </center>
     <bottom>
         <BorderPane BorderPane.alignment="CENTER">
             <left>
                 <HBox spacing="10.0" BorderPane.alignment="CENTER">
-                    <children>
-                        <Button fx:id="saveButton" onAction="#handleSave" prefWidth="60.0" text="Save">
-                            <tooltip>
-                                <Tooltip text="Adds new movie" />
-                            </tooltip>
-                        </Button>
-                  <Button fx:id="resetButton" mnemonicParsing="false" onAction="#handleReset" prefWidth="60.0" text="Reset" />
-                    </children>
                     <padding>
-                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
                     </padding>
+                    <Button onAction="#handleSave" prefWidth="60.0" text="Save">
+                        <tooltip>
+                            <Tooltip text="Adds new movie"/>
+                        </tooltip>
+                    </Button>
+                    <Button mnemonicParsing="false" onAction="#handleReset" prefWidth="60.0" text="Reset"/>
                 </HBox>
             </left>
             <right>
                 <HBox spacing="10.0" BorderPane.alignment="CENTER">
-                    <children>
-                        <Button fx:id="addButton" mnemonicParsing="true" onAction="#handleAdd" prefWidth="60.0" text="Add">
-                            <tooltip>
-                                <Tooltip text="Adds new genre for movie" />
-                            </tooltip></Button>
-                        <Button fx:id="deleteButton" mnemonicParsing="false" onAction="#handleDelete" prefWidth="60.0" text="Delete">
-                            <tooltip>
-                                <Tooltip text="Deletes the current genre" />
-                            </tooltip></Button>
-                    </children>
                     <padding>
-                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
                     </padding>
+                    <Button onAction="#handleAdd" prefWidth="60.0" text="Add">
+                        <tooltip>
+                            <Tooltip text="Adds new genre for movie"/>
+                        </tooltip>
+                    </Button>
+                    <Button mnemonicParsing="false" onAction="#handleDelete" prefWidth="60.0" text="Delete">
+                        <tooltip>
+                            <Tooltip text="Deletes the current genre"/>
+                        </tooltip>
+                    </Button>
                 </HBox>
             </right>
         </BorderPane>
     </bottom>
-   <right>
-      <SplitPane dividerPositions="0.5" prefHeight="160.0" prefWidth="300.0" BorderPane.alignment="CENTER">
-         <items>
+    <right>
+        <SplitPane dividerPositions="0.5" prefHeight="160.0" prefWidth="300.0" BorderPane.alignment="CENTER">
             <VBox prefHeight="200.0" prefWidth="100.0">
-               <children>
-                  <Label alignment="CENTER" contentDisplay="RIGHT" maxWidth="1.7976931348623157E308" text="Actors" VBox.vgrow="ALWAYS" />
-                  <ListView fx:id="actorsListView" />
-               </children>
+                <Label alignment="CENTER" contentDisplay="RIGHT" maxWidth="1.7976931348623157E308" text="Actors"
+                       VBox.vgrow="ALWAYS"/>
+                <ListView fx:id="actorsListView"/>
             </VBox>
             <VBox prefHeight="200.0" prefWidth="100.0">
-               <children>
-                  <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Genres" />
-                  <ListView fx:id="genresListView" />
-               </children>
+                <Label alignment="CENTER" maxWidth="1.7976931348623157E308" text="Genres"/>
+                <ListView fx:id="genresListView"/>
             </VBox>
-         </items>
-      </SplitPane>
-   </right>
+        </SplitPane>
+    </right>
 </BorderPane>

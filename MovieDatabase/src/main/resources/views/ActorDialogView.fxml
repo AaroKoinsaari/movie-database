@@ -14,55 +14,56 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.moviedb.controllers.ActorDialogViewController">
+<BorderPane xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.moviedb.controllers.ActorDialogViewController">
     <bottom>
         <VBox BorderPane.alignment="CENTER">
-            <children>
-                <HBox />
-                <ButtonBar prefHeight="40.0" prefWidth="200.0">
-                    <buttons>
-                        <Button fx:id="okButton" defaultButton="true" mnemonicParsing="false" onAction="#handleOK" text="OK" />
-                        <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#handleCancel" text="Cancel" />
-                    </buttons>
-                    <padding>
-                        <Insets right="10.0" />
-                    </padding>
-                </ButtonBar>
-            </children>
+            <HBox/>
+            <ButtonBar prefHeight="40.0" prefWidth="200.0">
+                <buttons>
+                    <Button fx:id="okButton" defaultButton="true" mnemonicParsing="false" onAction="#handleOK"
+                            text="OK"/>
+                    <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#handleCancel"
+                            text="Cancel"/>
+                </buttons>
+                <padding>
+                    <Insets right="10.0"/>
+                </padding>
+            </ButtonBar>
         </VBox>
     </bottom>
     <center>
         <ScrollPane fitToWidth="true" pannable="true" BorderPane.alignment="CENTER">
-            <content>
-                <GridPane hgap="10.0">
-                    <columnConstraints>
-                        <ColumnConstraints fillWidth="false" halignment="RIGHT" hgrow="NEVER" minWidth="10.0" />
-                        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
-                  <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
-                    </columnConstraints>
-                    <rowConstraints>
-                        <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                  <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
-                    </rowConstraints>
-                    <children>
-                        <Label text="name" />
-                        <TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
-                  <Button fx:id="addButton" mnemonicParsing="false" onAction="#handleAdd" text="Add" GridPane.columnIndex="2" />
-                  <ListView fx:id="listView" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  <Label fx:id="alertLabel" alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" text="Actor is already in the list!" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                    </children>
-                    <opaqueInsets>
-                        <Insets left="10.0" top="10.0" />
-                    </opaqueInsets>
-                    <padding>
-                        <Insets left="10.0" right="10.0" top="10.0" />
-                    </padding>
-                </GridPane>
-            </content>
             <padding>
-                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
             </padding>
+            <GridPane hgap="10.0">
+                <columnConstraints>
+                    <ColumnConstraints fillWidth="false" halignment="RIGHT" hgrow="NEVER" minWidth="10.0"/>
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="10.0"/>
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="10.0"/>
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                    <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                    <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+                </rowConstraints>
+                <opaqueInsets>
+                    <Insets left="10.0" top="10.0"/>
+                </opaqueInsets>
+                <padding>
+                    <Insets left="10.0" right="10.0" top="10.0"/>
+                </padding>
+                <Label text="name"/>
+                <TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"/>
+                <Button fx:id="addButton" mnemonicParsing="false" onAction="#handleAdd" text="Add"
+                        GridPane.columnIndex="2"/>
+                <ListView fx:id="listView" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1"
+                          GridPane.rowIndex="1"/>
+                <Label fx:id="alertLabel" alignment="CENTER" contentDisplay="CENTER"
+                       maxWidth="1.7976931348623157E308" text="Actor is already in the list!" visible="false"
+                       GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            </GridPane>
         </ScrollPane>
     </center>
 </BorderPane>

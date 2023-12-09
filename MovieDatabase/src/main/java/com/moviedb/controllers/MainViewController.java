@@ -69,14 +69,6 @@ public class MainViewController implements Initializable {
     @FXML
     private ComboBoxChooser<String> searchComboBox;
     @FXML
-    private Button saveButton;
-    @FXML
-    private Button resetButton;
-    @FXML
-    private Button addButton;
-    @FXML
-    private Button deleteButton;
-    @FXML
     private ListView<Movie> moviesListView;
     @FXML
     private ListView<Actor> actorsListView;
