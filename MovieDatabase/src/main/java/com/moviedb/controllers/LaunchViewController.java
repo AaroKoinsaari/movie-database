@@ -140,6 +140,7 @@ public class LaunchViewController {
             // Create new Scene and set it as current window
             Scene scene = new Scene(root);
             Stage stage = new Stage();
+            controller.setPrimaryStage(stage);  // Set the main window for controller
             stage.setScene(scene);
             stage.setTitle("Main View - " + dbName);
             stage.show();

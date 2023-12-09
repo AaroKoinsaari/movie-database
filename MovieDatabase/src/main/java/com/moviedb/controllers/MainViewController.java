@@ -49,6 +49,7 @@ public class MainViewController implements Initializable {
     private MovieDao movieDao;
     private ActorDao actorDao;
     private GenreDao genreDao;
+    private Stage primaryStage;  // Static reference to the main view
     private Movie currentMovie;  // The movie currently chosen from the list
     private String currentSortCriterion = "title";  // Default sorting criterion
 
@@ -159,10 +160,21 @@ public class MainViewController implements Initializable {
 
     /**
      * Sets the new list of actors.
+     *
      * @param actors List of actors to update the actors list with.
      */
     public void setActorList(List<Actor> actors) {
         actorsListView.getItems().setAll(actors);
+    }
+    
+
+    /**
+     * Sets the primary stage of the application.
+     *
+     * @param primaryStage The main stage to be used throughout the application.
+     */
+    public void setPrimaryStage(Stage primaryStage) {
+        this.primaryStage = primaryStage;
     }
 
 
@@ -662,8 +674,7 @@ public class MainViewController implements Initializable {
      */
     private void openDialog(String fxmlPath, String dialogTitle, ActionEvent event) {
         try {
-            Node source = (Node) event.getSource();
-            Stage ownerStage = (Stage) source.getScene().getWindow();
+            Stage ownerStage = this.primaryStage;
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
