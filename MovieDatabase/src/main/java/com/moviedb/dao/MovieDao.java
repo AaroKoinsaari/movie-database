@@ -448,6 +448,11 @@ public class MovieDao {
 
     /**
      * Removes a specific link between a movie and an actor or genre in the database.
+     * <p>
+     * NOTE: IntelliJ IDEA may warn about SQL injection for the concatenation in the SQL query and
+     * SuppressWarnings won't remove this. The warning is, however, a false positive here because
+     * 'validateTableNameAndColumnName' ensures 'table' and 'idColumn' are from a safe list, and
+     * PreparedStatement is used, ensuring 'movieId' and 'id' are properly escaped.
      *
      * @param movieId The ID of the movie from which the link is being removed.
      * @param id The ID of the linked entity (actor ID or genre ID) to be removed.
@@ -457,7 +462,7 @@ public class MovieDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public void removeLinkFromMovie(int movieId, int id, String table, String idColumn) throws SQLException {
-        // Check for valid table and colun names to prevent SQL injection
+        // Check for valid table and column names to prevent SQL injection
         validateTableNameAndColumnName(table, idColumn);
 
         String sql = "DELETE FROM " + table + " WHERE movie_id = ? AND " + idColumn + " = ?";
@@ -471,6 +476,11 @@ public class MovieDao {
 
     /**
      * Adds a new link between a movie and an actor or genre in the database.
+     * <p>
+     * NOTE: IntelliJ IDEA may warn about SQL injection for the concatenation in the SQL query and
+     * SuppressWarnings won't remove this. The warning is, however, a false positive here because
+     * 'validateTableNameAndColumnName' ensures 'table' and 'idColumn' are from a safe list, and
+     * PreparedStatement is used, ensuring 'movieId' and 'id' are properly escaped.
      *
      * @param movieId The ID of the movie to which the link is being added.
      * @param id The ID of the associated entity (actor ID or genre ID) to be added.
@@ -502,7 +512,7 @@ public class MovieDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public boolean delete(int movieId) throws SQLException {
-        int rowsAffected = 0;
+        int rowsAffected;
 
         try {
             connection.setAutoCommit(false); // Start transaction
