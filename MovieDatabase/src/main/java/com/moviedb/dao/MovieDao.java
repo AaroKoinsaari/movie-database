@@ -12,26 +12,32 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.moviedb.models.Movie;
+import fi.jyu.mit.fxgui.Dialogs;
 
 
 /**
  * Data Access Object for the Movie class.
  * This class provides an abstraction layer between the application and the underlying database.
  * It handles all database operations related to movies, including creating, reading, updating, and deleting movie records.
- *
+ * <p>
  * The MovieDao class ensures that movie data is accessed and manipulated in a consistent and database-agnostic manner.
  * It encapsulates all SQL queries and shields the rest of the application from direct database interactions,
  * promoting cleaner separation of concerns and making the codebase more maintainable.
  */
 public class MovieDao {
 
-    /** Connection used to execute SQL queries and interact with the database. */
+    // Connection used to execute SQL queries and interact with the database.
     private Connection connection;
 
-    /** The URL pointing to the SQL database location. */
+    // The URL pointing to the SQL database location.
     private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
+
+    // Logger for logging errors
+    private static final Logger logger = Logger.getLogger(MovieDao.class.getName());
 
 
     /**
@@ -41,7 +47,8 @@ public class MovieDao {
         try {
             this.connection = DriverManager.getConnection(DB_URL);
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Error creating MovieDao instance. SQLState: " + e.getSQLState() +
+                    ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
         }
     }
 
@@ -63,7 +70,7 @@ public class MovieDao {
      * @return The generated ID of the added movie, or -1 if an error occurs.
      * @throws SQLException If there's an error during the database operation.
      */
-    public int create(Movie movie) {
+    public int create(Movie movie) throws SQLException {
         // Define the SQL queries
         String sqlInsertMovie = "INSERT INTO movies(title, release_year, director, writer, producer, " +
                                 "cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
@@ -115,8 +122,6 @@ public class MovieDao {
                 pstmtGenre.setInt(2, genreId);
                 pstmtGenre.executeUpdate();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return generatedMovieId;
     }
