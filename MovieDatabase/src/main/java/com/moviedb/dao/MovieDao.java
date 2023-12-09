@@ -73,13 +73,14 @@ public class MovieDao {
     public int create(Movie movie) throws SQLException {
         // Define the SQL queries
         String sqlInsertMovie = "INSERT INTO movies(title, release_year, director, writer, producer, " +
-                                "cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+                "cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
         String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
         String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
-
         String sqlLastInsertId = "SELECT last_insert_rowid()";
 
         int generatedMovieId = -1;  // -1 for default error state
+
+        connection.setAutoCommit(false);  // Start transaction
 
         // Insert the main details
         try (PreparedStatement pstmtMovie = connection.prepareStatement(sqlInsertMovie,
@@ -106,7 +107,7 @@ public class MovieDao {
 
             // Ensure to have a valid movie ID before proceeding
             if (generatedMovieId <= 0) {
-                throw new SQLException();
+                throw new SQLException("Failed to retrieve generated movie ID");
             }
 
             // Add the actors to their join table
@@ -122,9 +123,28 @@ public class MovieDao {
                 pstmtGenre.setInt(2, genreId);
                 pstmtGenre.executeUpdate();
             }
+
+            connection.commit();  // Commit the transaction
+
+        } catch (SQLException e) {
+            try {
+                connection.rollback();  // Attempt to rollback on failure
+                logger.log(Level.INFO, "Transaction rolled back due to SQLException", e);
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
+            }
+            throw e;  // Re-throw the exception to be handled by the caller
+        } finally {
+            try {
+                connection.setAutoCommit(true);  // Reset default behavior
+            } catch (SQLException autoCommitEx) {
+                logger.log(Level.SEVERE, "Error resetting auto-commit behavior", autoCommitEx);
+            }
         }
+
         return generatedMovieId;
     }
+
 
 
     /**
