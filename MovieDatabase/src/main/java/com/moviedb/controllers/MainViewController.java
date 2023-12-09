@@ -303,7 +303,7 @@ public class MainViewController implements Initializable {
         this.genreDao = new GenreDao(connection);
 
         // This method is for populating the database with pre-defined data for demonstration purposes
-        //fillDatabase();
+        fillDatabase();
 
         // Initiate listeners
         setupSearchTextFieldListener();
@@ -598,6 +598,7 @@ public class MainViewController implements Initializable {
     @FXML
     public void handleReset(ActionEvent event) {
         currentMovie = null;
+        currentListFocus = ListFocus.NONE;
         clearFields();
     }
 
@@ -654,10 +655,11 @@ public class MainViewController implements Initializable {
                     removeObjectFromList(genresListView, selectedGenre);
                 }
                 break;
-            default:  // No action
-                currentListFocus = ListFocus.NONE;
+            default:
+                // No action
                 break;
         }
+        currentListFocus = ListFocus.NONE;  // Reset the focus
     }
 
 
