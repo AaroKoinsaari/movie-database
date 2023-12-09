@@ -113,6 +113,7 @@
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                     </rowConstraints>
                                     <children>
                                         <Label text="title" GridPane.columnIndex="0" GridPane.rowIndex="0" />
@@ -131,6 +132,7 @@
                                         <TextField fx:id="cinematographyTextField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                         <TextField fx:id="budgetTextField" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                                         <TextField fx:id="countryTextField" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                              <Label fx:id="alertLabel" text="Movie saved successfully!" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="8" />
                                     </children>
                                     <opaqueInsets>
                                         <Insets left="10.0" top="10.0" />

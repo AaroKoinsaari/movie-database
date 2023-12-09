@@ -14,18 +14,19 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import fi.jyu.mit.fxgui.ComboBoxChooser;
 import fi.jyu.mit.fxgui.Dialogs;
@@ -97,6 +98,8 @@ public class MainViewController implements Initializable {
     public TextField budgetTextField;
     @FXML
     public TextField countryTextField;
+    @FXML
+    private Label alertLabel;  // For showing a successful save
     @FXML
     private MenuItem menuAbout;
     @FXML
@@ -530,16 +533,23 @@ public class MainViewController implements Initializable {
                     if (movieDao.update(updatedMovie)) {
                         addOrUpdateMovieInListView(updatedMovie);
                         currentMovie = null;  // Reset the current movie in memory
-                        clearFields();
                     }
                 } else {  // Movie doesn't exist, create new one
                     int newMovieId = movieDao.create(updatedMovie);
                     updatedMovie.setId(newMovieId);
                     moviesListView.getItems().add(updatedMovie);
-                    clearFields();
                 }
                 // Sort the list again when new movie was added
                 sortMoviesBy(currentSortCriterion);
+
+                // For emptying the form after successful save
+                //clearFields();
+
+                // Show the save was successful
+                alertLabel.setVisible(true);
+                PauseTransition delay = new PauseTransition(Duration.seconds(5));
+                delay.setOnFinished(e -> alertLabel.setVisible(false));  // Hide after 5 seconds
+                delay.play();
             }
 
         } catch (SQLException e) {
