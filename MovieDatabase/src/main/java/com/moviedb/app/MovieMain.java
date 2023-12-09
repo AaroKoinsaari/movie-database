@@ -10,8 +10,6 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
-import com.moviedb.controllers.MainViewController;
-
 
 /**
  * Main class for the Movie Database application.
@@ -24,7 +22,7 @@ import com.moviedb.controllers.MainViewController;
 public class MovieMain extends Application {
 
     // Logger for logging errors
-    private static final Logger logger = Logger.getLogger(MainViewController.class.getName());
+    private static final Logger logger = Logger.getLogger(MovieMain.class.getName());
 
 
     /**
