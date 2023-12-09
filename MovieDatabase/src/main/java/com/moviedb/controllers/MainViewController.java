@@ -524,7 +524,11 @@ public class MainViewController implements Initializable {
                     updatedMovie.setId(currentMovie.getId());
                     if (movieDao.update(updatedMovie)) {
                         addOrUpdateMovieInListView(updatedMovie);
-                        currentMovie = null;  // Reset the current movie in memory
+
+                        // Reset the current movie in memory
+                        // If clearFields is reactivated, this has to be too so the
+                        // program doesn't keep the "old" movie in memory
+                        //currentMovie = null;
                     }
                 } else {  // Movie doesn't exist, create new one
                     int newMovieId = movieDao.create(updatedMovie);
@@ -535,6 +539,7 @@ public class MainViewController implements Initializable {
                 sortMoviesBy(currentSortCriterion);
 
                 // For emptying the form after successful save
+                // Reactivate 'currentMovie = null' above also if this is reactivated
                 //clearFields();
 
                 // Show the save was successful
