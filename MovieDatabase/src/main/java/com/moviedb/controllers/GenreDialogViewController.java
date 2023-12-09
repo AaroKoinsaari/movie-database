@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -50,10 +49,9 @@ public class GenreDialogViewController {
      * Handles the action of the 'OK' button. Iterates through CheckBoxes to collect selected genres,
      * and updates the MainViewController with these selections.
      *
-     * @param event The ActionEvent triggered by the 'OK' button click.
      */
     @FXML
-    void handleOK(ActionEvent event) {
+    void handleOK() {
         List<Genre> selectedGenres = new ArrayList<>();
 
         for (CheckBox cb : listView.getItems()) {
@@ -71,10 +69,9 @@ public class GenreDialogViewController {
     /**
      * Handles the action of the 'Cancel' button by closing the dialog window.
      *
-     * @param event The ActionEvent triggered by the 'Cancel' button click.
      */
     @FXML
-    void handleCancel(ActionEvent event) {
+    void handleCancel() {
         closeStage();
     }
 

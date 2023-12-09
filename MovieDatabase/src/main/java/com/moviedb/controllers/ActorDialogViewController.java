@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -108,10 +107,9 @@ public class ActorDialogViewController implements Initializable {
      * showing a dialog if empty. Searches for the actor in the database; adds them to the list
      * if not present or creates a new actor if they do not exist.
      *
-     * @param event The ActionEvent triggered by the 'Add' button click.
      */
     @FXML
-    void handleAdd(ActionEvent event) {
+    void handleAdd() {
         alertLabel.setVisible(false);  // Reset the alert label
 
         String actorName = nameTextField.getText().trim();
@@ -135,10 +133,9 @@ public class ActorDialogViewController implements Initializable {
      * Handles the 'OK' button action. Associates actors from the list with the current movie
      * by checking if they already are associated or not.
      *
-     * @param event The ActionEvent triggered by the 'OK' button click.
      */
     @FXML
-    void handleOK(ActionEvent event) {
+    void handleOK() {
         mainViewController.setActorList(listView.getItems());
         closeStage();
     }
@@ -147,10 +144,9 @@ public class ActorDialogViewController implements Initializable {
     /**
      * Closes the dialog window when the 'Cancel' button is clicked.
      *
-     * @param event The ActionEvent triggered by the 'Cancel' button click.
      */
     @FXML
-    void handleCancel(ActionEvent event) {
+    void handleCancel() {
         closeStage();
     }
 
