@@ -39,6 +39,24 @@ public class MovieDao {
     // Logger for logging errors
     private static final Logger logger = Logger.getLogger(MovieDao.class.getName());
 
+    // Define the SQL queries
+    private static final String SQL_INSERT_MOVIE = "INSERT INTO movies(title, release_year, director, writer, producer, " +
+            "cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String SQL_INSERT_ACTOR = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
+    private static final String SQL_INSERT_GENRE = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
+    private static final String SQL_READ_MOVIE = "SELECT title, release_year, director, writer, producer, " +
+            "cinematographer, budget, country FROM movies WHERE id = ?";
+    private static final String SQL_READ_ALL_MOVIES = "SELECT id, title, release_year, director, writer, producer, " +
+            "cinematographer, budget, country FROM movies";
+
+    private static final String SQL_UPDATE_MOVIE_MAIN_DETAILS = "UPDATE movies SET title = ?, release_year = ?, director = ?, " +
+            "writer = ?, producer = ?, cinematographer = ?, budget = ?, country = ? WHERE id = ?";
+    private static final String SQL_DELETE_ACTORS = "DELETE FROM movie_actors WHERE movie_id = ?";
+    private static final String SQL_DELETE_GENRES = "DELETE FROM movie_genres WHERE movie_id = ?";
+    private static final String SQL_DELETE_MOVIE = "DELETE FROM movies WHERE id = ?";
+    private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";
+
+
 
     /**
      * Default constructor that initializes the connection to the default SQLite database.
@@ -71,72 +89,47 @@ public class MovieDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public int create(Movie movie) throws SQLException {
-        // Define the SQL queries
-        String sqlInsertMovie = "INSERT INTO movies(title, release_year, director, writer, producer, " +
-                "cinematographer, budget, country) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
-        String sqlInsertActor = "INSERT INTO movie_actors(movie_id, actor_id) VALUES(?, ?)";
-        String sqlInsertGenre = "INSERT INTO movie_genres(movie_id, genre_id) VALUES(?, ?)";
-        String sqlLastInsertId = "SELECT last_insert_rowid()";
+        int generatedMovieId = -1; // -1 for default error state
 
-        int generatedMovieId = -1;  // -1 for default error state
+        try {
+            connection.setAutoCommit(false); // Start transaction
 
-        connection.setAutoCommit(false);  // Start transaction
+            // Insert the main details
+            try (PreparedStatement pstmtMovie = connection.prepareStatement(SQL_INSERT_MOVIE,
+                    Statement.RETURN_GENERATED_KEYS)) { // ID for the added movie in the generated key
+                setPreparedStatementForMovie(pstmtMovie, movie);
+                pstmtMovie.executeUpdate();
 
-        // Insert the main details
-        try (PreparedStatement pstmtMovie = connection.prepareStatement(sqlInsertMovie,
-                Statement.RETURN_GENERATED_KEYS);  // ID for the added movie in the generated key
-             PreparedStatement pstmtActor = connection.prepareStatement(sqlInsertActor);
-             PreparedStatement pstmtGenre = connection.prepareStatement(sqlInsertGenre)) {
-            pstmtMovie.setString(1, movie.getTitle());
-            pstmtMovie.setInt(2, movie.getReleaseYear());
-            pstmtMovie.setString(3, movie.getDirector());
-            pstmtMovie.setString(4, movie.getWriter());
-            pstmtMovie.setString(5, movie.getProducer());
-            pstmtMovie.setString(6, movie.getCinematographer());
-            pstmtMovie.setInt(7, movie.getBudget());
-            pstmtMovie.setString(8, movie.getCountry());
-            pstmtMovie.executeUpdate();
-
-            // Retrieve the id generated for the added movie
-            try (Statement stmt = connection.createStatement();
-                 ResultSet rs = stmt.executeQuery(sqlLastInsertId)) {
-                if (rs.next()) {
-                    generatedMovieId = rs.getInt(1);
+                // Retrieve the id generated for the added movie
+                try (Statement stmt = connection.createStatement();
+                     ResultSet rs = stmt.executeQuery(SQL_LAST_INSERT_ID)) {
+                    if (rs.next()) {
+                        generatedMovieId = rs.getInt(1); // Retrieve the generated key (ID)
+                    }
                 }
+
+                // Ensure to have a valid movie ID before proceeding
+                if (generatedMovieId <= 0) {
+                    throw new SQLException("Failed to retrieve generated movie ID");
+                }
+
+                // Add actors and genres to their join tables
+                insertActorsToMovie(connection, generatedMovieId, movie.getActorIds());
+                insertGenresToMovie(connection, generatedMovieId, movie.getGenreIds());
+
+                connection.commit(); // Commit the transaction
             }
-
-            // Ensure to have a valid movie ID before proceeding
-            if (generatedMovieId <= 0) {
-                throw new SQLException("Failed to retrieve generated movie ID");
-            }
-
-            // Add the actors to their join table
-            for (int actorId : movie.getActorIds()) {
-                pstmtActor.setInt(1, generatedMovieId);
-                pstmtActor.setInt(2, actorId);
-                pstmtActor.executeUpdate();
-            }
-
-            // Add the genres to their join table
-            for (int genreId : movie.getGenreIds()) {
-                pstmtGenre.setInt(1, generatedMovieId);
-                pstmtGenre.setInt(2, genreId);
-                pstmtGenre.executeUpdate();
-            }
-
-            connection.commit();  // Commit the transaction
-
         } catch (SQLException e) {
             try {
-                connection.rollback();  // Attempt to rollback on failure
+                connection.rollback(); // Attempt to rollback on failure
                 logger.log(Level.INFO, "Transaction rolled back due to SQLException", e);
             } catch (SQLException rollbackEx) {
                 logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
             }
-            throw e;  // Re-throw the exception to be handled by the caller
+            throw e; // Re-throw the exception to be handled by the caller
         } finally {
             try {
-                connection.setAutoCommit(true);  // Restore default behavior
+                connection.setAutoCommit(true); // Restore default behavior
             } catch (SQLException autoCommitEx) {
                 logger.log(Level.SEVERE, "Error resetting auto-commit behavior", autoCommitEx);
             }
@@ -145,6 +138,68 @@ public class MovieDao {
         return generatedMovieId;
     }
 
+
+    /**
+     * Sets the parameters of a PreparedStatement for movie insertion.
+     * Takes a PreparedStatement and a Movie object and sets the
+     * parameters based on the properties of the Movie object.
+     *
+     * @param pstmt The PreparedStatement to be configured for inserting a movie.
+     * @param movie The Movie object containing the movie details.
+     * @throws SQLException if there's an error setting the PreparedStatement parameters.
+     */
+    private void setPreparedStatementForMovie(PreparedStatement pstmt, Movie movie) throws SQLException {
+        pstmt.setString(1, movie.getTitle());
+        pstmt.setInt(2, movie.getReleaseYear());
+        pstmt.setString(3, movie.getDirector());
+        pstmt.setString(4, movie.getWriter());
+        pstmt.setString(5, movie.getProducer());
+        pstmt.setString(6, movie.getCinematographer());
+        pstmt.setInt(7, movie.getBudget());
+        pstmt.setString(8, movie.getCountry());
+    }
+
+
+    /**
+     * Inserts associations between the movie and its actors into the database.
+     * Iterates over a list of actor IDs and inserts each actor ID along with
+     * the movie ID into the 'movie_actors' table.
+     *
+     * @param connection The database connection to use for the insertion.
+     * @param movieId The ID of the movie for which actors are being inserted.
+     * @param actorIds A list of actor IDs to be associated with the movie.
+     * @throws SQLException if there's an error inserting the actor records.
+     */
+    private void insertActorsToMovie(Connection connection, int movieId, List<Integer> actorIds) throws SQLException {
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_INSERT_ACTOR)) {
+            for (int actorId : actorIds) {
+                pstmt.setInt(1, movieId);
+                pstmt.setInt(2, actorId);
+                pstmt.executeUpdate();
+            }
+        }
+    }
+
+
+    /**
+     * Inserts associations between the movie and its genres into the database.
+     * Iterates over a list of genre IDs and inserts each genre ID along with
+     * the movie ID into the 'movie_genres' table.
+     *
+     * @param connection The database connection to use for the insertion.
+     * @param movieId The ID of the movie for which genres are being inserted.
+     * @param genreIds A list of genre IDs to be associated with the movie.
+     * @throws SQLException if there's an error inserting the genre records.
+     */
+    private void insertGenresToMovie(Connection connection, int movieId, List<Integer> genreIds) throws SQLException {
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_INSERT_GENRE)) {
+            for (int genreId : genreIds) {
+                pstmt.setInt(1, movieId);
+                pstmt.setInt(2, genreId);
+                pstmt.executeUpdate();
+            }
+        }
+    }
 
 
     /**
