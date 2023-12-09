@@ -11,6 +11,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -63,6 +65,9 @@ public class MainViewController implements Initializable {
     private Movie currentMovie;  // The movie currently chosen from the list
     private String currentSortCriterion = "title";  // Default sorting criterion
     private ListFocus currentListFocus = ListFocus.NONE;  // Determines the focused list
+
+    // Logger for logging errors
+    private static final Logger logger = Logger.getLogger(MainViewController.class.getName());
 
     @FXML
     private TextField searchTextField;
@@ -216,37 +221,33 @@ public class MainViewController implements Initializable {
             helpAlert.showAndWait();
         });
 
-        menuAbout.setOnAction(e -> {
-            Dialogs.showMessageDialog(
-                """
-                        Movie Database
-                        Version: 1.0
-    
-                        Author:
-                        Aaro Koinsaari
-    
-                        © 2023
-                        Aaro Koinsaari"""
-            );
-        });
+        menuAbout.setOnAction(e -> Dialogs.showMessageDialog(
+            """
+                    Movie Database
+                    Version: 1.0
+
+                    Author:
+                    Aaro Koinsaari
+
+                    © 2023
+                    Aaro Koinsaari"""
+        ));
 
         // Listen and update list focus
         menuAddActor.setOnAction(e -> {
             currentListFocus = ListFocus.ACTOR;
-            handleAdd(e);
+            handleAdd();
         });
         menuAddGenre.setOnAction(e -> {
             currentListFocus = ListFocus.GENRE;
-            handleAdd(e);
+            handleAdd();
         });
 
-        menuQuit.setOnAction(e -> {
-            Platform.exit();
-        });
+        menuQuit.setOnAction(e -> Platform.exit());
 
         // Listener for movies list to fill the information of selected movie when clicked
         moviesListView.setOnMouseClicked(event -> {
-            System.out.println("Movies lista aktivoitu");
+            logger.log(Level.INFO, "Movies list focused");
 
             currentListFocus = ListFocus.MOVIE;
 
@@ -256,20 +257,22 @@ public class MainViewController implements Initializable {
                     fillMovieDetails(selectedMovie);
                     currentMovie = selectedMovie;
                 } catch (Exception e) {
-                    System.out.println("Message: " + e.getMessage());
+                    logger.log(Level.SEVERE, "Error filling movie details: " + e.getMessage(), e);
+                    // Inform the user
+                    Dialogs.showMessageDialog("Error occured while filling the movie details to the form!");
                 }
             }
         });
 
         // Listener for the actors list
         actorsListView.setOnMouseClicked(event -> {
-            System.out.println("Actors lista aktivoitu");
+            logger.log(Level.INFO, "Actors list focused");
             currentListFocus = ListFocus.ACTOR;
         });
 
         // Listener for the genres list
         genresListView.setOnMouseClicked(event -> {
-            System.out.println("Genres lista aktivoitu");
+            logger.log(Level.INFO, "Genres list focused");
             currentListFocus = ListFocus.GENRE;
         });
 
@@ -309,10 +312,11 @@ public class MainViewController implements Initializable {
         try {
             updateMovieListView(movieDao.readAll());
         } catch (SQLException e) {
-            Dialogs.showMessageDialog("Opening database failed!");
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Error fetching all the movies from database. SQLState: " + e.getSQLState() +
+                    ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
+            Dialogs.showMessageDialog("Failed to load movie data from database!");  // Inform the user
         }
-        sortMoviesBy("title");  // At the start movies are sorted by title
+        sortMoviesBy("title");  // At the starting point movies are sorted by title
     }
 
     private void fillDatabase() {
@@ -336,34 +340,34 @@ public class MainViewController implements Initializable {
         Stream.of(
                 new Movie("Inception", 2010, "Christopher Nolan", "Christopher Nolan", "Emma Thomas",
                         "Wally Pfister", 160000000, "USA",
-                        Arrays.asList(2), Arrays.asList(1, 17, 20)), // Leonardo DiCaprio, Action, Sci-Fi, Thriller
+                        List.of(2), Arrays.asList(1, 17, 20)), // Leonardo DiCaprio, Action, Sci-Fi, Thriller
                 new Movie("The Shawshank Redemption", 1994, "Frank Darabont", "Stephen King", "Niki Marvin",
                         "Roger Deakins", 25000000, "USA",
-                        Arrays.asList(3), Arrays.asList(6, 21)), // Morgan Freeman, Drama, Crime
+                        List.of(3), Arrays.asList(6, 21)), // Morgan Freeman, Drama, Crime
                 new Movie("Pulp Fiction", 1994, "Quentin Tarantino", "Quentin Tarantino", "Lawrence Bender",
                         "Andrzej Sekula", 8000000, "USA",
                         Arrays.asList(4, 8), Arrays.asList(6, 15, 21)), // Uma Thurman, Brad Pitt, Crime, Mystery, Drama
                 new Movie("Forrest Gump", 1994, "Robert Zemeckis", "Winston Groom", "Wendy Finerman",
                         "Don Burgess", 55000000, "USA",
-                        Arrays.asList(5), Arrays.asList(6, 21, 16)), // Tom Hanks, Drama, Comedy, Romance
+                        List.of(5), Arrays.asList(6, 21, 16)), // Tom Hanks, Drama, Comedy, Romance
                 new Movie("The Matrix", 1999, "Lana Wachowski", "Lilly Wachowski", "Joel Silver",
                         "Bill Pope", 63000000, "USA",
-                        Arrays.asList(6), Arrays.asList(1, 17, 20)), // Keanu Reeves, Action, Sci-Fi, Thriller
+                        List.of(6), Arrays.asList(1, 17, 20)), // Keanu Reeves, Action, Sci-Fi, Thriller
                 new Movie("The Godfather", 1972, "Francis Ford Coppola", "Mario Puzo", "Albert S. Ruddy",
                         "Gordon Willis", 6000000, "USA",
-                        Arrays.asList(7), Arrays.asList(6, 21)), // Marlon Brando, Crime, Drama
+                        List.of(7), Arrays.asList(6, 21)), // Marlon Brando, Crime, Drama
                 new Movie("Fight Club", 1999, "David Fincher", "Chuck Palahniuk", "Art Linson",
                         "Jeff Cronenweth", 63000000, "Germany/USA",
                         Arrays.asList(8, 9), Arrays.asList(6, 21)), // Brad Pitt, Edward Norton, Drama, Crime
                 new Movie("The Dark Knight", 2008, "Christopher Nolan", "Jonathan Nolan", "Christopher Nolan",
                         "Wally Pfister", 185000000, "USA/UK",
-                        Arrays.asList(10), Arrays.asList(1, 20)), // Christian Bale, Action, Thriller
+                        List.of(10), Arrays.asList(1, 20)), // Christian Bale, Action, Thriller
                 new Movie("Schindler's List", 1993, "Steven Spielberg", "Thomas Keneally", "Steven Spielberg",
                         "Janusz Kamiński", 22000000, "USA",
-                        Arrays.asList(11), Arrays.asList(4, 21)), // Liam Neeson, Biography, Drama
+                        List.of(11), Arrays.asList(4, 21)), // Liam Neeson, Biography, Drama
                 new Movie("The Lord of the Rings: The Return of the King", 2003, "Peter Jackson", "J.R.R. Tolkien", "Peter Jackson",
                         "Andrew Lesnie", 94000000, "New Zealand/USA",
-                        Arrays.asList(12), Arrays.asList(2, 10, 21)), // Elijah Wood, Adventure, Fantasy, Drama
+                        List.of(12), Arrays.asList(2, 10, 21)), // Elijah Wood, Adventure, Fantasy, Drama
                 new Movie("Star Wars: Episode V - The Empire Strikes Back", 1980, "Irvin Kershner", "Leigh Brackett", "Gary Kurtz",
                         "Peter Suschitzky", 18000000, "USA",
                         Arrays.asList(13, 14), Arrays.asList(1, 2, 20)) // Mark Hamill, Harrison Ford, Action, Adventure, Sci-Fi
@@ -382,9 +386,9 @@ public class MainViewController implements Initializable {
         try {
             this.connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
         } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
+            logger.log(Level.SEVERE, "Failed to open database connection. SQLState: " + e.getSQLState() +
+                    ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
+            Dialogs.showMessageDialog("Failed to open the database connection!");  // Inform the user
         }
     }
 
@@ -409,9 +413,9 @@ public class MainViewController implements Initializable {
                     List<Movie> allMovies = movieDao.readAll();
                     updateMovieListView(allMovies);
                 } catch (SQLException e) {
-                    System.out.println("SQLState: " + e.getSQLState());
-                    System.out.println("Error Code: " + e.getErrorCode());
-                    System.out.println("Message: " + e.getMessage());
+                    logger.log(Level.SEVERE, "Failed to fetch all movies from database. SQLState: " + e.getSQLState() +
+                            ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
+                    Dialogs.showMessageDialog("Failed to load movies from the database!");  // Inform the user
                 }
             }
         });
@@ -513,7 +517,7 @@ public class MainViewController implements Initializable {
      */
     @FXML
     void handleSave(ActionEvent event) {
-        System.out.println("Save button clicked!");
+        logger.log(Level.INFO, "Save button clicked");
 
         try {
             if (validateInputs()) {
@@ -550,9 +554,9 @@ public class MainViewController implements Initializable {
             }
 
         } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
+            logger.log(Level.SEVERE, "Failed to save movie. SQLState: " + e.getSQLState() +
+                    ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
+            Dialogs.showMessageDialog("Failed to save movie data to the database!");  // Inform the user
         }
     }
 
@@ -595,18 +599,17 @@ public class MainViewController implements Initializable {
      * Determines which entity (actor or genre) is currently focused based on the
      * currentListFocus enum and opens the corresponding dialog.
      *
-     * @param event The ActionEvent triggered by the 'Add' button click.
      */
     @FXML
-    void handleAdd(ActionEvent event) {
-        System.out.println("Add button clicked. Current focus: " + currentListFocus);
+    void handleAdd() {
+        logger.log(Level.INFO, "Add button clicked. Current focus: " + currentListFocus);
 
         switch (currentListFocus) {
             case ACTOR:
-                openActorDialog(event);
+                openActorDialog();
                 break;
             case GENRE:
-                openGenreDialog(event);
+                openGenreDialog();
                 break;
             default:  // No action
                 currentListFocus = ListFocus.NONE;
@@ -653,20 +656,18 @@ public class MainViewController implements Initializable {
     /**
      * Opens the actor dialog.
      *
-     * @param event The ActionEvent that triggered the opening of the actor dialog.
      */
-    private void openActorDialog(ActionEvent event) {
-        openDialog("/views/ActorDialogView.fxml", "New Actor Details", event);
+    private void openActorDialog() {
+        openDialog("/views/ActorDialogView.fxml", "New Actor Details");
     }
 
 
     /**
      * Opens the genre dialog.
      *
-     * @param event The ActionEvent that triggered the opening of the genre dialog.
      */
-    private void openGenreDialog(ActionEvent event) {
-        openDialog("/views/GenreDialogView.fxml", "Choose the Genres", event);
+    private void openGenreDialog() {
+        openDialog("/views/GenreDialogView.fxml", "Choose the Genres");
     }
 
 
@@ -676,9 +677,8 @@ public class MainViewController implements Initializable {
      *
      * @param fxmlPath    The path to the FXML file for the dialog view.
      * @param dialogTitle The title of the dialog window.
-     * @param event       The ActionEvent that triggered the dialog opening.
      */
-    private void openDialog(String fxmlPath, String dialogTitle, ActionEvent event) {
+    private void openDialog(String fxmlPath, String dialogTitle) {
         try {
             Stage ownerStage = this.primaryStage;
 
@@ -700,8 +700,8 @@ public class MainViewController implements Initializable {
             dialogStage.initOwner(ownerStage);
             dialogStage.showAndWait();
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Message: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error opening dialog: " + e.getMessage(), e);
+            Dialogs.showMessageDialog("Failed to open the dialog window!");  // Inform the user
         }
     }
 
@@ -715,10 +715,10 @@ public class MainViewController implements Initializable {
      * @param <T>      The type of objects contained in the ListView.
      */
     private <T> void removeObjectFromList(ListView<T> listView, T object) {
-        if (object instanceof Movie movie) {
-            deleteMovie(movie);
-            listView.getItems().remove(movie);
-        } else {
+        if (!(object instanceof Integer)) {  // Make sure the object is not Integer
+            if (object instanceof Movie movie) {
+                deleteMovie(movie);
+            }
             listView.getItems().remove(object);
         }
     }
@@ -735,9 +735,9 @@ public class MainViewController implements Initializable {
             currentMovie = null;  // Reset the currently selected movie
             clearFields();
         } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
+            logger.log(Level.SEVERE, "Deleting the movie from database failed. SQLState: " + e.getSQLState() +
+                    ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
+            Dialogs.showMessageDialog("Failed to delete the movie!");  // Inform the user
         }
     }
 
