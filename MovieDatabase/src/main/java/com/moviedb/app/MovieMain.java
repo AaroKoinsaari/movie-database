@@ -1,35 +1,59 @@
 package com.moviedb.app;
 
+import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javafx.application.Application;
-import javafx.stage.Stage;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
-import javafx.fxml.FXMLLoader;
+import javafx.stage.Stage;
+
+import com.moviedb.controllers.MainViewController;
 
 
 /**
+ * Main class for the Movie Database application.
+ * Serves as the entry point for the application.
+ * Initializes the JavaFX environment and sets up the initial view of the application.
+ *
  * @author Aaro Koinsaari
- * @version 07.12.2023
+ * @version 2023-12-09
  */
 public class MovieMain extends Application {
+
+    // Logger for logging errors
+    private static final Logger logger = Logger.getLogger(MainViewController.class.getName());
+
+
+    /**
+     * Initializes and shows the launch view of the JavaFX application.
+     * It sets up the primary stage with the launch scene and displays it.
+     * The 'LaunchView' acts as the starting point of the application, leading to the main application window.
+     *
+     * @param primaryStage The primary stage for this application, onto which the initial scene is set.
+     */
     @Override
     public void start(Stage primaryStage) {
         try {
             FXMLLoader ldr = new FXMLLoader(getClass().getResource("/views/LaunchView.fxml"));
             final Pane root = ldr.load();
-            //final MoviesGUIController moviesCtrl = (MoviesGUIController)ldr.getController();
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(getClass().getResource("/styles/styles.css").toExternalForm());
+            scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles/styles.css")).toExternalForm());
             primaryStage.setScene(scene);
             primaryStage.setTitle("Movies");
             primaryStage.show();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Error launching the program: " + e.getMessage(), e);
         }
     }
 
+
     /**
-     * @param args Ei käytössä
+     * The main entry point for the JavaFX application.
+     *
+     * @param args Command line arguments passed to the application. Not used in this application.
      */
     public static void main(String[] args) {
         launch(args);
