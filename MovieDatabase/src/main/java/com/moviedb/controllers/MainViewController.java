@@ -44,19 +44,24 @@ import com.moviedb.models.Movie;
  */
 public class MainViewController implements Initializable {
 
+    /**
+     * Represents the focus of the current list in the user interface.
+     * Used to determine which list (movies, actors, or genres) is currently active
+     * and therefore which actions (add, delete, etc.) should be performed on.
+     */
+    public enum ListFocus {
+        MOVIE, ACTOR, GENRE, NONE
+    }
+
     private String databaseName;
     private Connection connection;
     private MovieDao movieDao;
     private ActorDao actorDao;
     private GenreDao genreDao;
-    private Stage primaryStage;  // Static reference to the main view
+    private Stage primaryStage;  // Static reference to the main window
     private Movie currentMovie;  // The movie currently chosen from the list
     private String currentSortCriterion = "title";  // Default sorting criterion
-
-    // Focus variables to determine which list is active
-    private boolean isMovieListFocused;
-    private boolean isActorListFocused;
-    private boolean isGenresListFocused;
+    private ListFocus currentListFocus = ListFocus.NONE;  // Determines the focused list
 
     @FXML
     private TextField searchTextField;
@@ -94,25 +99,18 @@ public class MainViewController implements Initializable {
     public TextField countryTextField;
     @FXML
     private MenuItem menuAbout;
-
     @FXML
     private MenuItem menuAddActor;
-
     @FXML
     private MenuItem menuAddGenre;
-
     @FXML
     private MenuItem menuDelete;
-
     @FXML
     private MenuItem menuHelp;
-
     @FXML
     private MenuItem menuNewMovie;
-
     @FXML
     private MenuItem menuQuit;
-
     @FXML
     private MenuItem menuSave;
 
@@ -166,7 +164,7 @@ public class MainViewController implements Initializable {
     public void setActorList(List<Actor> actors) {
         actorsListView.getItems().setAll(actors);
     }
-    
+
 
     /**
      * Sets the primary stage of the application.
@@ -237,18 +235,16 @@ public class MainViewController implements Initializable {
             );
         });
 
+        // Listen and update list focus
         menuAddActor.setOnAction(e -> {
-            isMovieListFocused = false;
-            isActorListFocused = true;
-            isGenresListFocused = false;
+            currentListFocus = ListFocus.ACTOR;
             handleAdd(e);
         });
         menuAddGenre.setOnAction(e -> {
-            isMovieListFocused = false;
-            isActorListFocused = false;
-            isGenresListFocused = true;
+            currentListFocus = ListFocus.GENRE;
             handleAdd(e);
         });
+
         menuQuit.setOnAction(e -> {
             Platform.exit();
         });
@@ -257,10 +253,7 @@ public class MainViewController implements Initializable {
         moviesListView.setOnMouseClicked(event -> {
             System.out.println("Movies lista aktivoitu");
 
-            // Update the focus variables
-            isMovieListFocused = true;
-            isActorListFocused = false;
-            isGenresListFocused = false;
+            currentListFocus = ListFocus.MOVIE;
 
             Movie selectedMovie = moviesListView.getSelectionModel().getSelectedItem();
             if (selectedMovie != null) {
@@ -276,21 +269,13 @@ public class MainViewController implements Initializable {
         // Listener for the actors list
         actorsListView.setOnMouseClicked(event -> {
             System.out.println("Actors lista aktivoitu");
-
-            // Update the focus variables
-            isActorListFocused = true;
-            isGenresListFocused = false;
-            isMovieListFocused = false;
+            currentListFocus = ListFocus.ACTOR;
         });
 
         // Listener for the genres list
         genresListView.setOnMouseClicked(event -> {
             System.out.println("Genres lista aktivoitu");
-
-            // Update the focus variables
-            isGenresListFocused = true;
-            isActorListFocused = false;
-            isMovieListFocused = false;
+            currentListFocus = ListFocus.GENRE;
         });
 
         // Listener for release year field
@@ -600,46 +585,60 @@ public class MainViewController implements Initializable {
 
     /**
      * Handles the 'Add' button click event.
-     * Determines which entity (movie, actor, or genre) is currently focused based on the
-     * focus variables and opens the corresponding dialog.
+     * Determines which entity (actor or genre) is currently focused based on the
+     * currentListFocus enum and opens the corresponding dialog.
      *
      * @param event The ActionEvent triggered by the 'Add' button click.
      */
     @FXML
     void handleAdd(ActionEvent event) {
-        System.out.println("Add button clicked. Movie focused: " + isMovieListFocused +
-                ", Actor focused: " + isActorListFocused + ", Genres focused: " + isGenresListFocused);
+        System.out.println("Add button clicked. Current focus: " + currentListFocus);
 
-        if (isActorListFocused) {
-            openActorDialog(event);
-        } else if (isGenresListFocused) {
-            openGenreDialog(event);
+        switch (currentListFocus) {
+            case ACTOR:
+                openActorDialog(event);
+                break;
+            case GENRE:
+                openGenreDialog(event);
+                break;
+            default:  // No action
+                currentListFocus = ListFocus.NONE;
+                break;
         }
     }
 
 
     /**
-     * Handles the deletion of movies, actors, or genres based on the focused list.
+     * Handles the deletion of movies, actors, or genres based on the current focused list.
+     * Uses the currentListFocus enum to determine which list (movies, actors, or genres) is currently active
+     * and performs the deletion on the selected item from that list.
      *
      * @param event The ActionEvent triggered by the delete action.
      */
     @FXML
     void handleDelete(ActionEvent event) {
-        if (isMovieListFocused) {
-            Movie selectedMovie = moviesListView.getSelectionModel().getSelectedItem();
-            if (selectedMovie != null) {
-                removeObjectFromList(moviesListView, selectedMovie);  // Removes also from db
-            }
-        } else if (isActorListFocused) {
-            Actor selectedActor = actorsListView.getSelectionModel().getSelectedItem();
-            if (selectedActor != null) {
-                removeObjectFromList(actorsListView, selectedActor);
-            }
-        } else if (isGenresListFocused) {
-            Genre selectedGenre = genresListView.getSelectionModel().getSelectedItem();
-            if (selectedGenre != null) {
-                removeObjectFromList(genresListView, selectedGenre);
-            }
+        switch (currentListFocus) {
+            case MOVIE:
+                Movie selectedMovie = moviesListView.getSelectionModel().getSelectedItem();
+                if (selectedMovie != null) {
+                    removeObjectFromList(moviesListView, selectedMovie);  // Removes also from db
+                }
+                break;
+            case ACTOR:
+                Actor selectedActor = actorsListView.getSelectionModel().getSelectedItem();
+                if (selectedActor != null) {
+                    removeObjectFromList(actorsListView, selectedActor);
+                }
+                break;
+            case GENRE:
+                Genre selectedGenre = genresListView.getSelectionModel().getSelectedItem();
+                if (selectedGenre != null) {
+                    removeObjectFromList(genresListView, selectedGenre);
+                }
+                break;
+            default:  // No action
+                currentListFocus = ListFocus.NONE;
+                break;
         }
     }
 
