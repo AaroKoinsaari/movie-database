@@ -275,7 +275,7 @@ public class MainViewController implements Initializable {
 
         // Listener for release year field
         releaseYearTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.isEmpty() && !InputValidator.isValidReleaseYear(newValue)) {
+            if (!newValue.isEmpty() && InputValidator.isValidReleaseYear(newValue)) {
                 releaseYearTextField.setStyle("-fx-control-inner-background: #ffdddd;");
             } else {
                 releaseYearTextField.setStyle("-fx-control-inner-background: white;");
@@ -806,13 +806,13 @@ public class MainViewController implements Initializable {
         String country = countryTextField.getText();
 
         if (updatedMovieTitle.isEmpty()) errorMsg.append("Title is required.\n");
-        if (!InputValidator.isValidReleaseYear(releaseYearText)) errorMsg.append("Give release year between 1900-2099.\n");
-        if (!InputValidator.isValidText(updatedDirector)) errorMsg.append("Director's name is invalid.\n");
-        if (!InputValidator.isValidText(writer)) errorMsg.append("Writer's name is invalid.\n");
-        if (!InputValidator.isValidText(producer)) errorMsg.append("Producer's name is invalid.\n");
-        if (!InputValidator.isValidText(cinematographer)) errorMsg.append("Cinematographer's name is invalid.\n");
+        if (InputValidator.isValidReleaseYear(releaseYearText)) errorMsg.append("Give release year between 1900-2099.\n");
+        if (InputValidator.isValidText(updatedDirector)) errorMsg.append("Director's name is invalid.\n");
+        if (InputValidator.isValidText(writer)) errorMsg.append("Writer's name is invalid.\n");
+        if (InputValidator.isValidText(producer)) errorMsg.append("Producer's name is invalid.\n");
+        if (InputValidator.isValidText(cinematographer)) errorMsg.append("Cinematographer's name is invalid.\n");
         if (!InputValidator.isInteger(budget)) errorMsg.append("Give budget as integer.\n");
-        if (!InputValidator.isValidText(country)) errorMsg.append("Invalid country name.\n");
+        if (InputValidator.isValidText(country)) errorMsg.append("Invalid country name.\n");
         if (actorsListView.getItems().isEmpty()) errorMsg.append("At least one actor is required.\n");
         if (genresListView.getItems().isEmpty()) errorMsg.append("At least one genre is required.\n");
 

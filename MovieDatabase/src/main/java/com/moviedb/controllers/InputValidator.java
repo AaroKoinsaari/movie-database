@@ -15,9 +15,9 @@ public class InputValidator {
     public static boolean isValidReleaseYear(String year) {
         if (year != null && !year.trim().isEmpty() && year.matches("\\d{4}")) {
             int y = Integer.parseInt(year);
-            return y >= 1900 && y <= 2099;
+            return y < 1900 || y > 2099;
         }
-        return false;
+        return true;
     }
 
 
@@ -29,7 +29,7 @@ public class InputValidator {
      * @return true if the text is valid, false otherwise.
      */
     public static boolean isValidText(String text) {
-        return text != null && !text.trim().isEmpty() && text.matches("[\\p{L} ./,'-]+");
+        return text == null || text.trim().isEmpty() || !text.matches("[\\p{L} ./,'-]+");
     }
 
 
