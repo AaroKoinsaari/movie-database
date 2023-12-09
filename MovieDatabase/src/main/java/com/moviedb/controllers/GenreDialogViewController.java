@@ -21,21 +21,16 @@ import com.moviedb.models.Genre;
  */
 public class GenreDialogViewController {
 
-    /** Data Access Object for genre-related operations. */
+    // Data Access Object for genre-related operations.
     private GenreDao genreDao;
 
-    /** Reference to the MainViewController to update selected genres. */
+    // Reference to the MainViewController to update selected genres.
     private MainViewController mainViewController;
 
     @FXML
-    private Button okButton;
-
+    private ListView<CheckBox> listView;
     @FXML
     private Button cancelButton;
-
-    /** ListView for displaying genres as CheckBoxes. */
-    @FXML
-    private ListView<CheckBox> listView;
 
 
     /**

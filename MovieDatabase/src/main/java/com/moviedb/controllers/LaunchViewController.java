@@ -5,7 +5,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -30,8 +29,6 @@ public class LaunchViewController {
     private Button cancelButton;
     @FXML
     private TextField databaseNameField;
-    @FXML
-    private Button okButton;
 
 
     /**
@@ -40,10 +37,9 @@ public class LaunchViewController {
      * otherwise prompts user to create a new database by the given name and opens
      * the main view for that if the user clicks Yes.
      *
-     * @param event The ActionEvent triggered by the 'OK' button click.
      */
     @FXML
-    void handleOkButton(ActionEvent event) {
+    void handleOkButton() {
         // Validate the database name
         String dbName = databaseNameField.getText().trim();
         if (dbName.isEmpty()) {
@@ -73,10 +69,9 @@ public class LaunchViewController {
     /**
      * Handles the Cancel button click in the launch window by simply closing the program.
      *
-     * @param event The ActionEvent triggered by the 'Cancel' button click.
      */
     @FXML
-    void handleCancelButton(ActionEvent event) {
+    void handleCancelButton() {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
     }

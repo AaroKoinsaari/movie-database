@@ -41,19 +41,10 @@ public class ActorDialogViewController implements Initializable {
 
     @FXML
     private TextField nameTextField;
-
-    @FXML
-    private Button addButton;
-
-    @FXML
-    private Button okButton;
-
     @FXML
     private Button cancelButton;
-
     @FXML
     private ListView<Actor> listView;
-
     @FXML
     private Label alertLabel;  // Displays alerts and notifications to the user
 
