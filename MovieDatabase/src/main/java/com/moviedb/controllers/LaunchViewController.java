@@ -4,6 +4,8 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -24,6 +26,10 @@ import fi.jyu.mit.fxgui.Dialogs;
  * simply opening an existing one to the Main View.
  */
 public class LaunchViewController {
+
+    // Logger for logging errors
+    private static final Logger logger = Logger.getLogger(LaunchViewController.class.getName());
+
 
     @FXML
     private Button cancelButton;
@@ -111,7 +117,7 @@ public class LaunchViewController {
             DatabaseInitializer.initialize(connection);
             connection.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to create a new database.", e);
             Dialogs.showMessageDialog("Failed to create a new database.");
         }
     }
@@ -144,8 +150,8 @@ public class LaunchViewController {
             Stage currentStage = (Stage) databaseNameField.getScene().getWindow();
             currentStage.close();
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Message: " + e.getMessage());
+            logger.log(Level.SEVERE, "Failed to open the MainView.", e);
+            Dialogs.showMessageDialog("Failed to open the main window.");
         }
     }
 }
