@@ -53,6 +53,8 @@ public class MovieDao {
     private static final String SQL_DELETE_ACTORS = "DELETE FROM movie_actors WHERE movie_id = ?";
     private static final String SQL_DELETE_GENRES = "DELETE FROM movie_genres WHERE movie_id = ?";
     private static final String SQL_DELETE_MOVIE = "DELETE FROM movies WHERE id = ?";
+
+    // This is used to fix the issue where the latest generated ID couldn't be fetched for some reason
     private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";
 
 
@@ -260,8 +262,9 @@ public class MovieDao {
         int budget = rs.getInt("budget");
         String country = rs.getString("country");
 
-        List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
-        List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
+        // Convert Sets to Lists
+        List<Integer> actorIds = new ArrayList<>(fetchAssociatedIds(id, "movie_actors", "actor_id"));
+        List<Integer> genreIds = new ArrayList<>(fetchAssociatedIds(id, "movie_genres", "genre_id"));
 
         return new Movie(id, title, releaseYear, director, writer, producer,
                 cinematographer, budget, country, actorIds, genreIds);
@@ -269,16 +272,16 @@ public class MovieDao {
 
 
     /**
-     * Fetches a list of either actor or genre IDs based on a specified movie ID and table name.
+     * Fetches a set of either actor or genre IDs based on a specified movie ID and table name.
      *
      * @param movieId The ID of the movie for which the actor or genre IDs are to be fetched.
      * @param tableName The name of the table (either "movie_actors" or "movie_genres") to fetch IDs from.
      * @param columnName The name of the column (either "actor_id" or "genre_id") to fetch IDs from.
-     * @return A List of Integers representing actor or genre IDs associated with the given movie ID.
+     * @return A Set of Integers representing actor or genre IDs associated with the given movie ID.
      * @throws SQLException If there's an error during the database operation.
      */
-    private List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
-        List<Integer> ids = new ArrayList<>();
+    private Set<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
+        Set<Integer> ids = new HashSet<>();
 
         // Validate table and column names to prevent SQL injection
         validateTableNameAndColumnName(tableName, columnName);
@@ -290,11 +293,11 @@ public class MovieDao {
             pstmt.setInt(1, movieId);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    ids.add(rs.getInt(columnName)); // Fetch and add each ID to the list
+                    ids.add(rs.getInt(columnName)); // Fetch and add each ID to the set
                 }
             }
         }
-        return ids; // Return the list of associated IDs
+        return ids; // Return the set of associated IDs
     }
 
 
@@ -425,7 +428,7 @@ public class MovieDao {
         // Check for valid table and column names to prevent SQL injection
         validateTableNameAndColumnName(table, idColumn);
 
-        Set<Integer> currentIds = getCurrentIds(movieId, table, idColumn);
+        Set<Integer> currentIds = fetchAssociatedIds(movieId, table, idColumn);
 
         // Delete links that are not in the updated list
         for (Integer id : currentIds) {
@@ -440,34 +443,6 @@ public class MovieDao {
                 addLinkToMovie(movieId, id, table, idColumn);
             }
         }
-    }
-
-
-    /**
-     * Retrieves a set of current IDs linked with a specific movie from a join table.
-     *
-     * @param movieId The ID of the movie for which linked IDs are being fetched.
-     * @param table The name of the join table from which to fetch the links (either 'movie_actors' or 'movie_genres').
-     * @param idColumn The name of the column in the join table that stores the IDs ('actor_id' or 'genre_id').
-     * @return A set of integer IDs currently linked with the movie in the specified join table.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    private Set<Integer> getCurrentIds(int movieId, String table, String idColumn) throws SQLException {
-        // Check for valid table and column names to prevent SQL injection
-        validateTableNameAndColumnName(table, idColumn);
-
-        Set<Integer> ids = new HashSet<>();
-
-        String sql = "SELECT " + idColumn + " FROM " + table + " WHERE movie_id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, movieId);
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    ids.add(rs.getInt(idColumn));
-                }
-            }
-        }
-        return ids;
     }
 
 
