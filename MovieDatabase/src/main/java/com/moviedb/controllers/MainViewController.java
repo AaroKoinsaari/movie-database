@@ -303,7 +303,8 @@ public class MainViewController implements Initializable {
         this.actorDao = new ActorDao(connection);
         this.genreDao = new GenreDao(connection);
 
-        fillDatabase();
+        // This method is for populating the database with pre-defined data for demonstration purposes
+        //fillDatabase();
 
         // Initiate listeners
         setupSearchTextFieldListener();
@@ -319,6 +320,12 @@ public class MainViewController implements Initializable {
         sortMoviesBy("title");  // At the starting point movies are sorted by title
     }
 
+
+    /**
+     * Populates the database with a set of predefined data for demonstration purposes.
+     * It's designed to be called when there is a need to demonstrate the application with preloaded data.
+     */
+    @SuppressWarnings("unused")
     private void fillDatabase() {
         Stream.of(
                 new Actor("Robert De Niro"),    // ID 1
