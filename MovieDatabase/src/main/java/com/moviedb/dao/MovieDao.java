@@ -16,7 +16,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.moviedb.models.Movie;
-import fi.jyu.mit.fxgui.Dialogs;
 
 
 /**
@@ -210,30 +209,12 @@ public class MovieDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public Movie read(int id) throws SQLException {
-        String sql = "SELECT title, release_year, director, writer, producer, " +
-                "cinematographer, budget, country FROM movies WHERE id = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_READ_MOVIE)) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
 
-            // If result is found, convert it to a Movie object
             if (rs.next()) {
-                String title = rs.getString("title");
-                int releaseYear = rs.getInt("release_year");
-                String director = rs.getString("director");
-                String writer = rs.getString("writer");
-                String producer = rs.getString("producer");
-                String cinematographer = rs.getString("cinematographer");
-                int budget = rs.getInt("budget");
-                String country = rs.getString("country");
-
-                // Fetch the list of actors and genres
-                List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
-                List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
-
-                return new Movie(id, title, releaseYear, director, writer, producer,
-                        cinematographer, budget, country, actorIds, genreIds);
+                return convertResultSetToMovie(rs, id);
             }
         }
         return null;
@@ -242,33 +223,19 @@ public class MovieDao {
 
     /**
      * Retrieves all movies from the database with their detailed information including
-     * and associated actor and genre IDs.
+     * associated actor and genre IDs.
      *
      * @return A list of all movies in the database, with full details.
      * @throws SQLException If there's an error during the database operation.
      */
     public List<Movie> readAll() throws SQLException {
         List<Movie> movies = new ArrayList<>();
-        String sql = "SELECT id, title, release_year, director, writer, producer, cinematographer, budget, country FROM movies";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_READ_ALL_MOVIES);
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
                 int id = rs.getInt("id");
-                String title = rs.getString("title");
-                int releaseYear = rs.getInt("release_year");
-                String director = rs.getString("director");
-                String writer = rs.getString("writer");
-                String producer = rs.getString("producer");
-                String cinematographer = rs.getString("cinematographer");
-                int budget = rs.getInt("budget");
-                String country = rs.getString("country");
-                List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
-                List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
-
-                movies.add(new Movie(id, title, releaseYear, director, writer, producer,
-                                     cinematographer, budget, country, actorIds, genreIds));
+                movies.add(convertResultSetToMovie(rs, id));
             }
         }
         return movies;
@@ -276,35 +243,75 @@ public class MovieDao {
 
 
     /**
+     * Creates a Movie object from a ResultSet.
+     *
+     * @param rs The ResultSet from which movie data is extracted.
+     * @param id The ID of the movie.
+     * @return A Movie object populated with data from the ResultSet.
+     * @throws SQLException If there's an error during data extraction.
+     */
+    private Movie convertResultSetToMovie(ResultSet rs, int id) throws SQLException {
+        String title = rs.getString("title");
+        int releaseYear = rs.getInt("release_year");
+        String director = rs.getString("director");
+        String writer = rs.getString("writer");
+        String producer = rs.getString("producer");
+        String cinematographer = rs.getString("cinematographer");
+        int budget = rs.getInt("budget");
+        String country = rs.getString("country");
+
+        List<Integer> actorIds = fetchAssociatedIds(id, "movie_actors", "actor_id");
+        List<Integer> genreIds = fetchAssociatedIds(id, "movie_genres", "genre_id");
+
+        return new Movie(id, title, releaseYear, director, writer, producer,
+                cinematographer, budget, country, actorIds, genreIds);
+    }
+
+
+    /**
      * Fetches a list of either actor or genre IDs based on a specified movie ID and table name.
      *
      * @param movieId The ID of the movie for which the actor or genre IDs are to be fetched.
-     * @param tableName The name of the table (either "actors" or "genres") to fetch IDs from.
+     * @param tableName The name of the table (either "movie_actors" or "movie_genres") to fetch IDs from.
+     * @param columnName The name of the column (either "actor_id" or "genre_id") to fetch IDs from.
      * @return A List of Integers representing actor or genre IDs associated with the given movie ID.
      * @throws SQLException If there's an error during the database operation.
      */
-    public List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
+    private List<Integer> fetchAssociatedIds(int movieId, String tableName, String columnName) throws SQLException {
         List<Integer> ids = new ArrayList<>();
 
-        // Whitelist allowed table and column names
-        List<String> allowedTables = Arrays.asList("movie_actors", "movie_genres");
-        List<String> allowedColumns = Arrays.asList("actor_id", "genre_id");
+        // Validate table and column names to prevent SQL injection
+        validateTableNameAndColumnName(tableName, columnName);
 
-        if (!allowedTables.contains(tableName) || (!allowedColumns.contains(columnName))) {
-            throw new IllegalArgumentException();
-        }
-
+        // Construct SQL query dynamically using safe table and column names
         String sql = "SELECT " + columnName + " FROM " + tableName + " WHERE movie_id = ?";
 
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, movieId);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                ids.add(rs.getInt(columnName));
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt(columnName)); // Fetch and add each ID to the list
+                }
             }
         }
-        return ids;
+        return ids; // Return the list of associated IDs
+    }
+
+
+    /**
+     * Validates that the given table name and column name are allowed.
+     * Throws IllegalArgumentException if they are not valid.
+     *
+     * @param table The table name to validate.
+     * @param column The column name to validate.
+     */
+    private void validateTableNameAndColumnName(String table, String column) {
+        List<String> allowedTables = Arrays.asList("movie_actors", "movie_genres");
+        List<String> allowedColumns = Arrays.asList("actor_id", "genre_id");
+
+        if (!allowedTables.contains(table) || !allowedColumns.contains(column)) {
+            throw new IllegalArgumentException("Invalid table or column name");
+        }
     }
 
 
