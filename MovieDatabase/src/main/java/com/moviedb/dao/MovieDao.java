@@ -136,7 +136,7 @@ public class MovieDao {
             throw e;  // Re-throw the exception to be handled by the caller
         } finally {
             try {
-                connection.setAutoCommit(true);  // Reset default behavior
+                connection.setAutoCommit(true);  // Restore default behavior
             } catch (SQLException autoCommitEx) {
                 logger.log(Level.SEVERE, "Error resetting auto-commit behavior", autoCommitEx);
             }
@@ -287,10 +287,19 @@ public class MovieDao {
             connection.commit();
             updateSuccessful = true;
         } catch (SQLException e) {
-            connection.rollback();  // Rollback transactions on error
-            e.printStackTrace();
+            try {
+                connection.rollback();  // Rollback transactions on error
+                logger.log(Level.SEVERE, "Transaction rolled back due to SQLException", e);
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
+            }
+            throw e;  // Re-throw the exception to be handled by the caller
         } finally {
-            connection.setAutoCommit(true);  // Restore default behavior
+            try {
+                connection.setAutoCommit(true);  // Restore default behavior
+            } catch (SQLException autoCommitEx) {
+                logger.log(Level.SEVERE, "Error resetting auto-commit behavior", autoCommitEx);
+            }
         }
 
         return updateSuccessful;
@@ -474,10 +483,19 @@ public class MovieDao {
 
             connection.commit();
         } catch (SQLException e) {
-            connection.rollback(); // Rollback transaction on error
-            e.printStackTrace();
+            try {
+                connection.rollback(); // Rollback transaction on error
+                logger.log(Level.SEVERE, "Transaction rolled back due to SQLException", e);
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
+            }
+            throw e; // Re-throw the exception to be handled by the caller
         } finally {
-            connection.setAutoCommit(true); // Restore default behavior
+            try {
+                connection.setAutoCommit(true); // Restore default behavior
+            } catch (SQLException autoCommitEx) {
+                logger.log(Level.SEVERE, "Error resetting auto-commit behavior", autoCommitEx);
+            }
         }
         return rowsAffected > 0;
     }
