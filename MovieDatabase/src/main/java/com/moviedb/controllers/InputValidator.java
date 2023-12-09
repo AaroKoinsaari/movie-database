@@ -29,7 +29,7 @@ public class InputValidator {
      * @return true if the text is valid, false otherwise.
      */
     public static boolean isValidText(String text) {
-        return text != null && !text.trim().isEmpty() && text.matches("[\\p{L} .'-]+");
+        return text != null && !text.trim().isEmpty() && text.matches("[\\p{L} ./,'-]+");
     }
 
 

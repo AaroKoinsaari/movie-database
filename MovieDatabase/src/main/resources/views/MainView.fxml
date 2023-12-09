@@ -40,9 +40,9 @@
                 </Menu>
                 <Menu mnemonicParsing="true" text="Edit">
                     <items>
-                        <MenuItem fx:id="menuNewMovie" mnemonicParsing="true" text="_New Movie">
+                        <MenuItem fx:id="menuNewMovie" mnemonicParsing="true" text="_Reset">
                             <accelerator>
-                                <KeyCodeCombination alt="UP" code="N" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                                <KeyCodeCombination alt="UP" code="R" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                             </accelerator>
                         </MenuItem>
                         <MenuItem fx:id="menuAddActor" mnemonicParsing="true" text="Add _Actor">
