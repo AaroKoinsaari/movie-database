@@ -86,9 +86,6 @@ public abstract class EmptyDBSetup {
                 stmt.execute("INSERT INTO genres (name) VALUES ('Romance')");       // 10
             }
         } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
             fail("Error creating the empty database structure");
         }
     }
@@ -118,9 +115,6 @@ public abstract class EmptyDBSetup {
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
             fail("Error adding actors to database");
         }
     }

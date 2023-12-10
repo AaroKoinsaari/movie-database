@@ -30,7 +30,6 @@ public class LaunchViewController {
     // Logger for logging errors
     private static final Logger logger = Logger.getLogger(LaunchViewController.class.getName());
 
-
     @FXML
     private Button cancelButton;
     @FXML

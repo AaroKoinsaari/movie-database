@@ -54,7 +54,6 @@ public class ActorDialogViewController implements Initializable {
     /**
      * Initializes the controller with necessary references, sets up the ListView with actors
      * and fetches all the current actors to a list.
-     * TODO: Fetching all the actors might not be the best for big datasets. Could be improved in the future
      *
      * @param mainViewController The main controller of the application.
      * @param connection         The database connection for actor data retrieval.

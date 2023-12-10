@@ -8,10 +8,10 @@ import java.util.Objects;
  */
 public class Genre {
 
-    /** The unique identifier of the genre. */
+    // The unique identifier of the genre.
     private int id;
 
-    /** The name of the genre. */
+    // The name of the genre.
     private String name;
 
 

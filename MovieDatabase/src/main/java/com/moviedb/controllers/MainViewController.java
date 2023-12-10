@@ -5,14 +5,14 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import javafx.animation.PauseTransition;
@@ -24,7 +24,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -301,7 +305,7 @@ public class MainViewController implements Initializable {
 
         // Listener for budget field
         budgetTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.isEmpty() && !InputValidator.isInteger(newValue)) {
+            if (!newValue.isEmpty() && InputValidator.isInteger(newValue)) {
                 budgetTextField.setStyle("-fx-control-inner-background: #ffdddd;"); // Virheellinen syöte, maalaa punaiseksi
             } else {
                 budgetTextField.setStyle("-fx-control-inner-background: white;"); // Oikea syöte, käytä valkoista taustaa
@@ -870,7 +874,7 @@ public class MainViewController implements Initializable {
         if (InputValidator.isValidText(writer)) errorMsg.append("Writer's name is invalid.\n");
         if (InputValidator.isValidText(producer)) errorMsg.append("Producer's name is invalid.\n");
         if (InputValidator.isValidText(cinematographer)) errorMsg.append("Cinematographer's name is invalid.\n");
-        if (!InputValidator.isInteger(budget)) errorMsg.append("Give budget as integer.\n");
+        if (InputValidator.isInteger(budget)) errorMsg.append("Give budget as integer.\n");
         if (InputValidator.isValidText(country)) errorMsg.append("Invalid country name.\n");
         if (actorsListView.getItems().isEmpty()) errorMsg.append("At least one actor is required.\n");
         if (genresListView.getItems().isEmpty()) errorMsg.append("At least one genre is required.\n");

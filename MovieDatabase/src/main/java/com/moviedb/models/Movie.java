@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Movie {
 
-    /** Main details of the movie */
+    // Main details of the movie
     private int id;
     private final String title;
     private final int releaseYear;

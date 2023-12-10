@@ -8,10 +8,10 @@ import java.util.Objects;
  */
 public class Actor {
 
-    /** The unique identifier of the actor. */
+    // The unique identifier of the actor.
     private int id;
 
-    /** The name of the actor. */
+    // The name of the actor.
     private String name;
 
 

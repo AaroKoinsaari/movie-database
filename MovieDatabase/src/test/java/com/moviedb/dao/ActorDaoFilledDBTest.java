@@ -72,7 +72,7 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
 
     @Test
     @DisplayName("Read a non-existing actor from the database")
-    void readNonExistingActorTest() {
+    void testReadNonExistingActor() {
         Optional<Actor> fetchedNonExistentActor = assertDoesNotThrow(() -> dao.read(99),
                 "Reading a non-existent actor should not throw SQLException");
         assertTrue(fetchedNonExistentActor.isEmpty(), "Actor should not be present");
@@ -81,7 +81,7 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
 
     @Test
     @DisplayName("Read a newly inserted actor from the database")
-    void readNewInsertedActorTest() {
+    void testReadNewInsertedActor() {
         String name = "Test Actor 1";
         Actor testActor = new Actor(name);
         int actorId = assertDoesNotThrow(() -> dao.create(testActor),
@@ -100,7 +100,7 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
 
     @Test
     @DisplayName("Update an existing actor in the database")
-    void updateTest() {
+    void testUpdate() {
         int actorId = 2;  // Meryl Streep
         String updatedName = "Test Name";
 

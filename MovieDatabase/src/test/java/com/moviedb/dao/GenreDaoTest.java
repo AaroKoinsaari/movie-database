@@ -61,7 +61,7 @@ public class GenreDaoTest extends FilledDBSetup {
 
     @Test
     @DisplayName("Read all genres from the database")
-    void readAllTest() {
+    void testReadAll() {
         List<Genre> fetchedGenres = assertDoesNotThrow(() -> dao.readAll(),
                 "Reading all genres should not throw SQLException");
         assertEquals(expectedGenres, fetchedGenres);
@@ -70,7 +70,7 @@ public class GenreDaoTest extends FilledDBSetup {
 
     @Test
     @DisplayName("Get genres by ID from the database")
-    void getGenreByIdTest() {
+    void testGetGenreById() {
         // Testing retrieval of existing genres by their ID
         Optional<Genre> actualActionGenre = assertDoesNotThrow(() -> dao.getGenreById(1),
                 "Reading genre 'Action' by ID should not throw SQLException");
@@ -97,7 +97,7 @@ public class GenreDaoTest extends FilledDBSetup {
 
     @Test
     @DisplayName("Get genres by name from the database")
-    void getGenreByNameTest() {
+    void testGetGenreByName() {
         // Testing retrieval of existing genres by their name
         Optional<Genre> actualActionGenre = assertDoesNotThrow(() -> dao.getGenreByName("Action"),
                 "Reading genre 'Action' by name should not throw SQLException");
