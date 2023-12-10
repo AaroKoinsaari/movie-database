@@ -1,7 +1,6 @@
 package com.moviedb.dao;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.moviedb.models.Movie;
 
@@ -27,16 +25,7 @@ import com.moviedb.models.Movie;
  * It encapsulates all SQL queries and shields the rest of the application from direct database interactions,
  * promoting cleaner separation of concerns and making the codebase more maintainable.
  */
-public class MovieDao {
-
-    // Connection used to execute SQL queries and interact with the database.
-    private Connection connection;
-
-    // The URL pointing to the SQL database location.
-    private static final String DB_URL = "jdbc:sqlite:";
-
-    // Logger for logging errors
-    private static final Logger logger = Logger.getLogger(MovieDao.class.getName());
+public class MovieDao extends BaseDao {
 
     // Define the SQL queries
     private static final String SQL_INSERT_MOVIE = "INSERT INTO movies(title, release_year, director, writer, producer, " +
@@ -59,12 +48,7 @@ public class MovieDao {
      * Default constructor that initializes the connection to the default SQLite database.
      */
     public MovieDao() {
-        try {
-            this.connection = DriverManager.getConnection(DB_URL);
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error creating MovieDao instance. SQLState: " + e.getSQLState() +
-                    ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
-        }
+        super();
     }
 
 
@@ -74,7 +58,7 @@ public class MovieDao {
      * @param connection The specific connection to database.
      */
     public MovieDao(Connection connection) {
-        this.connection = connection;
+        super(connection);
     }
 
 
@@ -86,7 +70,7 @@ public class MovieDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public int create(Movie movie) throws SQLException {
-        int generatedMovieId = -1; // -1 for default error state
+        int generatedMovieId;
 
         try {
             connection.setAutoCommit(false); // Start transaction
@@ -128,42 +112,6 @@ public class MovieDao {
 
         return generatedMovieId;
     }
-
-
-    /**
-     * Retrieves the generated ID for the last inserted row.
-     * <p>
-     * This method handles ID retrieval for different databases. It uses "SELECT last_insert_rowid()"
-     * for SQLite due to its specific behavior with auto-increment keys. For other databases like H2,
-     * it utilizes the standard JDBC getGeneratedKeys method. This approach is necessary to resolve
-     * compatibility issues between production (SQLite) and testing environments (H2), ensuring
-     * consistent behavior across different database systems.
-     *
-     * @param pstmt The PreparedStatement from which the generated key is retrieved.
-     * @return The generated ID of the last inserted row, or -1 if an error occurs.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    private int fetchGeneratedId(PreparedStatement pstmt) throws SQLException {
-        int generatedId = -1;
-        String databaseProductName = connection.getMetaData().getDatabaseProductName();
-
-        if (databaseProductName.equals("SQLite")) {
-            try (Statement stmt = connection.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT last_insert_rowid()")) {
-                if (rs.next()) {
-                    generatedId = rs.getInt(1); // Retrieve the generated key (ID)
-                }
-            }
-        } else {  // For H2 db
-            try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    generatedId = rs.getInt(1);
-                }
-            }
-        }
-        return generatedId;
-    }
-
 
 
     /**

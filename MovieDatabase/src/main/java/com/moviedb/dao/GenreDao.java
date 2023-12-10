@@ -1,15 +1,12 @@
 package com.moviedb.dao;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.moviedb.models.Genre;
 
@@ -22,16 +19,7 @@ import com.moviedb.models.Genre;
  * The GenreDao class provides a uniform approach to handling genre data, regardless of the database technology used.
  * It abstracts SQL queries away from the rest of the application, enabling cleaner code separation and improved code maintainability.
  */
-public class GenreDao {
-
-    // Connection used to execute SQL queries and interact with the database.
-    private Connection connection;
-
-    // The URL pointing to the SQL database location.
-    private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
-
-    // Logger for logging errors
-    private static final Logger logger = Logger.getLogger(GenreDao.class.getName());
+public class GenreDao extends BaseDao {
 
     // Define SQL queries
     private static final String SQL_READ_ALL_GENRES = "SELECT id, name FROM genres";
@@ -43,12 +31,7 @@ public class GenreDao {
      * Default constructor that initializes the connection to the default SQLite database.
      */
     public GenreDao() {
-        try {
-            this.connection = DriverManager.getConnection(DB_URL);
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error creating GenreDao instance. SQLState: " + e.getSQLState() +
-                    ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
-        }
+        super();
     }
 
 
@@ -58,7 +41,7 @@ public class GenreDao {
      * @param connection The specific connection to database.
      */
     public GenreDao(Connection connection) {
-        this.connection = connection;
+        super(connection);
     }
 
 

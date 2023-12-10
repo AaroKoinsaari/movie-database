@@ -1,7 +1,6 @@
 package com.moviedb.dao;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.moviedb.models.Actor;
 
@@ -24,16 +22,7 @@ import com.moviedb.models.Actor;
  * It encapsulates SQL queries, providing a clean separation from direct database interactions,
  * which enhances the maintainability and scalability of the codebase.
  */
-public class ActorDao {
-
-    // Connection used to execute SQL queries and interact with the database.
-    private Connection connection;
-
-    // The URL pointing to the SQL database location.
-    private static final String DB_URL = "jdbc:sqlite:";
-
-    // Logger for logging errors
-    private static final Logger logger = Logger.getLogger(ActorDao.class.getName());
+public class ActorDao extends BaseDao {
 
     // Define SQL queries
     private static final String SQL_INSERT_ACTOR = "INSERT INTO actors(name) VALUES(?)";
@@ -48,12 +37,7 @@ public class ActorDao {
      * Default constructor that initializes the connection to the default SQLite database.
      */
     public ActorDao() {
-        try {
-            this.connection = DriverManager.getConnection(DB_URL);
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error creating ActorDao instance. SQLState: " + e.getSQLState() +
-                    ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
-        }
+        super();
     }
 
 
@@ -63,7 +47,7 @@ public class ActorDao {
      * @param connection The specific connection to database.
      */
     public ActorDao(Connection connection) {
-        this.connection = connection;
+        super(connection);
     }
 
 
@@ -75,7 +59,7 @@ public class ActorDao {
      * @throws SQLException If there's an error during the database operation.
      */
     public int create(Actor actor) throws SQLException {
-        int generatedActorId = -1;  // Default error state
+        int generatedActorId;  // Default error state
 
         try {
             connection.setAutoCommit(false);  // Start transaction
@@ -111,41 +95,6 @@ public class ActorDao {
         }
 
         return generatedActorId;
-    }
-
-
-    /**
-     * Retrieves the generated ID for the last inserted row.
-     * <p>
-     * This method handles ID retrieval for different databases. It uses "SELECT last_insert_rowid()"
-     * for SQLite due to its specific behavior with auto-increment keys. For other databases like H2,
-     * it utilizes the standard JDBC getGeneratedKeys method. This approach is necessary to resolve
-     * compatibility issues between production (SQLite) and testing environments (H2), ensuring
-     * consistent behavior across different database systems.
-     *
-     * @param pstmt The PreparedStatement from which the generated key is retrieved.
-     * @return The generated ID of the last inserted row, or -1 if an error occurs.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    private int fetchGeneratedId(PreparedStatement pstmt) throws SQLException {
-        int generatedId = -1;
-        String databaseProductName = connection.getMetaData().getDatabaseProductName();
-
-        if (databaseProductName.equals("SQLite")) {
-            try (Statement stmt = connection.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT last_insert_rowid()")) {
-                if (rs.next()) {
-                    generatedId = rs.getInt(1); // Retrieve the generated key (ID)
-                }
-            }
-        } else {  // For H2 db
-            try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    generatedId = rs.getInt(1);
-                }
-            }
-        }
-        return generatedId;
     }
 
 
