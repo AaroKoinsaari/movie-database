@@ -193,6 +193,9 @@ public class MainViewController implements Initializable {
     }
 
 
+    /**
+     * Configures action listeners for menu items in the UI.
+     */
     private void setupMenuActions() {
         menuSave.setOnAction(this::handleSave);
         menuDelete.setOnAction(this::handleDelete);
@@ -282,6 +285,10 @@ public class MainViewController implements Initializable {
     }
 
 
+    /**
+     * Sets up listeners for integer input fields in the UI which validate
+     * the input and change the field's background color based on validity.
+     */
     private void setupIntFieldListeners() {
         // Listener for release year field
         releaseYearTextField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -303,6 +310,11 @@ public class MainViewController implements Initializable {
     }
 
 
+    /**
+     * Sets up mouse click listeners for lists in the UI.
+     * The listener for movies updates the detailed view of the selected movie,
+     * while the listeners for actors and genres update the current focus.
+     */
     private void setupListListeners() {
         // Listener for movies list to fill the information of selected movie when clicked
         moviesListView.setOnMouseClicked(event -> {
