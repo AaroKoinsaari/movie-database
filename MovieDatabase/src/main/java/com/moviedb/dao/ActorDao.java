@@ -9,6 +9,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.moviedb.models.Actor;
 
@@ -18,11 +20,20 @@ import com.moviedb.models.Actor;
  */
 public class ActorDao {
 
-    /** Connection used to execute SQL queries and interact with the database. */
+    // Connection used to execute SQL queries and interact with the database.
     private Connection connection;
 
-    /** The URL pointing to the SQL database location. */
+    // The URL pointing to the SQL database location.
     private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
+
+    // Logger for logging errors
+    private static final Logger logger = Logger.getLogger(ActorDao.class.getName());
+
+    // Define SQL queries
+    private static final String SQL_INSERT_ACTOR = "INSERT INTO actors(name) VALUES(?)";
+    private static final String SQL_READ_ACTOR = "SELECT name, id FROM actors WHERE id = ?";
+
+    private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";
 
 
     /**
@@ -32,7 +43,8 @@ public class ActorDao {
         try {
             this.connection = DriverManager.getConnection(DB_URL);
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Error creating ActorDao instance. SQLState: " + e.getSQLState() +
+                    ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
         }
     }
 
@@ -52,29 +64,51 @@ public class ActorDao {
      *
      * @param actor The actor to be added.
      * @return The generated ID of the added actor, or -1 if an error occurs.
+     * @throws SQLException If there's an error during the database operation.
      */
-    public int create(Actor actor) {
-        String sqlInsert = "INSERT INTO actors(name) VALUES(?)";
-        String sqlLastId = "SELECT last_insert_rowid()";
+    public int create(Actor actor) throws SQLException {
+        int generatedActorId = -1;  // Default error state
 
-        try (PreparedStatement pstmtInsert = connection.prepareStatement(sqlInsert);
-             Statement stmtLastId = connection.createStatement()) {
-            pstmtInsert.setString(1, actor.getName());
-            pstmtInsert.executeUpdate();
+        try {
+            connection.setAutoCommit(false);  // Start transaction
 
-            try (ResultSet rs = stmtLastId.executeQuery(sqlLastId)) {
-                if (rs.next()) {
-                    return rs.getInt(1);  // Return the latest added row
+            try (PreparedStatement pstmt = connection.prepareStatement(SQL_INSERT_ACTOR,
+                    Statement.RETURN_GENERATED_KEYS)) {  // ID for the added actor in the generated key
+                pstmt.setString(1, actor.getName());
+                pstmt.executeUpdate();
+
+                try (Statement stmt = connection.createStatement();
+                     ResultSet rs = stmt.executeQuery(SQL_LAST_INSERT_ID)) {
+                    if (rs.next()) {
+                        generatedActorId = rs.getInt(1);  // Retrieve the generated key (ID)
+                    }
                 }
+
+                // Ensure to have a valid actor ID before proceeding
+                if (generatedActorId <= 0) {
+                    throw new SQLException("Failed to retrieve generated actor ID");
+                }
+
+                connection.commit();
             }
         } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
+            try {
+                connection.rollback();  // Attempt to rollback on failure
+                logger.log(Level.INFO, "Transaction rolled back due to SQLException", e);
+            } catch (SQLException rollbackEx) {
+                logger.log(Level.SEVERE, "Error during transaction rollback", rollbackEx);
+            }
+            throw e;  // Re-throw exception to be handled by the caller
+        } finally {
+            try {
+                connection.setAutoCommit(true);  // Restore default behavior
+            } catch (SQLException autoCommitEx) {
+                logger.log(Level.SEVERE, "Error resetting auto-commit behavior", autoCommitEx);
+            }
         }
-        return -1;  // In an error case, return -1
-    }
 
+        return generatedActorId;
+    }
 
 
     /**
@@ -82,26 +116,32 @@ public class ActorDao {
      *
      * @param id The unique identifier of the actor to be fetched.
      * @return The actor of found, an empty optional otherwise.
+     * @throws SQLException If there's an error during the database operation.
      */
-    public Optional<Actor> read(int id) {
-        String sql = "SELECT name, id FROM actors where id = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+    public Optional<Actor> read(int id) throws SQLException {
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_READ_ACTOR)) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                String name = rs.getString("name");
-                return Optional.of(new Actor(id, name));
+                return Optional.of(convertResultSetToActor(rs));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
-            System.out.println("Error reading the actor from database");
         }
         return Optional.empty();
+    }
+
+
+    /**
+     * Creates an Actor object from a ResultSet.
+     *
+     * @param rs The ResultSet from which actor data is extracted.
+     * @return An Actor object populated with data from the ResultSet.
+     * @throws SQLException If there's an error during data extraction.
+     */
+    private Actor convertResultSetToActor(ResultSet rs) throws SQLException {
+        int id = rs.getInt("id");
+        String name = rs.getString("name");
+        return new Actor(id, name);
     }
 
 
