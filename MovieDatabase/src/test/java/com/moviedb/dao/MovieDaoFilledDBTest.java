@@ -5,11 +5,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.moviedb.database.FilledDBSetup;
 import com.moviedb.models.Movie;
@@ -35,39 +38,56 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
     }
 
 
-    /** Tests the creation of a new movie in the database. */
     @Test
+    @DisplayName("Create a new movie and verify it in the database")
     void createTest() {
-        // Create new test movie
+        // Create new test movie with additional parameters
         String title = "Test Movie";
         int releaseYear = 2023;
         String director = "Test Director";
+        String writer = "Test Writer";
+        String producer = "Test Producer";
+        String cinematographer = "Test Cinematographer";
+        int budget = 100;
+        String country = "Finland";
         List<Integer> actorIds = new ArrayList<>(Arrays.asList(1, 2, 5));  // RDN, MS, MR
-        List<Integer> genreIds = new ArrayList<>(Arrays.asList(1, 2, 3, 5));  // Action, adventure, comedy, drama
-        Movie testMovie = new Movie(title, releaseYear, director, actorIds, genreIds);
+        List<Integer> genreIds = new ArrayList<>(Arrays.asList(1, 2, 3, 5));  // Action, Adventure, Comedy, Drama
+        Movie testMovie = new Movie(title, releaseYear, director, writer, producer, cinematographer, budget, country, actorIds, genreIds);
 
-        int generatedId = dao.create(testMovie);
+        int generatedId = assertDoesNotThrow(() -> dao.create(testMovie),
+                "Creation of the movie should not throw SQLException");
 
-        assertTrue(generatedId > 0);  // Confirm that the movie has been added to the database
+        assertTrue(generatedId > 0, "The generated ID should be greater than 0 to confirm database insertion");
 
         // Fetch the created movie and test that the values are correct
-        Movie fetchedMovie = dao.read(generatedId);
+        Movie fetchedMovie = assertDoesNotThrow(() -> dao.read(generatedId),
+                "Reading the movie should not throw SQLException");
+
+        assertNotNull(fetchedMovie, "Fetched movie should not be null");
         assertEquals(title, fetchedMovie.getTitle());
         assertEquals(releaseYear, fetchedMovie.getReleaseYear());
         assertEquals(director, fetchedMovie.getDirector());
+        // Additional assertions for new parameters
+        assertEquals(writer, fetchedMovie.getWriter());
+        assertEquals(producer, fetchedMovie.getProducer());
+        assertEquals(cinematographer, fetchedMovie.getCinematographer());
+        assertEquals(budget, fetchedMovie.getBudget());
+        assertEquals(country, fetchedMovie.getCountry());
         assertEquals(actorIds, fetchedMovie.getActorIds());
         assertEquals(genreIds, fetchedMovie.getGenreIds());
         assertEquals(generatedId, fetchedMovie.getId());
     }
 
 
-    /** Tests reading for a pre-existing Movie from the database. */
     @Test
+    @DisplayName("Read a pre-existing movie from the database and verify its details")
     void readTest() {
         int movieId = 2;  // The Wolf of Wall Street
-        Movie retrievedMovie = dao.read(movieId);
 
-        assertNotNull(retrievedMovie); // Confirm that the movie has been added to the database
+        Movie retrievedMovie = assertDoesNotThrow(() -> dao.read(movieId),
+                "Reading the movie should not throw SQLException");
+
+        assertNotNull(retrievedMovie, "Retrieved movie should not be null");
         assertEquals(movieId, retrievedMovie.getId());
         assertEquals("The Wolf of Wall Street", retrievedMovie.getTitle());
         assertEquals(2013, retrievedMovie.getReleaseYear());
@@ -81,11 +101,12 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
     }
 
 
-    /** Tests updating of a pre-existing Movie from the database. */
     @Test
+    @DisplayName("Update a pre-existing movie in the database and verify the changes")
     void updateTest() {
         // Fetch the original movie
-        Movie originalMovie = dao.read(3);  // Django Unchained
+        Movie originalMovie = assertDoesNotThrow(() -> dao.read(3),
+                "Reading the original movie should not throw SQLException");
 
         int originalMovieId = originalMovie.getId();
 
@@ -93,17 +114,26 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
         String newTitle = "Django The Movie";
         int newReleaseYear = 2023;
         String newDirector = "Aki Kaurismäki";
+        String newWriter = "Updated Writer";
+        String newProducer = "Updated Producer";
+        String newCinematographer = "Updated Cinematographer";
+        int newBudget = 150000;
+        String newCountry = "Finland";
         List<Integer> newActorIds = Arrays.asList(1, 5); // Robert De Niro, Margot Robbie
         List<Integer> newGenreIds = Arrays.asList(6, 7); // Fantasy, Historical
 
         // Updated movie object with new attributes
-        Movie updatedMovie = new Movie(newTitle, newReleaseYear, newDirector, newActorIds, newGenreIds);
+        Movie updatedMovie = new Movie(newTitle, newReleaseYear, newDirector, newWriter, newProducer,
+                newCinematographer, newBudget, newCountry, newActorIds, newGenreIds);
         updatedMovie.setId(originalMovieId); // Link updated object to existing record
 
-        assertTrue(dao.update(updatedMovie)); // Update the movie to database and confirm it
+        assertDoesNotThrow(() -> assertTrue(dao.update(updatedMovie)),
+                "Updating the movie should not throw SQLException");
 
         // Check that the update was correctly implemented
-        Movie fetchedUpdatedMovie = dao.read(originalMovieId);
+        Movie fetchedUpdatedMovie = assertDoesNotThrow(() -> dao.read(originalMovieId),
+                "Reading the updated movie should not throw SQLException");
+
         assertEquals(newTitle, fetchedUpdatedMovie.getTitle());
         assertEquals(newReleaseYear, fetchedUpdatedMovie.getReleaseYear());
         assertEquals(newDirector, fetchedUpdatedMovie.getDirector());
@@ -112,19 +142,24 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
     }
 
 
-    /** Tests deletion of pre-existing Movies from the database. */
     @Test
+    @DisplayName("Delete movies from the database and verify they are removed")
     void deleteTest() {
         int movieIdToDelete1 = 1;  // Inception
         int movieIdToDelete2 = 4;  // The Deer Hunter
-        dao.delete(movieIdToDelete1);
-        dao.delete(movieIdToDelete2);
+
+        assertDoesNotThrow(() -> dao.delete(movieIdToDelete1),
+                "Deleting movie 1 should not throw SQLException");
+        assertDoesNotThrow(() -> dao.delete(movieIdToDelete2),
+                "Deleting movie 2 should not throw SQLException");
 
         // Try to fetch deleted movies (should return null)
-        Movie deletedMovie1 = dao.read(movieIdToDelete1);
-        Movie deletedMovie2 = dao.read(movieIdToDelete2);
+        Movie deletedMovie1 = assertDoesNotThrow(() -> dao.read(movieIdToDelete1),
+                "Reading deleted movie 1 should not throw SQLException");
+        Movie deletedMovie2 = assertDoesNotThrow(() -> dao.read(movieIdToDelete2),
+                "Reading deleted movie 2 should not throw SQLException");
 
-        assertNull(deletedMovie1);
-        assertNull(deletedMovie2);
+        assertNull(deletedMovie1, "Deleted movie 1 should not be found in the database");
+        assertNull(deletedMovie2, "Deleted movie 2 should not be found in the database");
     }
 }
