@@ -32,6 +32,8 @@ public class ActorDao {
     // Define SQL queries
     private static final String SQL_INSERT_ACTOR = "INSERT INTO actors(name) VALUES(?)";
     private static final String SQL_READ_ACTOR = "SELECT name, id FROM actors WHERE id = ?";
+    private static final String SQL_UPDATE_ACTOR = "UPDATE actors SET name = ? WHERE id = ?";
+
 
     private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";
 
@@ -146,74 +148,18 @@ public class ActorDao {
 
 
     /**
-     * Updates the name of an actor in the SQL database.
+     * Updates the name of an actor in the database.
      *
      * @param updatedActor The movie object containing updated information.
      * @return boolean true if the update was successful, otherwise false.
      * @throws SQLException If there's an error during the database operation.
      */
-    public boolean update(Actor updatedActor) {
-        String sql = "UPDATE actors SET name = ? WHERE id = ?";
-        boolean isUpdated = false;
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+    public boolean update(Actor updatedActor) throws SQLException {
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_UPDATE_ACTOR)) {
             pstmt.setString(1, updatedActor.getName());
             pstmt.setInt(2, updatedActor.getId());
-            int affectedRows = pstmt.executeUpdate();
-            isUpdated = affectedRows > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
+            return pstmt.executeUpdate() > 0;
         }
-        return isUpdated;
-    }
-
-
-    /**
-     * Deletes an actor from the SQL database.
-     *
-     * @param actorId The ID of the actor to be deleted.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    public boolean delete(int actorId) throws SQLException {
-        if (!isActorLinkedToMovie(actorId)) {
-            String sql = "DELETE FROM actors WHERE id = ?";
-
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                pstmt.setInt(1, actorId);
-                int affectedRows = pstmt.executeUpdate();
-                return affectedRows > 0;  // Return true if deletion was successful
-            } catch (SQLException e) {
-                e.printStackTrace();
-                throw e;  // Re-throw exception
-            }
-        } else {
-            // Throw an exception if the actor is linked to one or more movies
-            throw new SQLException("Actor is linked to one or more movies.");
-        }
-    }
-
-
-    /**
-     * Checks if an actor is associated with any movies.
-     *
-     * @param actorId the ID of the actor to check.
-     * @return true if the actor is linked to one or more movies, false otherwise.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    private boolean isActorLinkedToMovie(int actorId) {
-        String sql = "SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setInt(1, actorId);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1) > 0;  // true if the actor is associated with any movie
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
     }
 
 
