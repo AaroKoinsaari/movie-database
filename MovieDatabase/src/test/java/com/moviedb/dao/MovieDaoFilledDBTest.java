@@ -28,6 +28,7 @@ import com.moviedb.models.Movie;
 public class MovieDaoFilledDBTest extends FilledDBSetup {
     private MovieDao dao;  // Instance of MovieDao used across all test cases
 
+
     /**
      * Additional setup for the filled database for each test.
      * Initializes the connection to the test database for each test.
@@ -67,7 +68,6 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
         assertEquals(title, fetchedMovie.getTitle());
         assertEquals(releaseYear, fetchedMovie.getReleaseYear());
         assertEquals(director, fetchedMovie.getDirector());
-        // Additional assertions for new parameters
         assertEquals(writer, fetchedMovie.getWriter());
         assertEquals(producer, fetchedMovie.getProducer());
         assertEquals(cinematographer, fetchedMovie.getCinematographer());

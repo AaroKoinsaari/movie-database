@@ -4,10 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.moviedb.database.EmptyDBSetup;
 import com.moviedb.models.Actor;
@@ -19,7 +22,9 @@ import com.moviedb.models.Actor;
  * Each test method is designed to test a single functionality of the ActorDao class.
  */
 public class ActorDaoEmptyDBTest extends EmptyDBSetup {
+
     private ActorDao dao;  // Instance of ActorDao used across all test cases
+
 
     /**
      * Additional setup for the empty database for each test.
@@ -31,21 +36,25 @@ public class ActorDaoEmptyDBTest extends EmptyDBSetup {
     }
 
 
-    /** Tests the creation of a new Actor in the database. */
     @Test
-    void createTest() {
+    @DisplayName("Create new actors in the database and verify them")
+    void testCreate() {
         String actorName1 = "Test Actor 1";
         String actorName2 = "Test Actor 2";
 
         // Create actors in the database and return the generated ID
-        int actorId1 = dao.create(new Actor(actorName1));
-        int actorId2 = dao.create(new Actor(actorName2));
+        int actorId1 = assertDoesNotThrow(() -> dao.create(new Actor(actorName1)),
+                "Creating actor 1 should not throw SQLException");
+        int actorId2 = assertDoesNotThrow(() -> dao.create(new Actor(actorName2)),
+                "Creating actor 2 should not throw SQLException");
 
         // Read the created actors from the database
-        Optional<Actor> foundActor1 = dao.read(actorId1);
-        Optional<Actor> foundActor2 = dao.read(actorId2);
+        Optional<Actor> foundActor1 = assertDoesNotThrow(() -> dao.read(actorId1),
+                "Reading actor 1 should not throw SQLException");
+        Optional<Actor> foundActor2 = assertDoesNotThrow(() -> dao.read(actorId2),
+                "Reading actor 2 should not throw SQLException");
 
-        // Confirm that the actors are found and compare them to them to the created objects
+        // Confirm that the actors are found and compare them to the created objects
         assertTrue(foundActor1.isPresent(), "Actor 1 should be present");
         assertTrue(foundActor2.isPresent(), "Actor 2 should be present");
         assertEquals(actorName1, foundActor1.get().getName(), "Actor 1's name should match");
@@ -57,20 +66,22 @@ public class ActorDaoEmptyDBTest extends EmptyDBSetup {
     }
 
 
-    /** Tests the reading of a non-existing Actor from the database. */
     @Test
-    void readTest() {
+    @DisplayName("Read a non-existent actor from the database")
+    void testRead() {
         int nonExistentActorId = 99;
-        Optional<Actor> fetchedActor = dao.read(nonExistentActorId);
+
+        Optional<Actor> fetchedActor = assertDoesNotThrow(() -> dao.read(nonExistentActorId),
+                "Reading a non-existent actor should not throw SQLException");
 
         // Assert that the Optional is empty, indicating no actor found
-        assertTrue(fetchedActor.isEmpty(), "Should return null for trying to read a non-existent actor");
+        assertTrue(fetchedActor.isEmpty(), "Should return empty for a non-existent actor");
     }
 
 
-    /** Tests updating a non-existent Actor in the database. */
     @Test
-    void updateTest() {
+    @DisplayName("Update a non-existent actor in the database")
+    void testUpdate() {
         // Attempt to update a non-existent actor
         String updatedName = "Updated Actor";
         int nonExistentActorId = 99;
@@ -78,37 +89,40 @@ public class ActorDaoEmptyDBTest extends EmptyDBSetup {
         actor.setId(nonExistentActorId);
 
         // Perform the update and assert that it was unsuccessful
-        boolean updateSuccessful = dao.update(actor);
-        assertFalse(updateSuccessful, "Should return null for trying to update a non-existent actor");
+        boolean updateSuccessful = assertDoesNotThrow(() -> dao.update(actor),
+                "Updating a non-existent actor should not throw SQLException");
+        assertFalse(updateSuccessful, "Should return false for trying to update a non-existent actor");
 
         // Attempt to retrieve the non-existent actor from the database and assert that it's empty
-        Optional<Actor> updatedActorOpt = dao.read(nonExistentActorId);
+        Optional<Actor> updatedActorOpt = assertDoesNotThrow(() -> dao.read(nonExistentActorId),
+                "Reading a non-existent actor after update attempt should not throw SQLException");
         assertTrue(updatedActorOpt.isEmpty(), "Non-existent actor should not be present after attempted update");
     }
 
 
-    /** Tests reading all non-existent Actors in the database. */
     @Test
-    void readAllTest() {
-        // Read all actors from empty database and assert that the list is empty
-        List<Actor> actors = dao.readAll();
-        assertTrue(actors.isEmpty());
+    @DisplayName("Read all actors from empty database")
+    void testReadAll() {
+        List<Actor> actors = assertDoesNotThrow(() -> dao.readAll(),
+                "Reading all actors from empty database should not throw SQLException");
+        assertTrue(actors.isEmpty(), "Actor list should be empty in an empty database");
     }
 
 
-    /** Tests getting a non-existent Actor by ID in the database. */
     @Test
-    void getActorByIdTest() {
-        // Attempt to retrieve an actor by ID from an empty database and assert the result is empty Optional
-        Optional<Actor> result = dao.getActorById(1);
-        assertFalse(result.isPresent(), "No actors should be found by id in an empty database");
+    @DisplayName("Get a non-existent actor by ID from the database")
+    void testGetActorById() {
+        Optional<Actor> result = assertDoesNotThrow(() -> dao.getActorById(1),
+                "Getting a non-existent actor by ID should not throw SQLException");
+        assertFalse(result.isPresent(), "No actors should be found by ID in an empty database");
     }
 
 
-    /** Tests getting a non-existent Actor by name in the database. */
     @Test
-    void getActorByNameTest() {
-        Optional<Actor> result = dao.getActorByName("Test Actor");
+    @DisplayName("Get a non-existent actor by name from the database")
+    void testGetActorByName() {
+        Optional<Actor> result = assertDoesNotThrow(() -> dao.getActorByName("Test Actor"),
+                "Getting a non-existent actor by name should not throw SQLException");
         assertFalse(result.isPresent(), "No actors should be found by name in an empty database");
     }
 }

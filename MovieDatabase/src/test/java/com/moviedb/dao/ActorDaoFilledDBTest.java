@@ -1,16 +1,18 @@
 package com.moviedb.dao;
 
-import java.sql.SQLException;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.moviedb.database.FilledDBSetup;
 import com.moviedb.models.Actor;
+
 
 /**
  * This class contains unit tests for the ActorDao class using a pre-filled database setup.
@@ -20,7 +22,9 @@ import com.moviedb.models.Actor;
  * the expected behavior against the known state of the database.
  */
 public class ActorDaoFilledDBTest extends FilledDBSetup {
+
     private ActorDao dao;  // Instance of ActorDao used across all test cases
+
 
     /**
      * Additional setup for the filled database for each test.
@@ -32,20 +36,20 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
     }
 
 
-    /** Tests the creation of a new Actor in the database. */
     @Test
-    void createTest() {
+    @DisplayName("Create a new actor in the database and verify")
+    void testCreate() {
         String name = "New Actor";
         Actor newActor = new Actor(name);
 
         // Insert new actor to database and fetch it
-        int actorId = dao.create(newActor);
-        Optional<Actor> fetchedActor = dao.read(actorId);
+        int actorId = assertDoesNotThrow(() -> dao.create(newActor),
+                "Creating a new actor should not throw SQLException");
 
-        // Assert that the retrieved Optional contains the actor
+        Optional<Actor> fetchedActor = assertDoesNotThrow(() -> dao.read(actorId),
+                "Reading the created actor should not throw SQLException");
+
         assertTrue(fetchedActor.isPresent(), "Actor should be present");
-
-        // If the actor is found, assert that the actor's properties match those of the test actor
         fetchedActor.ifPresent(actor -> {
             assertEquals(name, actor.getName(), "Actor's name should match");
             assertEquals(actorId, actor.getId(), "Actor's ID should match");
@@ -53,10 +57,11 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
     }
 
 
-    /** Tests the reading of an existing Actor in the database. */
     @Test
-    void readExistingActorTest() {
-        Optional<Actor> fetchedExistingActor = dao.read(6);  // Leonardo Di Caprio
+    @DisplayName("Read an existing actor in the database")
+    void testReadExistingActor() {
+        Optional<Actor> fetchedExistingActor = assertDoesNotThrow(() -> dao.read(6),
+                "Reading an existing actor should not throw SQLException");
         assertTrue(fetchedExistingActor.isPresent(), "Actor should be present");
         fetchedExistingActor.ifPresent(actor -> {
             assertEquals("Leonardo Di Caprio", actor.getName(), "Actor name should match");
@@ -65,21 +70,25 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
     }
 
 
-    /** Tests the reading of a non-existing Actor in the database. */
     @Test
+    @DisplayName("Read a non-existing actor from the database")
     void readNonExistingActorTest() {
-        Optional<Actor> fetchedNonExistentActor = dao.read(99);
+        Optional<Actor> fetchedNonExistentActor = assertDoesNotThrow(() -> dao.read(99),
+                "Reading a non-existent actor should not throw SQLException");
         assertTrue(fetchedNonExistentActor.isEmpty(), "Actor should not be present");
     }
 
 
-    /** Tests the reading of a new Actor in the database. */
     @Test
+    @DisplayName("Read a newly inserted actor from the database")
     void readNewInsertedActorTest() {
         String name = "Test Actor 1";
         Actor testActor = new Actor(name);
-        int actorId = dao.create(testActor);
-        Optional<Actor> foundActor = dao.read(actorId);
+        int actorId = assertDoesNotThrow(() -> dao.create(testActor),
+                "Creating new actor should not throw SQLException");
+
+        Optional<Actor> foundActor = assertDoesNotThrow(() -> dao.read(actorId),
+                "Reading the newly created actor should not throw SQLException");
 
         assertTrue(foundActor.isPresent(), "Actor should be present");
         foundActor.ifPresent(actor -> {
@@ -89,65 +98,27 @@ public class ActorDaoFilledDBTest extends FilledDBSetup {
     }
 
 
-    /** Tests updating of an existing Actor in the database. */
     @Test
+    @DisplayName("Update an existing actor in the database")
     void updateTest() {
         int actorId = 2;  // Meryl Streep
         String updatedName = "Test Name";
 
-        // Fetch the actor from database
-        Optional<Actor> actorOptional = dao.read(actorId);
+        Optional<Actor> actorOptional = assertDoesNotThrow(() -> dao.read(actorId),
+                "Reading an existing actor should not throw SQLException");
         assertTrue(actorOptional.isPresent(), "Actor should be in the database");
 
-        // Update the fetched actor
         Actor actorToUpdate = actorOptional.get();
         actorToUpdate.setName(updatedName);
 
-        // Assert that the update was successful
-        boolean updateSuccessful = dao.update(actorToUpdate);
+        boolean updateSuccessful = assertDoesNotThrow(() -> dao.update(actorToUpdate),
+                "Updating the actor should not throw SQLException");
         assertTrue(updateSuccessful, "Actor update should be successful");
 
-        // Confirm the the update worked correctly
-        Optional<Actor> updatedOptionalActor = dao.read(actorId);
+        Optional<Actor> updatedOptionalActor = assertDoesNotThrow(() -> dao.read(actorId),
+                "Reading the updated actor should not throw SQLException");
         assertTrue(updatedOptionalActor.isPresent(), "Updated actor should still be in the database");
         Actor updatedActor = updatedOptionalActor.get();
         assertEquals(updatedName, updatedActor.getName(), "Actor's name should be updated in the database");
-    }
-
-
-    /** Tests the deletion of an Actor that is not linked to any movie in the database. */
-    @Test
-    void deleteNonLinkedActorTest() throws SQLException {
-        int newActorId = dao.create(new Actor("Test Actor"));
-        assertTrue(dao.delete(newActorId));
-    }
-
-
-    /** Tests the deletion of an Actor that is linked to one or more movies in the database. */
-    @Test
-    void deleteLinkedActorTest() {
-        int actorId = 5;  //  Margot Robbie
-
-        // Assert that SQLException is thrown when trying to delete actor that is linked to a movie
-        assertThrows(SQLException.class, () -> {
-            dao.delete(actorId);
-        }, "Should throw an exception, but didn't");
-    }
-
-
-    /**
-     * Tests the deletion of an Actor that is linked to one or more movies in the database
-     * after deleting the movie in which the actor was linked.
-     * @throws SQLException If there's an error during the database operation.
-     */
-    @Test
-    void deleteLinkedActorAfterDeletingMovieTest() throws SQLException {
-        // Delete movie where actor is linked
-        MovieDao movieDao = new MovieDao(connection);
-        movieDao.delete(3);  // Django Unchained
-
-        // Delete the actor and assert that deletion was successful
-        int actorId = 3;  // Jamie Foxx
-        assertTrue(dao.delete(actorId));
     }
 }

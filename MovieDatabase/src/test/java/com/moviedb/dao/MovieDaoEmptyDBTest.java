@@ -27,6 +27,7 @@ import com.moviedb.models.Movie;
 class MovieDaoEmptyDBTest extends EmptyDBSetup {
     private MovieDao dao;  // Instance of MovieDao used across all test cases
 
+
     /**
      * Additional setup for the empty database for each test.
      * Initializes the connection to the test database for each test.
@@ -106,6 +107,12 @@ class MovieDaoEmptyDBTest extends EmptyDBSetup {
     }
 
 
+    /**
+     * Creates and returns a new Movie object with updated attributes.
+     *
+     * @param updatedTitle The new title for the movie.
+     * @return A Movie object with updated attributes.
+     */
     private static Movie getUpdatedMovie(String updatedTitle) {
         int updatedReleaseYear = 2023;
         String updatedDirector = "Updated Director";
