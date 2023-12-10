@@ -186,7 +186,14 @@ public class MainViewController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // Set action events for the menu items
+        setupMenuActions();
+        setupSearchTextFieldListener();
+        setupIntFieldListeners();
+        setupListListeners();
+    }
+
+
+    private void setupMenuActions() {
         menuSave.setOnAction(this::handleSave);
         menuDelete.setOnAction(this::handleDelete);
         menuDelete.setOnAction(this::handleDelete);
@@ -221,15 +228,15 @@ public class MainViewController implements Initializable {
         });
 
         menuAbout.setOnAction(e -> Dialogs.showMessageDialog(
-            """
-                    Movie Database
-                    Version: 1.0
-
-                    Author:
-                    Aaro Koinsaari
-
-                    © 2023
-                    Aaro Koinsaari"""
+                """
+                        Movie Database
+                        Version: 1.0
+    
+                        Author:
+                        Aaro Koinsaari
+    
+                        © 2023
+                        Aaro Koinsaari"""
         ));
 
         // Listen and update list focus
@@ -243,7 +250,60 @@ public class MainViewController implements Initializable {
         });
 
         menuQuit.setOnAction(e -> Platform.exit());
+    }
 
+
+    /**
+     * Sets up a listener for the search text field. When the user types in the search field,
+     * the movies list view is updated to show only the movies that match the search criteria.
+     * If the search field is cleared, the original list of movies is reloaded from the database.
+     */
+    private void setupSearchTextFieldListener() {
+        searchTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.length() >= 2) {
+                List<Movie> filteredMovies = searchMoviesStartingWith(newValue);
+
+                // Sort the filtered movies alphabetically by title
+                filteredMovies.sort(Comparator.comparing(Movie::getTitle));
+                updateMovieListView(filteredMovies);
+            } else if (newValue.isEmpty()) {
+
+                // Fetch the original list of movies from db once the search field is empty
+                try {
+                    List<Movie> allMovies = movieDao.readAll();
+                    updateMovieListView(allMovies);
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Failed to fetch all movies from database. SQLState: " + e.getSQLState() +
+                            ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
+                    Dialogs.showMessageDialog("Failed to load movies from the database!");  // Inform the user
+                }
+            }
+        });
+    }
+
+
+    private void setupIntFieldListeners() {
+        // Listener for release year field
+        releaseYearTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.isEmpty() && InputValidator.isValidReleaseYear(newValue)) {
+                releaseYearTextField.setStyle("-fx-control-inner-background: #ffdddd;");
+            } else {
+                releaseYearTextField.setStyle("-fx-control-inner-background: white;");
+            }
+        });
+
+        // Listener for budget field
+        budgetTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.isEmpty() && !InputValidator.isInteger(newValue)) {
+                budgetTextField.setStyle("-fx-control-inner-background: #ffdddd;"); // Virheellinen syöte, maalaa punaiseksi
+            } else {
+                budgetTextField.setStyle("-fx-control-inner-background: white;"); // Oikea syöte, käytä valkoista taustaa
+            }
+        });
+    }
+
+
+    private void setupListListeners() {
         // Listener for movies list to fill the information of selected movie when clicked
         moviesListView.setOnMouseClicked(event -> {
             logger.log(Level.INFO, "Movies list focused");
@@ -273,15 +333,6 @@ public class MainViewController implements Initializable {
         genresListView.setOnMouseClicked(event -> {
             logger.log(Level.INFO, "Genres list focused");
             currentListFocus = ListFocus.GENRE;
-        });
-
-        // Listener for release year field
-        releaseYearTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (!newValue.isEmpty() && InputValidator.isValidReleaseYear(newValue)) {
-                releaseYearTextField.setStyle("-fx-control-inner-background: #ffdddd;");
-            } else {
-                releaseYearTextField.setStyle("-fx-control-inner-background: white;");
-            }
         });
     }
 
@@ -398,35 +449,6 @@ public class MainViewController implements Initializable {
                     ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
             Dialogs.showMessageDialog("Failed to open the database connection!");  // Inform the user
         }
-    }
-
-
-    /**
-     * Sets up a listener for the search text field. When the user types in the search field,
-     * the movies list view is updated to show only the movies that match the search criteria.
-     * If the search field is cleared, the original list of movies is reloaded from the database.
-     */
-    private void setupSearchTextFieldListener() {
-        searchTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.length() >= 2) {
-                List<Movie> filteredMovies = searchMoviesStartingWith(newValue);
-
-                // Sort the filtered movies alphabetically by title
-                filteredMovies.sort(Comparator.comparing(Movie::getTitle));
-                updateMovieListView(filteredMovies);
-            } else if (newValue.isEmpty()) {
-
-                // Fetch the original list of movies from db once the search field is empty
-                try {
-                    List<Movie> allMovies = movieDao.readAll();
-                    updateMovieListView(allMovies);
-                } catch (SQLException e) {
-                    logger.log(Level.SEVERE, "Failed to fetch all movies from database. SQLState: " + e.getSQLState() +
-                            ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
-                    Dialogs.showMessageDialog("Failed to load movies from the database!");  // Inform the user
-                }
-            }
-        });
     }
 
 
