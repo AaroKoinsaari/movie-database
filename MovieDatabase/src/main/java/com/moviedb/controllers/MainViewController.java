@@ -370,7 +370,7 @@ public class MainViewController implements Initializable {
         this.genreDao = new GenreDao(connection);
 
         // This method is for populating the database with pre-defined data for demonstration purposes
-        fillDatabase();
+        //fillDatabase();
 
         // Initiate listeners
         setupSearchTextFieldListener();
