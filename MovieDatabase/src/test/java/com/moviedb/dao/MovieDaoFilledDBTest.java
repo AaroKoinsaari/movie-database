@@ -40,7 +40,7 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
 
     @Test
     @DisplayName("Create a new movie and verify it in the database")
-    void createTest() {
+    void testCreate() {
         // Create new test movie with additional parameters
         String title = "Test Movie";
         int releaseYear = 2023;
@@ -81,7 +81,7 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
 
     @Test
     @DisplayName("Read a pre-existing movie from the database and verify its details")
-    void readTest() {
+    void testRead() {
         int movieId = 2;  // The Wolf of Wall Street
 
         Movie retrievedMovie = assertDoesNotThrow(() -> dao.read(movieId),
@@ -103,7 +103,7 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
 
     @Test
     @DisplayName("Update a pre-existing movie in the database and verify the changes")
-    void updateTest() {
+    void testUpdate() {
         // Fetch the original movie
         Movie originalMovie = assertDoesNotThrow(() -> dao.read(3),
                 "Reading the original movie should not throw SQLException");
@@ -144,7 +144,7 @@ public class MovieDaoFilledDBTest extends FilledDBSetup {
 
     @Test
     @DisplayName("Delete movies from the database and verify they are removed")
-    void deleteTest() {
+    void testDelete() {
         int movieIdToDelete1 = 1;  // Inception
         int movieIdToDelete2 = 4;  // The Deer Hunter
 
