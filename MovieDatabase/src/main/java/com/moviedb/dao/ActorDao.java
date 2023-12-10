@@ -1,14 +1,14 @@
 package com.moviedb.dao;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Optional;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Connection;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,6 +17,12 @@ import com.moviedb.models.Actor;
 
 /**
  * Data Access Object for the Actor class.
+ * This class serves as an intermediary between the application logic and the database layer,
+ * handling all database operations related to actors.
+ * <p>
+ * The ActorDao class ensures consistent and database-independent access and manipulation of actor data.
+ * It encapsulates SQL queries, providing a clean separation from direct database interactions,
+ * which enhances the maintainability and scalability of the codebase.
  */
 public class ActorDao {
 

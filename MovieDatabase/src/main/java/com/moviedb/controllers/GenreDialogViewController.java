@@ -1,8 +1,11 @@
 package com.moviedb.controllers;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -10,6 +13,9 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.stage.Stage;
 
+import fi.jyu.mit.fxgui.Dialogs;
+
+import com.moviedb.dao.ActorDao;
 import com.moviedb.dao.GenreDao;
 import com.moviedb.models.Genre;
 
@@ -25,6 +31,9 @@ public class GenreDialogViewController {
 
     // Reference to the MainViewController to update selected genres.
     private MainViewController mainViewController;
+
+    // Logger for logging errors
+    private static final Logger logger = Logger.getLogger(ActorDao.class.getName());
 
     @FXML
     private ListView<CheckBox> listView;
@@ -77,11 +86,18 @@ public class GenreDialogViewController {
 
 
     /**
-     * Populates the ListView with CheckBoxes, each representing a genre.
-     * CheckBoxes are marked as selected based on the current selection in MainViewController.
+     * Loads and displays genres in the ListView with CheckBoxes.
      */
     private void loadGenres() {
-        List<Genre> genres = genreDao.readAll();
+        List<Genre> genres;
+        try {
+            genres = genreDao.readAll();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching genres from the database", e);
+            Dialogs.showMessageDialog("Error fetching the genres from the database");
+            return;  // Exit the method as genres cannot be loaded
+        }
+
         List<Genre> selectedGenres = mainViewController.getGenreList();
 
         for (Genre genre : genres) {
@@ -95,6 +111,7 @@ public class GenreDialogViewController {
             listView.getItems().add(cb);
         }
     }
+
 
 
     /**

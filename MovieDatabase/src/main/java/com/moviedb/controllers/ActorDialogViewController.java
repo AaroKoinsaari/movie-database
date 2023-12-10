@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
@@ -37,6 +39,7 @@ public class ActorDialogViewController implements Initializable {
     private ActorDao actorDao;
     private MainViewController mainViewController;
     private List<Actor> allActors;  // List of all current actors in the database
+    private static final Logger logger = Logger.getLogger(ActorDialogViewController.class.getName());
 
     @FXML
     private TextField nameTextField;
@@ -106,7 +109,6 @@ public class ActorDialogViewController implements Initializable {
      * Triggers when the 'Add' button is clicked. Validates the actor name from the text field,
      * showing a dialog if empty. Searches for the actor in the database; adds them to the list
      * if not present or creates a new actor if they do not exist.
-     *
      */
     @FXML
     void handleAdd() {
@@ -118,13 +120,18 @@ public class ActorDialogViewController implements Initializable {
             return;
         }
 
-        Optional<Actor> actorOpt = actorDao.getActorByName(actorName);
+        try {
+            Optional<Actor> actorOpt = actorDao.getActorByName(actorName);
 
-        // Check if the actor already exists and if it's already on the list
-        if (actorOpt.isPresent()) {
-            addActorToListIfNotExists(actorOpt.get());
-        } else {
-            createAndAddNewActor(actorName);
+            // Check if the actor already exists and if it's already on the list
+            if (actorOpt.isPresent()) {
+                addActorToListIfNotExists(actorOpt.get());
+            } else {
+                createAndAddNewActor(actorName);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching actor by name: " + actorName + " from db", e);
+            Dialogs.showMessageDialog("Error occurred while fetching actor from the database.");
         }
     }
 

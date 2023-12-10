@@ -580,11 +580,11 @@ public class MainViewController implements Initializable {
         for (int i = 0; i < moviesListView.getItems().size(); i++) {
             if (moviesListView.getItems().get(i).getId() == movie.getId()) {
                 moviesListView.getItems().remove(i);
-                moviesListView.getItems().add(i, movie); // Remove and re-add to update
+                moviesListView.getItems().add(i, movie);  // Remove and re-add to update
                 return;
             }
         }
-        moviesListView.getItems().add(movie); // Add new if not found
+        moviesListView.getItems().add(movie);  // Add new if not found
     }
 
 
@@ -759,7 +759,7 @@ public class MainViewController implements Initializable {
      */
     private void fillMovieDetails(Movie selectedMovie) {
         titleTextField.setText(selectedMovie.getTitle());
-        releaseYearTextField.setText(String.valueOf(selectedMovie.getReleaseYear()));  // Format to String
+        releaseYearTextField.setText(String.valueOf(selectedMovie.getReleaseYear()));
         directorTextField.setText(selectedMovie.getDirector());
         writerTextField.setText(selectedMovie.getWriter());
         producerTextField.setText(selectedMovie.getProducer());
@@ -773,14 +773,24 @@ public class MainViewController implements Initializable {
 
         // Add all actors to its ListChooser component
         for (Integer actorId : selectedMovie.getActorIds()) {
-            Optional<Actor> actorOptional = actorDao.getActorById(actorId);
-            actorOptional.ifPresent(actor -> actorsListView.getItems().add(actor));  // Add actor to list if it exists
+            try {
+                Optional<Actor> actorOptional = actorDao.getActorById(actorId);
+                actorOptional.ifPresent(actor -> actorsListView.getItems().add(actor));  // Add actor to list if it exists
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, "Error fetching actor with ID: " + actorId, e);
+                Dialogs.showMessageDialog("Error populating the actors list!");  // Inform the user
+            }
         }
 
         // Add all genres to its ListChooser component
         for (Integer genreId : selectedMovie.getGenreIds()) {
-            Optional<Genre> genreOptional = genreDao.getGenreById(genreId);
-            genreOptional.ifPresent(genre -> genresListView.getItems().add(genre));  // Add genre to list if it exists
+            try {
+                Optional<Genre> genreOptional = genreDao.getGenreById(genreId);
+                genreOptional.ifPresent(genre -> genresListView.getItems().add(genre));  // Add genre to list if it exists
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, "Error fetching genre with ID: " + genreId, e);
+                Dialogs.showMessageDialog("Error populating the genres list!");  // Inform the user
+            }
         }
     }
 
