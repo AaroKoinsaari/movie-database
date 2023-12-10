@@ -40,6 +40,6 @@ public class InputValidator {
      * @return true if the string is an integer, false otherwise.
      */
     public static boolean isInteger(String str) {
-        return str != null && !str.trim().isEmpty() && str.matches("-?\\d+");
+        return str == null || str.trim().isEmpty() || !str.matches("-?\\d+");
     }
 }
