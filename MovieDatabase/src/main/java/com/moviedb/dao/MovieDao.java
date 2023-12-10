@@ -33,7 +33,7 @@ public class MovieDao {
     private Connection connection;
 
     // The URL pointing to the SQL database location.
-    private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
+    private static final String DB_URL = "jdbc:sqlite:";
 
     // Logger for logging errors
     private static final Logger logger = Logger.getLogger(MovieDao.class.getName());
@@ -53,10 +53,6 @@ public class MovieDao {
     private static final String SQL_DELETE_ACTORS = "DELETE FROM movie_actors WHERE movie_id = ?";
     private static final String SQL_DELETE_GENRES = "DELETE FROM movie_genres WHERE movie_id = ?";
     private static final String SQL_DELETE_MOVIE = "DELETE FROM movies WHERE id = ?";
-
-    // This is used to fix the issue where the latest generated ID couldn't be fetched for some reason
-    private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";
-
 
 
     /**
@@ -96,18 +92,12 @@ public class MovieDao {
             connection.setAutoCommit(false); // Start transaction
 
             // Insert the main details
-            try (PreparedStatement pstmtMovie = connection.prepareStatement(SQL_INSERT_MOVIE,
+            try (PreparedStatement pstmt = connection.prepareStatement(SQL_INSERT_MOVIE,
                     Statement.RETURN_GENERATED_KEYS)) { // ID for the added movie in the generated key
-                setPreparedStatementForMovie(pstmtMovie, movie);
-                pstmtMovie.executeUpdate();
+                setPreparedStatementForMovie(pstmt, movie);
+                pstmt.executeUpdate();
 
-                // Retrieve the id generated for the added movie
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(SQL_LAST_INSERT_ID)) {
-                    if (rs.next()) {
-                        generatedMovieId = rs.getInt(1); // Retrieve the generated key (ID)
-                    }
-                }
+                generatedMovieId = fetchGeneratedId(pstmt);
 
                 // Ensure to have a valid movie ID before proceeding
                 if (generatedMovieId <= 0) {
@@ -138,6 +128,42 @@ public class MovieDao {
 
         return generatedMovieId;
     }
+
+
+    /**
+     * Retrieves the generated ID for the last inserted row.
+     * <p>
+     * This method handles ID retrieval for different databases. It uses "SELECT last_insert_rowid()"
+     * for SQLite due to its specific behavior with auto-increment keys. For other databases like H2,
+     * it utilizes the standard JDBC getGeneratedKeys method. This approach is necessary to resolve
+     * compatibility issues between production (SQLite) and testing environments (H2), ensuring
+     * consistent behavior across different database systems.
+     *
+     * @param pstmt The PreparedStatement from which the generated key is retrieved.
+     * @return The generated ID of the last inserted row, or -1 if an error occurs.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    private int fetchGeneratedId(PreparedStatement pstmt) throws SQLException {
+        int generatedId = -1;
+        String databaseProductName = connection.getMetaData().getDatabaseProductName();
+
+        if (databaseProductName.equals("SQLite")) {
+            try (Statement stmt = connection.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT last_insert_rowid()")) {
+                if (rs.next()) {
+                    generatedId = rs.getInt(1); // Retrieve the generated key (ID)
+                }
+            }
+        } else {  // For H2 db
+            try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    generatedId = rs.getInt(1);
+                }
+            }
+        }
+        return generatedId;
+    }
+
 
 
     /**

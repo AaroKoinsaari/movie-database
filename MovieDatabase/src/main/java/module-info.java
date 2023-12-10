@@ -13,4 +13,5 @@ module com.moviedb {
     exports com.moviedb.controllers;
     exports com.moviedb.dao;
     exports com.moviedb.models;
+    exports com.moviedb.database;
 }

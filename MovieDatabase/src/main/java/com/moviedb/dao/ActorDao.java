@@ -30,7 +30,7 @@ public class ActorDao {
     private Connection connection;
 
     // The URL pointing to the SQL database location.
-    private static final String DB_URL = "jdbc:sqlite:database/moviedatabase.db";
+    private static final String DB_URL = "jdbc:sqlite:";
 
     // Logger for logging errors
     private static final Logger logger = Logger.getLogger(ActorDao.class.getName());
@@ -42,8 +42,6 @@ public class ActorDao {
     private static final String SQL_READ_ALL_ACTORS = "SELECT id, name FROM actors";
     private static final String SQL_GET_ACTOR_BY_ID = "SELECT id, name FROM actors WHERE id = ?";
     private static final String SQL_GET_ACTOR_BY_NAME = "SELECT name, id FROM actors WHERE name = ?";
-
-    private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";
 
 
     /**
@@ -87,12 +85,7 @@ public class ActorDao {
                 pstmt.setString(1, actor.getName());
                 pstmt.executeUpdate();
 
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(SQL_LAST_INSERT_ID)) {
-                    if (rs.next()) {
-                        generatedActorId = rs.getInt(1);  // Retrieve the generated key (ID)
-                    }
-                }
+                generatedActorId = fetchGeneratedId(pstmt);
 
                 // Ensure to have a valid actor ID before proceeding
                 if (generatedActorId <= 0) {
@@ -118,6 +111,41 @@ public class ActorDao {
         }
 
         return generatedActorId;
+    }
+
+
+    /**
+     * Retrieves the generated ID for the last inserted row.
+     * <p>
+     * This method handles ID retrieval for different databases. It uses "SELECT last_insert_rowid()"
+     * for SQLite due to its specific behavior with auto-increment keys. For other databases like H2,
+     * it utilizes the standard JDBC getGeneratedKeys method. This approach is necessary to resolve
+     * compatibility issues between production (SQLite) and testing environments (H2), ensuring
+     * consistent behavior across different database systems.
+     *
+     * @param pstmt The PreparedStatement from which the generated key is retrieved.
+     * @return The generated ID of the last inserted row, or -1 if an error occurs.
+     * @throws SQLException If there's an error during the database operation.
+     */
+    private int fetchGeneratedId(PreparedStatement pstmt) throws SQLException {
+        int generatedId = -1;
+        String databaseProductName = connection.getMetaData().getDatabaseProductName();
+
+        if (databaseProductName.equals("SQLite")) {
+            try (Statement stmt = connection.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT last_insert_rowid()")) {
+                if (rs.next()) {
+                    generatedId = rs.getInt(1); // Retrieve the generated key (ID)
+                }
+            }
+        } else {  // For H2 db
+            try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    generatedId = rs.getInt(1);
+                }
+            }
+        }
+        return generatedId;
     }
 
 
