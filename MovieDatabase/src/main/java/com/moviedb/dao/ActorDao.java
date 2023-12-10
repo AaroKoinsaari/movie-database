@@ -33,7 +33,9 @@ public class ActorDao {
     private static final String SQL_INSERT_ACTOR = "INSERT INTO actors(name) VALUES(?)";
     private static final String SQL_READ_ACTOR = "SELECT name, id FROM actors WHERE id = ?";
     private static final String SQL_UPDATE_ACTOR = "UPDATE actors SET name = ? WHERE id = ?";
-
+    private static final String SQL_READ_ALL_ACTORS = "SELECT id, name FROM actors";
+    private static final String SQL_GET_ACTOR_BY_ID = "SELECT id, name FROM actors WHERE id = ?";
+    private static final String SQL_GET_ACTOR_BY_NAME = "SELECT name, id FROM actors WHERE name = ?";
 
     private static final String SQL_LAST_INSERT_ID = "SELECT last_insert_rowid()";
 
@@ -134,20 +136,6 @@ public class ActorDao {
 
 
     /**
-     * Creates an Actor object from a ResultSet.
-     *
-     * @param rs The ResultSet from which actor data is extracted.
-     * @return An Actor object populated with data from the ResultSet.
-     * @throws SQLException If there's an error during data extraction.
-     */
-    private Actor convertResultSetToActor(ResultSet rs) throws SQLException {
-        int id = rs.getInt("id");
-        String name = rs.getString("name");
-        return new Actor(id, name);
-    }
-
-
-    /**
      * Updates the name of an actor in the database.
      *
      * @param updatedActor The movie object containing updated information.
@@ -171,12 +159,10 @@ public class ActorDao {
      */
     public List<Actor> readAll() throws SQLException {
         List<Actor> actors = new ArrayList<>();
-        String sql = "SELECT id, name FROM actors";
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_READ_ALL_ACTORS);
              ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
-                // Insert the values of name and id from every row to the ArrayList
                 actors.add(new Actor(rs.getInt("id"), rs.getString("name")));
             }
         }
@@ -191,19 +177,14 @@ public class ActorDao {
      * @return The actor if found, otherwise an empty optional.
      * @throws SQLException If there's an error during the database operation.
      */
-    public Optional<Actor> getActorById(int id) {
-        String sql = "SELECT id, name FROM actors WHERE id = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+    public Optional<Actor> getActorById(int id) throws SQLException {
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_GET_ACTOR_BY_ID)) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
 
-            // Wrap the result in Optional if found
             if (rs.next()) {
-                return Optional.of(new Actor(rs.getInt("id"), rs.getString("name")));
+                return Optional.of(convertResultSetToActor(rs));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return Optional.empty();
     }
@@ -216,22 +197,30 @@ public class ActorDao {
      * @return The actor if found, otherwise an empty optional.
      * @throws SQLException If there's an error during the database operation.
      */
-    public Optional<Actor> getActorByName(String name) {
-        String sql = "SELECT name, id FROM actors WHERE name = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+    public Optional<Actor> getActorByName(String name) throws SQLException {
+        try (PreparedStatement pstmt = connection.prepareStatement(SQL_GET_ACTOR_BY_NAME)) {
             pstmt.setString(1, name);
             ResultSet rs = pstmt.executeQuery();
 
             // Wrap the result in Opitonal if found
             if (rs.next()) {
-                return Optional.of(new Actor(rs.getInt("id"), rs.getString("name")));
+                return Optional.of(convertResultSetToActor(rs));
             }
-        } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
         }
         return Optional.empty();
+    }
+
+
+    /**
+     * Creates an Actor object from a ResultSet.
+     *
+     * @param rs The ResultSet from which actor data is extracted.
+     * @return An Actor object populated with data from the ResultSet.
+     * @throws SQLException If there's an error during data extraction.
+     */
+    private Actor convertResultSetToActor(ResultSet rs) throws SQLException {
+        int id = rs.getInt("id");
+        String name = rs.getString("name");
+        return new Actor(id, name);
     }
 }
