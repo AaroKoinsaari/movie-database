@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -12,6 +14,10 @@ import java.sql.Statement;
  * It ensures that the database is set up correctly with the required schema before the application is used.
  */
 public class DatabaseInitializer {
+
+    // Logger for logging errors
+    private static final Logger logger = Logger.getLogger(DatabaseInitializer.class.getName());
+
 
     /**
      * Initializes the database by creating all necessary tables.
@@ -29,7 +35,8 @@ public class DatabaseInitializer {
             createMovieActorsTable(connection);
             createMovieGenresTable(connection);
         } catch (SQLException e) {
-            e.printStackTrace();  // TODO: Improve
+            logger.log(Level.SEVERE, "Error fetching all the movies from database. SQLState: " + e.getSQLState() +
+                    ", Error Code: " + e.getErrorCode() + ", Message: " + e.getMessage(), e);
         }
     }
 
