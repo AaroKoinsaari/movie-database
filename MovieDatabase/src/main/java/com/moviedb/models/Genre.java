@@ -28,16 +28,6 @@ public class Genre {
 
 
     /**
-     * Constructs a new {@code Genre} object with given name (ID is handled in the database).
-     *
-     * @param name The name of the genre.
-     */
-    public Genre(String name) {
-        this.name = name;
-    }
-
-
-    /**
      * Returns the ID of the genre.
      *
      * @return ID of the genre.

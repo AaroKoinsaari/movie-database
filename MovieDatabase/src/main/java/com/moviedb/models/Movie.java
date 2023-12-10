@@ -11,26 +11,26 @@ public class Movie {
 
     /** Main details of the movie */
     private int id;
-    private String title;
-    private int releaseYear;
-    private String director;
-    private String writer;
-    private String producer;
-    private String cinematographer;
-    private int budget;
-    private String country;
+    private final String title;
+    private final int releaseYear;
+    private final String director;
+    private final String writer;
+    private final String producer;
+    private final String cinematographer;
+    private final int budget;
+    private final String country;
 
     /**
      * A list of IDs representing actors associated with the movie.
      * Each actor ID corresponds to a unique actor.
      */
-    private List<Integer> actorIds;
+    private final List<Integer> actorIds;
 
     /**
      * A list of IDs representing genres associated with the movie.
      * Each genre ID corresponds to a unique genre.
      */
-    private List<Integer> genreIds;
+    private final List<Integer> genreIds;
 
 
     /**
