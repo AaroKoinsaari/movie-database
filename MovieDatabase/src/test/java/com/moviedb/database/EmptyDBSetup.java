@@ -50,6 +50,11 @@ public abstract class EmptyDBSetup {
                         + "title VARCHAR(255) NOT NULL,"
                         + "release_year INTEGER,"
                         + "director VARCHAR(255),"
+                        + "writer VARCHAR(255),"
+                        + "producer VARCHAR(255),"
+                        + "cinematographer VARCHAR(255),"
+                        + "budget INTEGER,"
+                        + "country VARCHAR(255),"
                         + "PRIMARY KEY(id))");
 
                 // Create movie_actors table
