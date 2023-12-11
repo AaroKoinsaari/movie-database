@@ -8,17 +8,14 @@ import java.util.Objects;
  */
 public class Genre {
 
-    // The unique identifier of the genre.
     private int id;
-
-    // The name of the genre.
     private String name;
 
 
     /**
      * Constructs a new {@code Genre} object with given id and name.
      *
-     * @param id The unique identifier of the genre.
+     * @param id   The unique identifier of the genre.
      * @param name The name of the genre.
      */
     public Genre(int id, String name) {
@@ -101,6 +98,11 @@ public class Genre {
     }
 
 
+    /**
+     * Returns a string representation of the genre.
+     *
+     * @return A string containing the name of the genre.
+     */
     @Override
     public String toString() {
         return this.getName();

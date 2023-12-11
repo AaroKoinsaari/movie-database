@@ -19,14 +19,10 @@ import java.util.logging.Logger;
  */
 public abstract class BaseDao {
 
-    // Database connection used by DAO implementations.
-    protected Connection connection;
+    protected static final String DB_URL = "jdbc:sqlite:";  // Default database URL for SQLite database connections.
 
-    // Logger for logging errors and information.
-    protected Logger logger;
-
-    // Default database URL for SQLite database connections.
-    protected static final String DB_URL = "jdbc:sqlite:";
+    protected Connection connection;  // Database connection used by DAO implementations.
+    protected Logger logger;  // Logger for logging errors and information.
 
 
     /**

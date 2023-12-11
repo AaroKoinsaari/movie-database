@@ -15,7 +15,7 @@ import com.moviedb.models.Actor;
 
 
 /**
- * This class contains unit tests for the ActorDao class using a pre-filled database setup.
+ * This class contains unit tests for the ActorDao class using a pre-filled H2 database setup.
  * It operates under the assumption that certain movies, genres, and actors already exist in the database,
  * with known IDs that are used within the tests. These IDs are annotated within the test methods.
  * Each test method is designed to test a single functionality of the ActorDao class, verifying

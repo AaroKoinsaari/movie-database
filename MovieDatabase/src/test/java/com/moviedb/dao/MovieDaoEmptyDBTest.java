@@ -8,12 +8,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.moviedb.database.EmptyDBSetup;
 import com.moviedb.models.Movie;
@@ -25,6 +25,7 @@ import com.moviedb.models.Movie;
  * Each test method is designed to test a single functionality of the MovieDao class.
  */
 class MovieDaoEmptyDBTest extends EmptyDBSetup {
+
     private MovieDao dao;  // Instance of MovieDao used across all test cases
 
 

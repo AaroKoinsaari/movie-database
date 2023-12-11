@@ -27,7 +27,6 @@ import fi.jyu.mit.fxgui.Dialogs;
  */
 public class LaunchViewController {
 
-    // Logger for logging errors
     private static final Logger logger = Logger.getLogger(LaunchViewController.class.getName());
 
     @FXML
@@ -41,7 +40,6 @@ public class LaunchViewController {
      * Checks if the specified database exists, and if it does, opens the main view for that,
      * otherwise prompts user to create a new database by the given name and opens
      * the main view for that if the user clicks Yes.
-     *
      */
     @FXML
     void handleOkButton() {
@@ -72,17 +70,6 @@ public class LaunchViewController {
 
 
     /**
-     * Handles the Cancel button click in the launch window by simply closing the program.
-     *
-     */
-    @FXML
-    void handleCancelButton() {
-        Stage stage = (Stage) cancelButton.getScene().getWindow();
-        stage.close();
-    }
-
-
-    /**
      * Formats the database name by removing all spaces and converting to lower case.
      *
      * @param dbName The original database name.
@@ -102,23 +89,6 @@ public class LaunchViewController {
     private boolean databaseExists(String dbPath) {
         File dbFile = new File(dbPath);
         return dbFile.exists();
-    }
-
-
-    /**
-     * Creates a new database based on a given name.
-     *
-     * @param dbName Name of the new database.
-     */
-    private void createNewDatabase(String dbName) {
-        try {
-            Connection connection = DriverManager.getConnection("jdbc:sqlite:src/main/java/com/moviedb/database/" + dbName + ".db");
-            DatabaseInitializer.initialize(connection);
-            connection.close();
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Failed to create a new database.", e);
-            Dialogs.showMessageDialog("Failed to create a new database.");
-        }
     }
 
 
@@ -145,12 +115,40 @@ public class LaunchViewController {
             stage.setTitle("Main View - " + dbName);
             stage.show();
 
-            // Close the "old" window
+            // Close the current window
             Stage currentStage = (Stage) databaseNameField.getScene().getWindow();
             currentStage.close();
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to open the MainView.", e);
-            Dialogs.showMessageDialog("Failed to open the main window.");
+            logger.log(Level.SEVERE, "Failed to open the MainView. Message: " + e.getMessage(), e);
+            Dialogs.showMessageDialog("Failed to open the main window.");  // Inform the user
         }
+    }
+
+
+    /**
+     * Creates a new database based on a given name.
+     *
+     * @param dbName Name of the new database.
+     */
+    private void createNewDatabase(String dbName) {
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:src/main/java/com/moviedb/database/" + dbName + ".db");
+            DatabaseInitializer.initialize(connection);
+            connection.close();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Failed to create a new database. SQL state: " + e.getSQLState()
+                    + " Error code: " + e.getErrorCode() + " Message: " + e.getMessage(), e);
+            Dialogs.showMessageDialog("Failed to create a new database.");  // Inform the user
+        }
+    }
+
+
+    /**
+     * Handles the 'Cancel' button click in the launch window by closing the program.
+     */
+    @FXML
+    void handleCancelButton() {
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
     }
 }

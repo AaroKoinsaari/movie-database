@@ -10,23 +10,21 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
-
 /**
  * Main class for the Movie Database application.
  * Serves as the entry point for the application.
  * Initializes the JavaFX environment and sets up the initial view of the application.
  *
  * @author Aaro Koinsaari
- * @version 2023-12-09
+ * @version 2023-12-11
  */
 public class MovieMain extends Application {
 
-    // Logger for logging errors
     private static final Logger logger = Logger.getLogger(MovieMain.class.getName());
 
 
     /**
-     * Initializes and shows the launch view of the JavaFX application.
+     * Initializes and shows the launch view of the application.
      * It sets up the primary stage with the launch scene and displays it.
      * The 'LaunchView' acts as the starting point of the application, leading to the main application window.
      *

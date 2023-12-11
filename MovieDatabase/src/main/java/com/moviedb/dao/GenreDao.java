@@ -119,5 +119,4 @@ public class GenreDao extends BaseDao {
         String name = rs.getString("name");
         return new Genre(id, name);
     }
-
 }

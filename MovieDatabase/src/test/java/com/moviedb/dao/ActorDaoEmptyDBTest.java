@@ -17,7 +17,7 @@ import com.moviedb.models.Actor;
 
 
 /**
- * This class contains unit tests for the ActorDao class using an empty database setup.
+ * This class contains unit tests for the ActorDao class using an empty H2 database setup.
  * Only genres are existing in the empty database since they are static.
  * Each test method is designed to test a single functionality of the ActorDao class.
  */

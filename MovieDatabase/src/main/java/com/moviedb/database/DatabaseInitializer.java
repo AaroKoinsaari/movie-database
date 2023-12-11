@@ -15,7 +15,6 @@ import java.util.logging.Logger;
  */
 public class DatabaseInitializer {
 
-    // Logger for logging errors
     private static final Logger logger = Logger.getLogger(DatabaseInitializer.class.getName());
 
 

@@ -19,7 +19,6 @@ import com.moviedb.database.FilledDBSetup;
 import com.moviedb.models.Genre;
 
 
-
 /**
  * This class contains unit tests for the GenreDao class using a pre-filled database setup.
  * It operates under the assumption that genres already exist in the database,

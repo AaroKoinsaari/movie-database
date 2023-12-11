@@ -4,7 +4,7 @@ import java.util.List;
 
 
 /**
- * A movie object with attributes such as title, release year, director,
+ * A movie object with its main attributes and
  * associated actor IDs, and associated genre IDs.
  */
 public class Movie {
@@ -19,6 +19,7 @@ public class Movie {
     private final String cinematographer;
     private final int budget;
     private final String country;
+
 
     /**
      * A list of IDs representing actors associated with the movie.

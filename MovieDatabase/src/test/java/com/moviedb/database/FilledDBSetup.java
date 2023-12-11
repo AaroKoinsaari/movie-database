@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.junit.jupiter.api.BeforeEach;
+
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -103,9 +104,9 @@ public abstract class FilledDBSetup extends EmptyDBSetup {
     /**
      * Inserts a movie into the movies table and returns the generated movie ID.
      *
-     * @param title The title of the movie to insert.
+     * @param title       The title of the movie to insert.
      * @param releaseYear The release year of the movie.
-     * @param director The director of the movie.
+     * @param director    The director of the movie.
      * @return The generated ID for the inserted movie, or -1 if the insertion failed.
      */
     private int insertMovie(String title, int releaseYear, String director) {
@@ -136,7 +137,7 @@ public abstract class FilledDBSetup extends EmptyDBSetup {
      * Retrieves the actor's ID based on the given name and inserts a new
      * record into the movie_actors table with the movie ID and actor ID.
      *
-     * @param movieId The ID of the movie.
+     * @param movieId   The ID of the movie.
      * @param actorName The name of the actor to link to the movie.
      */
     private void linkMovieActor(int movieId, String actorName) {
@@ -189,7 +190,7 @@ public abstract class FilledDBSetup extends EmptyDBSetup {
      * Retrieves the genre's ID based on the given name and inserts a new
      * record into the movie_genres table with the movie ID and genre ID.
      *
-     * @param movieId The ID of the movie.
+     * @param movieId   The ID of the movie.
      * @param genreName The name of the genre to link to the movie.
      */
     private void linkMovieGenre(int movieId, String genreName) {

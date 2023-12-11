@@ -50,27 +50,18 @@ import com.moviedb.models.Movie;
  */
 public class MainViewController implements Initializable {
 
-    /**
-     * Represents the focus of the current list in the user interface.
-     * Used to determine which list (movies, actors, or genres) is currently active
-     * and therefore which actions (add, delete, etc.) should be performed on.
-     */
-    public enum ListFocus {
-        MOVIE, ACTOR, GENRE, NONE
-    }
+    private static final Logger logger = Logger.getLogger(MainViewController.class.getName());
 
     private String databaseName;
     private Connection connection;
     private MovieDao movieDao;
     private ActorDao actorDao;
     private GenreDao genreDao;
-    private Stage primaryStage;  // Static reference to the main window
+
+    private Stage primaryStage;  // Reference to the main window
     private Movie currentMovie;  // The movie currently chosen from the list
     private String currentSortCriterion = "title";  // Default sorting criterion
     private ListFocus currentListFocus = ListFocus.NONE;  // Determines the focused list
-
-    // Logger for logging errors
-    private static final Logger logger = Logger.getLogger(MainViewController.class.getName());
 
     @FXML
     private TextField searchTextField;
@@ -116,6 +107,16 @@ public class MainViewController implements Initializable {
     private MenuItem menuQuit;
     @FXML
     private MenuItem menuSave;
+
+
+    /**
+     * Represents the focus of the current list in the user interface.
+     * Used to determine which list (movies, actors, or genres) is currently active
+     * and therefore which actions (add, delete, etc.) should be performed on.
+     */
+    public enum ListFocus {
+        MOVIE, ACTOR, GENRE, NONE
+    }
 
 
     /**
@@ -237,7 +238,7 @@ public class MainViewController implements Initializable {
         menuAbout.setOnAction(e -> Dialogs.showMessageDialog(
                 """
                         Movie Database
-                        Version: 1.0
+                        Version: 1.1
     
                         Author:
                         Aaro Koinsaari
@@ -297,18 +298,18 @@ public class MainViewController implements Initializable {
         // Listener for release year field
         releaseYearTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty() && InputValidator.isValidReleaseYear(newValue)) {
-                releaseYearTextField.setStyle("-fx-control-inner-background: #ffdddd;");
+                releaseYearTextField.setStyle("-fx-control-inner-background: #ffdddd;");  // Wrong input, paint red
             } else {
-                releaseYearTextField.setStyle("-fx-control-inner-background: white;");
+                releaseYearTextField.setStyle("-fx-control-inner-background: white;");  // Correct input, keep white
             }
         });
 
         // Listener for budget field
         budgetTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.isEmpty() && InputValidator.isInteger(newValue)) {
-                budgetTextField.setStyle("-fx-control-inner-background: #ffdddd;"); // Virheellinen syöte, maalaa punaiseksi
+                budgetTextField.setStyle("-fx-control-inner-background: #ffdddd;");
             } else {
-                budgetTextField.setStyle("-fx-control-inner-background: white;"); // Oikea syöte, käytä valkoista taustaa
+                budgetTextField.setStyle("-fx-control-inner-background: white;");
             }
         });
     }
@@ -390,6 +391,7 @@ public class MainViewController implements Initializable {
     /**
      * Populates the database with a set of predefined data for demonstration purposes.
      * It's designed to be called when there is a need to demonstrate the application with preloaded data.
+     * That's why the warning is suppressed.
      */
     @SuppressWarnings("unused")
     private void fillDatabase() {
@@ -449,7 +451,6 @@ public class MainViewController implements Initializable {
             Dialogs.showMessageDialog("Error occurred when creating the database!");
         }
     }
-
 
 
     /**
@@ -528,7 +529,7 @@ public class MainViewController implements Initializable {
      * The search is case-insensitive.
      *
      * @param prefix The prefix to filter the movies by.
-     * @return       A list of movies that start with the specified prefix.
+     * @return A list of movies that start with the specified prefix.
      */
     private List<Movie> searchMoviesStartingWith(String prefix) {
         String lowerCasePrefix = prefix.toLowerCase();
@@ -550,7 +551,6 @@ public class MainViewController implements Initializable {
         moviesListView.getItems().addAll(movies);
         sortMoviesBy(currentSortCriterion);
     }
-
 
 
     /**
@@ -645,7 +645,6 @@ public class MainViewController implements Initializable {
      * Handles the 'Add' button click event.
      * Determines which entity (actor or genre) is currently focused based on the
      * currentListFocus enum and opens the corresponding dialog.
-     *
      */
     @FXML
     void handleAdd() {
@@ -703,7 +702,6 @@ public class MainViewController implements Initializable {
 
     /**
      * Opens the actor dialog.
-     *
      */
     private void openActorDialog() {
         openDialog("/views/ActorDialogView.fxml", "New Actor Details");
@@ -712,7 +710,6 @@ public class MainViewController implements Initializable {
 
     /**
      * Opens the genre dialog.
-     *
      */
     private void openGenreDialog() {
         openDialog("/views/GenreDialogView.fxml", "Choose the Genres");
@@ -887,7 +884,6 @@ public class MainViewController implements Initializable {
 
         return isValid;
     }
-
 
 
     /**

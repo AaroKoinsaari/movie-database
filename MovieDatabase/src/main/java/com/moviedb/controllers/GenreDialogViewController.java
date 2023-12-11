@@ -26,14 +26,10 @@ import com.moviedb.models.Genre;
  */
 public class GenreDialogViewController {
 
-    // Data Access Object for genre-related operations.
-    private GenreDao genreDao;
-
-    // Reference to the MainViewController to update selected genres.
-    private MainViewController mainViewController;
-
-    // Logger for logging errors
     private static final Logger logger = Logger.getLogger(ActorDao.class.getName());
+
+    private GenreDao genreDao;
+    private MainViewController mainViewController;  // Reference to the MainViewController to update selected genres.
 
     @FXML
     private ListView<CheckBox> listView;
@@ -55,37 +51,6 @@ public class GenreDialogViewController {
 
 
     /**
-     * Handles the action of the 'OK' button. Iterates through CheckBoxes to collect selected genres,
-     * and updates the MainViewController with these selections.
-     *
-     */
-    @FXML
-    void handleOK() {
-        List<Genre> selectedGenres = new ArrayList<>();
-
-        for (CheckBox cb : listView.getItems()) {
-            if (cb.isSelected()) {
-                Genre genre = (Genre) cb.getUserData();
-                selectedGenres.add(genre);
-            }
-        }
-
-        mainViewController.setGenreList(selectedGenres);
-        closeStage();
-    }
-
-
-    /**
-     * Handles the action of the 'Cancel' button by closing the dialog window.
-     *
-     */
-    @FXML
-    void handleCancel() {
-        closeStage();
-    }
-
-
-    /**
      * Loads and displays genres in the ListView with CheckBoxes.
      */
     private void loadGenres() {
@@ -93,7 +58,8 @@ public class GenreDialogViewController {
         try {
             genres = genreDao.readAll();
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error fetching genres from the database", e);
+            logger.log(Level.SEVERE, "Error fetching genres from the database. SQL state: "
+                    + e.getSQLState() + " Error code: " + e.getErrorCode() + " Message: " + e.getMessage(), e);
             Dialogs.showMessageDialog("Error fetching the genres from the database");
             return;  // Exit the method as genres cannot be loaded
         }
@@ -112,6 +78,34 @@ public class GenreDialogViewController {
         }
     }
 
+
+    /**
+     * Handles the action of the 'OK' button. Iterates through CheckBoxes to collect selected genres,
+     * and updates the MainViewController with these selections.
+     */
+    @FXML
+    void handleOK() {
+        List<Genre> selectedGenres = new ArrayList<>();
+
+        for (CheckBox cb : listView.getItems()) {
+            if (cb.isSelected()) {
+                Genre genre = (Genre) cb.getUserData();
+                selectedGenres.add(genre);
+            }
+        }
+
+        mainViewController.setGenreList(selectedGenres);
+        closeStage();
+    }
+
+
+    /**
+     * Closes the dialog window when the 'Cancel' button is clicked without saving changes.
+     */
+    @FXML
+    void handleCancel() {
+        closeStage();
+    }
 
 
     /**

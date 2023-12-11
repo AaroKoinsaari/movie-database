@@ -36,7 +36,6 @@ public class MovieDao extends BaseDao {
             "cinematographer, budget, country FROM movies WHERE id = ?";
     private static final String SQL_READ_ALL_MOVIES = "SELECT id, title, release_year, director, writer, producer, " +
             "cinematographer, budget, country FROM movies";
-
     private static final String SQL_UPDATE_MOVIE_MAIN_DETAILS = "UPDATE movies SET title = ?, release_year = ?, director = ?, " +
             "writer = ?, producer = ?, cinematographer = ?, budget = ?, country = ? WHERE id = ?";
     private static final String SQL_DELETE_ACTORS = "DELETE FROM movie_actors WHERE movie_id = ?";
@@ -141,8 +140,8 @@ public class MovieDao extends BaseDao {
      * the movie ID into the 'movie_actors' table.
      *
      * @param connection The database connection to use for the insertion.
-     * @param movieId The ID of the movie for which actors are being inserted.
-     * @param actorIds A list of actor IDs to be associated with the movie.
+     * @param movieId    The ID of the movie for which actors are being inserted.
+     * @param actorIds   A list of actor IDs to be associated with the movie.
      * @throws SQLException if there's an error inserting the actor records.
      */
     private void insertActorsToMovie(Connection connection, int movieId, List<Integer> actorIds) throws SQLException {
@@ -162,8 +161,8 @@ public class MovieDao extends BaseDao {
      * the movie ID into the 'movie_genres' table.
      *
      * @param connection The database connection to use for the insertion.
-     * @param movieId The ID of the movie for which genres are being inserted.
-     * @param genreIds A list of genre IDs to be associated with the movie.
+     * @param movieId    The ID of the movie for which genres are being inserted.
+     * @param genreIds   A list of genre IDs to be associated with the movie.
      * @throws SQLException if there's an error inserting the genre records.
      */
     private void insertGenresToMovie(Connection connection, int movieId, List<Integer> genreIds) throws SQLException {
@@ -248,8 +247,8 @@ public class MovieDao extends BaseDao {
     /**
      * Fetches a set of either actor or genre IDs based on a specified movie ID and table name.
      *
-     * @param movieId The ID of the movie for which the actor or genre IDs are to be fetched.
-     * @param tableName The name of the table (either "movie_actors" or "movie_genres") to fetch IDs from.
+     * @param movieId    The ID of the movie for which the actor or genre IDs are to be fetched.
+     * @param tableName  The name of the table (either "movie_actors" or "movie_genres") to fetch IDs from.
      * @param columnName The name of the column (either "actor_id" or "genre_id") to fetch IDs from.
      * @return A Set of Integers representing actor or genre IDs associated with the given movie ID.
      * @throws SQLException If there's an error during the database operation.
@@ -279,7 +278,7 @@ public class MovieDao extends BaseDao {
      * Validates that the given table name and column name are allowed.
      * Throws IllegalArgumentException if they are not valid.
      *
-     * @param table The table name to validate.
+     * @param table  The table name to validate.
      * @param column The column name to validate.
      */
     private void validateTableNameAndColumnName(String table, String column) {
@@ -354,7 +353,7 @@ public class MovieDao extends BaseDao {
      * Checks if the main details of the movie have changed.
      *
      * @param existingMovie The current movie in the database.
-     * @param updatedMovie The movie with updated details.
+     * @param updatedMovie  The movie with updated details.
      * @return boolean true if there are changes in the main details, otherwise false.
      */
     private boolean hasMainDetailsChanged(Movie existingMovie, Movie updatedMovie) {
@@ -392,10 +391,10 @@ public class MovieDao extends BaseDao {
      * Updates the link associations for a movie in the database by adding new links
      * and removing outdated ones for a specific Movie.
      *
-     * @param movieId The ID of the movie for which links are being updated.
+     * @param movieId    The ID of the movie for which links are being updated.
      * @param updatedIds A set of new IDs (either actor or genre IDs) to be associated with the movie.
-     * @param table The name of the table where the links are stored (either 'movie_actors' or 'movie_genres').
-     * @param idColumn The name of the column in the join table that stores the IDs (either 'actor_id' or 'genre_id').
+     * @param table      The name of the table where the links are stored (either 'movie_actors' or 'movie_genres').
+     * @param idColumn   The name of the column in the join table that stores the IDs (either 'actor_id' or 'genre_id').
      * @throws SQLException If there's an error during the database operation.
      */
     private void updateMovieLinks(int movieId, Set<Integer> updatedIds, String table, String idColumn) throws SQLException {
@@ -428,9 +427,9 @@ public class MovieDao extends BaseDao {
      * 'validateTableNameAndColumnName' ensures 'table' and 'idColumn' are from a safe list, and
      * PreparedStatement is used, ensuring 'movieId' and 'id' are properly escaped.
      *
-     * @param movieId The ID of the movie from which the link is being removed.
-     * @param id The ID of the linked entity (actor ID or genre ID) to be removed.
-     * @param table The name of the join table (either 'movie_actors' or 'movie_genres').
+     * @param movieId  The ID of the movie from which the link is being removed.
+     * @param id       The ID of the linked entity (actor ID or genre ID) to be removed.
+     * @param table    The name of the join table (either 'movie_actors' or 'movie_genres').
      * @param idColumn The name of the column in the join table that stores the actor's
      *                 or genre's IDs (either 'actor_id' or 'genre_id').
      * @throws SQLException If there's an error during the database operation.
@@ -456,9 +455,9 @@ public class MovieDao extends BaseDao {
      * 'validateTableNameAndColumnName' ensures 'table' and 'idColumn' are from a safe list, and
      * PreparedStatement is used, ensuring 'movieId' and 'id' are properly escaped.
      *
-     * @param movieId The ID of the movie to which the link is being added.
-     * @param id The ID of the associated entity (actor ID or genre ID) to be added.
-     * @param table The name of the join table ('movie_actors' or 'movie_genres').
+     * @param movieId  The ID of the movie to which the link is being added.
+     * @param id       The ID of the associated entity (actor ID or genre ID) to be added.
+     * @param table    The name of the join table ('movie_actors' or 'movie_genres').
      * @param idColumn The name of the column in the join table that stores the actor's
      *                 or genre's IDs ('actor_id' or 'genre_id').
      * @throws SQLException If there's an error during the database operation.

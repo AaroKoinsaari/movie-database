@@ -36,10 +36,11 @@ import com.moviedb.models.Actor;
  */
 public class ActorDialogViewController implements Initializable {
 
-    private ActorDao actorDao;
-    private MainViewController mainViewController;
-    private List<Actor> allActors;  // List of all current actors in the database
     private static final Logger logger = Logger.getLogger(ActorDialogViewController.class.getName());
+
+    private ActorDao actorDao;
+    private MainViewController mainViewController;  // Reference to the main controller for updating the actors list
+    private List<Actor> allActors;  // List of all current actors in the database
 
     @FXML
     private TextField nameTextField;
@@ -62,16 +63,16 @@ public class ActorDialogViewController implements Initializable {
         this.mainViewController = mainViewController;
         this.actorDao = new ActorDao(connection);
 
-        // Update listView using observableList
+        // Update listView using observable list
         ObservableList<Actor> actors = FXCollections.observableArrayList(mainViewController.getActorList());
         listView.setItems(actors);
 
         try {
             this.allActors = actorDao.readAll();
         } catch (SQLException e) {
-            System.out.println("SQLState: " + e.getSQLState());
-            System.out.println("Error Code: " + e.getErrorCode());
-            System.out.println("Message: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error fetching all the actors from database. SQL state: " + e.getSQLState()
+            + " Error code: " + e.getErrorCode() + " Message: " + e.getMessage(), e);
+            Dialogs.showMessageDialog("Error fetching all actors from database!");  // Inform the user
         }
     }
 
@@ -79,7 +80,7 @@ public class ActorDialogViewController implements Initializable {
     /**
      * Initializes the controller with auto-completion for the actor name TextField.
      * Auto-completion suggestions are generated based on the user's input, with a minimum
-     * of 3 characters required.
+     * of 2 characters required.
      * Selected suggestions are automatically filled into the TextField.
      *
      * @param url The URL used for resolving relative paths, can be null.
@@ -89,7 +90,7 @@ public class ActorDialogViewController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         TextFields.bindAutoCompletion(nameTextField, input -> {
             String userInput = input.getUserText();
-            if (userInput.length() >= 3) {
+            if (userInput.length() >= 2) {
                 return allActors.stream()
                         .filter(actor -> actor.getName().toLowerCase().startsWith(userInput.toLowerCase()))
                         .limit(10)  // Limit the result for first 10
@@ -129,31 +130,10 @@ public class ActorDialogViewController implements Initializable {
                 createAndAddNewActor(actorName);
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error fetching actor by name: " + actorName + " from db", e);
-            Dialogs.showMessageDialog("Error occurred while fetching actor from the database.");
+            logger.log(Level.SEVERE, "Error fetching actor by name: " + actorName + " from db. SQL state: "
+                    + e.getSQLState() + " Error code: " + e.getErrorCode() + " Message: " + e.getMessage(), e);
+            Dialogs.showMessageDialog("Error occurred while fetching actor from the database.");  // Inform the user
         }
-    }
-
-
-    /**
-     * Handles the 'OK' button action. Associates actors from the list with the current movie
-     * by checking if they already are associated or not.
-     *
-     */
-    @FXML
-    void handleOK() {
-        mainViewController.setActorList(listView.getItems());
-        closeStage();
-    }
-
-
-    /**
-     * Closes the dialog window when the 'Cancel' button is clicked.
-     *
-     */
-    @FXML
-    void handleCancel() {
-        closeStage();
     }
 
 
@@ -168,14 +148,27 @@ public class ActorDialogViewController implements Initializable {
         } else {
             alertLabel.setText("Actor '" + actor.getName() + "' is already in the list!");
             alertLabel.setVisible(true);
-            // Dialogs.showMessageDialog("Actor '" + actor.getName() + "' is already in the list.");
+            //Dialogs.showMessageDialog("Actor '" + actor.getName() + "' is already in the list.");
         }
         nameTextField.clear();
     }
 
 
     /**
-     * Creates a new actor with the given name and adds them to the list.
+     * Checks if the specified actor is already in the list by comparing
+     * the actor's ID with the IDs of actors in the list.
+     *
+     * @param actor The Actor object to check in the list.
+     * @return true if the actor is in the list, false otherwise.
+     */
+    private boolean isActorOnTheList(Actor actor) {
+        return listView.getItems().stream()
+                .anyMatch(existingActor -> existingActor.getId() == actor.getId());
+    }
+
+
+    /**
+     * Creates a new actor with the given name and adds it to the list.
      * Handles the creation process in the database and updates the list view upon success.
      *
      * @param actorName The name of the actor to be created and added.
@@ -191,22 +184,30 @@ public class ActorDialogViewController implements Initializable {
             alertLabel.setText("New actor created!");
             alertLabel.setVisible(true);
         } catch (Exception e) {
-            Dialogs.showMessageDialog("Error creating actor: " + e.getMessage());
+            logger.log(Level.SEVERE, "Error creating an actor. Message: " + e.getMessage(), e);
+            Dialogs.showMessageDialog("Error creating actor!");  // Inform the user
             nameTextField.clear();
         }
     }
 
 
     /**
-     * Checks if the specified actor is already in the list by comparing
-     * the actor's ID with the IDs of actors in the list.
-     *
-     * @param actor The Actor object to check in the list.
-     * @return true if the actor is in the list, false otherwise.
+     * Handles the 'OK' button action. Associates actors from the list with the current movie
+     * by checking if they already are associated or not and closes the window.
      */
-    private boolean isActorOnTheList(Actor actor) {
-        return listView.getItems().stream()
-                .anyMatch(existingActor -> existingActor.getId() == actor.getId());
+    @FXML
+    void handleOK() {
+        mainViewController.setActorList(listView.getItems());
+        closeStage();
+    }
+
+
+    /**
+     * Closes the dialog window when the 'Cancel' button is clicked without saving changes.
+     */
+    @FXML
+    void handleCancel() {
+        closeStage();
     }
 
 

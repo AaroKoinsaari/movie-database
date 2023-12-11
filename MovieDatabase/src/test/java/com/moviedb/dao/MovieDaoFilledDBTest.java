@@ -26,6 +26,7 @@ import com.moviedb.models.Movie;
  * the expected behavior against the known state of the database.
  */
 public class MovieDaoFilledDBTest extends FilledDBSetup {
+
     private MovieDao dao;  // Instance of MovieDao used across all test cases
 
 

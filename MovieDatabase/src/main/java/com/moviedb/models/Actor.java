@@ -8,17 +8,14 @@ import java.util.Objects;
  */
 public class Actor {
 
-    // The unique identifier of the actor.
     private int id;
-
-    // The name of the actor.
     private String name;
 
 
     /**
      * Constructs a new {@code Actor} object with given id and name.
      *
-     * @param id The unique identifier of the actor.
+     * @param id   The unique identifier of the actor.
      * @param name The name of the actor.
      */
     public Actor(int id, String name) {
@@ -111,6 +108,11 @@ public class Actor {
     }
 
 
+    /**
+     * Returns a string representation of the actor.
+     *
+     * @return A string containing the name of the actor.
+     */
     @Override
     public String toString() {
         return this.getName();
