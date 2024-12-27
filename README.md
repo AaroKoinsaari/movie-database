@@ -33,7 +33,7 @@ Before you start, ensure you have the following installed:
 
 2. **IDE configuration**: Open the project in your preferred IDE (make sure the IDE is configured to handle JavaFX dependencies).
 
-3. **Install the FXGUI Library**: Since `FXGui` is not available in public Maven repositories, you need to download the JAR from: https://gitlab.jyu.fi/tie/ohj2/esimerkit/fxexamples/-/raw/master/FXGui/fxgui.jar.
+3. **Install the FXGUI Library**: Since `FXGui` is not available in public Maven repositories, you need to download the JAR from: https://svn.cc.jyu.fi/srv/svn/ohj2/FXExamples/trunk/FXGui/fxgui.jar.
 
 4. **Install the Library to Your Local Maven Repository**:
    Use the following Maven command to install the library to your local Maven repository:
