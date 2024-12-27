@@ -22,7 +22,6 @@
 
 package com.moviedb.app;
 
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -51,7 +50,6 @@ public class MovieMain extends Application {
             FXMLLoader ldr = new FXMLLoader(getClass().getResource("/views/LaunchView.fxml"));
             final Pane root = ldr.load();
             Scene scene = new Scene(root);
-            scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles/styles.css")).toExternalForm());
             primaryStage.setScene(scene);
             primaryStage.setTitle("Movies");
             primaryStage.show();
