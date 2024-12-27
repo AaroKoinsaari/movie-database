@@ -1,10 +1,10 @@
 # Movie Database
 
-This is a lightweight and efficient small movie database application developed in Java.
+Lightweight and efficient movie database application developed with Java.
 
 ## Introduction
 
-MovieDatabase is a Java application designed to help users manage and explore their movie collections. This is part of coursework at JYU.
+MovieDatabase is a Java application designed to help users manage and explore their movie collections. This is part of coursework at the University of Jyväskylä (JYU).
 
 ## Features
 
@@ -22,35 +22,27 @@ MovieDatabase is a Java application designed to help users manage and explore th
 
 Before you start, ensure you have the following installed:
 
-- Java JDK (Java Development Kit)
-- Maven, for managing project dependencies and building the application.
-- A modern IDE like IntelliJ IDEA, Eclipse, or similar which includes support for JavaFX and Maven projects.
-- FXGUI.jar package, which can be found from [here](https://gitlab.jyu.fi/tie/ohj2/esimerkit/fxexamples/-/raw/master/FXGui/fxgui.jar). This is a JAR library provided by the University of Jyväskylä (JYU), commonly utilized in their programming courses. It offers additional functionalities for Java-based GUI development, simplifying various tasks and operations commonly encountered in academic projects.
+- Java Development Kit (JDK) 21 or newer.
+- Maven (any recent version).
+- An IDE that supports JavaFX and Maven (Eclipse, IntelliJ IDEA...)
+- `FXGui.jar` package (_see download link below_). This is a JAR library provided by JYU, commonly used in their programming courses.
 
 ### Setting Up the Project
 
 1. **Clone the Repository**: Clone the MovieDatabase repository to your local development environment:
 
-2. **IDE configuration**: Open the project in an IDE that supports Maven projects, such as IntelliJ IDEA or Eclipse. Ensure the IDE is configured to handle JavaFX and Maven dependencies.
+2. **IDE configuration**: Open the project in your preferred IDE (make sure the IDE is configured to handle JavaFX dependencies).
 
-3. **Configure VM Options**: Adjust VM options for compatibility with JavaFX. In your IDE’s run configurations, add the following:
+3. **Install the FXGUI Library**: Since `FXGui` is not available in public Maven repositories, you need to download the JAR from: https://gitlab.jyu.fi/tie/ohj2/esimerkit/fxexamples/-/raw/master/FXGui/fxgui.jar.
 
-   ```bash
-   --add-opens javafx.base/com.sun.javafx.event=org.controlsfx.controls
-   ```
-
-   This step is crucial for allowing certain JavaFX operations that are necessary for the application.
-
-4. **Install Local Library**: The MovieDatabase project uses the `fxgui` library, which is a local dependency not available in public Maven repositories. To set up this library download it from [here](https://gitlab.jyu.fi/tie/ohj2/esimerkit/fxexamples/-/raw/master/FXGui/fxgui.jar).
-
-5. **Install the Library to Your Local Maven Repository**:
+4. **Install the Library to Your Local Maven Repository**:
    Use the following Maven command to install the library to your local Maven repository:
 
    ```bash
    mvn install:install-file -Dfile=path-to-fxgui.jar -DgroupId=fi.mit.jyu -DartifactId=fxgui -Dversion=1.0 -Dpackaging=jar
    ```
 
-6. **Verify the Dependency in `pom.xml`**: Ensure that you `pom.xml` file contains the following dependency:
+5. **Verify the Dependency in `pom.xml`**: Ensure that you `pom.xml` file contains the following dependency:
 
    ```xml
    <dependency>
@@ -60,7 +52,7 @@ Before you start, ensure you have the following installed:
    </dependency>
    ```
 
-This dependency should match the groupId, artifactId, and version specified in the Maven install command.
+   Make sure the groupId, artifactId, and version match what you used in the Maven install command.
 
 ### Building and Running the Application
 
@@ -78,8 +70,36 @@ This dependency should match the groupId, artifactId, and version specified in t
    java -jar MovieDatabase.jar
    ```
 
-Replace MovieDatabase.jar with the actual name of the output JAR if it differs.
+   Replace `MovieDatabase.jar` with the actual name of the output JAR if it differs.
+
+## Troubleshooting
+
+If you encounter an error (especially when trying to add new actors when the actor column is active) such as `IllegalAccessError`, where the JVM complains about inaccessible packages (e.g., “module javafx.base does not export com.sun.javafx.event to module org.controlsfx.controls”), here is what you need to do:
+
+- In IntelliJ IDEA:
+
+  1.  Go to **Run > Edit Configurations**
+  2.  Select your Run Configuration.
+  3.  Add the following in the VM Options field:
+
+  ```bash
+  --add-opens javafx.base/com.sun.javafx.event=org.controlsfx.controls
+  ```
+
+- Command Line:
+
+  ```bash
+  java --add-opens javafx.base/com.sun.javafx.event=org.controlsfx.controls -jar MovieDatabase.jar
+  ```
+
+## Acknowledgements
+
+This project was developed as part of a coursework assignment at the University of Jyväskylä (JYU). I would like to thank the course instructors and teaching assistants for their guidance and feedback throughout the project.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
 ## Contact
 
-For any inquiries, feel free to contact me via email: [aaro.koinsaari@proton.me](mailto:aaro.koinsaari@proton.me) or connect in LinkedIn: [aarokoinsaari](https://www.linkedin.com/in/AaroKoinsaari).
+For any inquiries, feel free to contact me via email at [aaro.koinsaari@proton.me](mailto:aaro.koinsaari@proton.me) or connect in LinkedIn: [aarokoinsaari](https://www.linkedin.com/in/AaroKoinsaari).
